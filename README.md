@@ -1,13 +1,10 @@
 # mTRF_Toolbox
 The mTRF Toolbox is a MATLAB repository that permits the fast computation of the linear stimulus-response mapping of any sensory system in the forward or backward direction. It is suitable for analysing multi-channel EEG, MEG, ECoG and EMG data. The forward encoding model, or temporal response function (TRF) as it is commonly known, can be used to investigate information processing in neuronal populations using conventional time-frequency and source analysis techniques. In addition, the TRF can be used to predict the spectrotemporal dynamics of future neural responses to unseen stimulus sequences. Stimulus reconstrcution can also be performed using backward decoding models that project the multi-channel population respones back to the dynamics of the causal stimulus signal. The mTRF Toolbox facilitates the use of extended continuous stimuli in electrophysiological studies compared to conventional time-locked averaging approaches which require the use of discrete, isolated stimulus events. This allows researchers to investigate of how neural systems process dynamic environmental signals such as speech, music and motion.
 
-Supporting documentation can be found here:
-Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli.](http://dx.doi.org/10.3389/fnhum.2016.00604) *Frontiers in Human Neuroscience* 10:604.
+Supporting documentation can be found in the accompanying open access paper:
+[1] Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli.](http://dx.doi.org/10.3389/fnhum.2016.00604) *Frontiers in Human Neuroscience* 10:604.
 
-<a href="https://www.youtube.com/watch?v=8-xg_xmz1Vs" target="_blank"><img src="https://github.com/mickcrosse/mickcrosse.github.io/blob/master/assets/imgs/mTRF_Toolbox.png" 
-alt="mTRF Toolbox Video" width="240" height="140" border="10" /></a>
-
-## Features
+## Functions
 - mTRFtrain.m
 - mTRFpredict.m
 - mTRFtransform.m
