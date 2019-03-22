@@ -16,11 +16,11 @@ function xLag = lagGen(x,lags)
 %
 %   See also MTRFTRAIN MTRFPREDICT MTRFCROSSVAL MTRFMULTICROSSVAL.
 
-%   Author: Michael Crosse
+%   Author: Mick Crosse
+%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
+%   Website: www.lalorlab.net
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Email: edmundlalor@gmail.com
-%   Website: http://lalorlab.net/
-%   April 2014; Last revision: 18 August 2015
+%   April 2014; Last revision: 18-Aug-2015
 
 xLag = zeros(size(x,1),size(x,2)*length(lags));
 

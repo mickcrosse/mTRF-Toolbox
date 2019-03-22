@@ -1,14 +1,14 @@
-function [r,p,mse,pred,model] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda)
+function [r,p,rmse,pred,model] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda)
 %mTRFcrossval mTRF Toolbox cross-validation function.
-%   [R,P,MSE] = MTRFCROSSVAL(STIM,RESP,FS,MAP,TMIN,TMAX,LAMBDA) performs
+%   [R,P,RMSE] = MTRFCROSSVAL(STIM,RESP,FS,MAP,TMIN,TMAX,LAMBDA) performs
 %   leave-one-out cross-validation on the set of stimuli STIM and the
 %   neural responses RESP for the range of ridge parameter values LAMBDA.
 %   As a measure of performance, it returns the correlation coefficients R
 %   between the predicted and original signals, the corresponding p-values
-%   P and the mean squared errors MSE. Pass in MAP==1 to map in the forward
-%   direction or MAP==-1 to map backwards. The sampling frequency FS should
-%   be defined in Hertz and the time lags should be set in milliseconds
-%   between TMIN and TMAX.
+%   P and the root-mean-square errors RMSE. Pass in MAP==1 to map in the
+%   forward direction or MAP==-1 to map backwards. The sampling frequency
+%   FS should be defined in Hertz and the time lags should be set in
+%   milliseconds between TMIN and TMAX.
 %
 %   [...,PRED,MODEL] = MTRFCROSSVAL(...) also returns the predictions PRED
 %   and the linear mapping functions MODEL.
@@ -25,7 +25,7 @@ function [r,p,mse,pred,model] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda)
 %   Outputs:
 %   r      - correlation coefficients
 %   p      - p-values of the correlations
-%   mse    - mean squared errors
+%   rmse   - root-mean-square errors
 %   pred   - prediction [MAP==1: cell{1,trials}(lambdas by time by chans),
 %            MAP==-1: cell{1,trials}(lambdas by time by feats)]
 %   model  - linear mapping function (MAP==1: trials by lambdas by feats by
@@ -42,11 +42,11 @@ function [r,p,mse,pred,model] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda)
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
 
-%   Author: Michael Crosse
+%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
+%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
+%   Website: www.lalorlab.net
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Email: edmundlalor@gmail.com
-%   Website: http://lalorlab.net/
-%   April 2014; Last revision: 31 May 2016
+%   April 2014; Last revision: 4-Feb-2019
 
 % Define x and y
 if tmin > tmax
@@ -69,23 +69,23 @@ tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
 % Set up regularisation
-dim1 = size(x{1},2)*length(tmin:tmax)+size(x{1},2);
+dim1 = size(x{1},2)*length(tmin:tmax)+1;
 dim2 = size(y{1},2);
 model = zeros(numel(x),numel(lambda),dim1,dim2);
 if size(x{1},2) == 1
-    d = 2*eye(dim1,dim1); d([1,end]) = 1;
+    d = 2*eye(dim1);d([dim1+2,end]) = 1;
     u = [zeros(dim1,1),eye(dim1,dim1-1)];
     l = [zeros(1,dim1);eye(dim1-1,dim1)];
-    M = d-u-l;
+    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
 else
-    M = eye(dim1,dim1);
+    M = eye(dim1,dim1); M(1,1) = 0;
 end
 
 % Training
 X = cell(1,numel(x));
 for i = 1:numel(x)
     % Generate lag matrix
-    X{i} = [ones(size(x{i})),lagGen(x{i},tmin:tmax)];
+    X{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)];
     % Calculate model for each lambda value
     for j = 1:length(lambda)
         model(i,j,:,:) = (X{i}'*X{i}+lambda(j)*M)\(X{i}'*y{i});
@@ -96,7 +96,7 @@ end
 pred = cell(1,numel(x));
 r = zeros(numel(x),numel(lambda),dim2);
 p = zeros(numel(x),numel(lambda),dim2);
-mse = zeros(numel(x),numel(lambda),dim2);
+rmse = zeros(numel(x),numel(lambda),dim2);
 for i = 1:numel(x)
     pred{i} = zeros(numel(lambda),size(y{i},1),dim2);
     % Define training trials
@@ -107,10 +107,9 @@ for i = 1:numel(x)
         % Calculate prediction
         pred{i}(j,:,:) = X{i}*squeeze(mean(model(trials,j,:,:),1));
         % Calculate accuracy
-        for k = 1:dim2
-            [r(i,j,k),p(i,j,k)] = corr(y{i}(:,k),squeeze(pred{i}(j,:,k))');
-            mse(i,j,k) = mean((y{i}(:,k)-squeeze(pred{i}(j,:,k))').^2);
-        end
+        [rtmp,ptmp] = corr(y{i},squeeze(pred{i}(j,:,:)));
+        r(i,j,:) = diag(rtmp); p(i,j,:) = diag(ptmp);
+        rmse(i,j,:) = sqrt(mean((y{i}-squeeze(pred{i}(j,:,:))).^2,1));
     end
 end
 

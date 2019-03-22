@@ -1,20 +1,19 @@
-mTRF Toolbox is a MATLAB TOOLBOX that permits the fast computation of the
-linear stimulus-response mapping of any sensory system in the forward or 
-backward direction. It is suitable for analysing EEG, MEG, ECoG and EMG 
-data.
-
-The forward model, or temporal response function (TRF), can be interpreted
-using conventional analysis techniques such as time-frequency and source 
-analysis. The TRF can also be used to predict future responses of the 
-system given a new stimulus signal. Similarly, the backward model can be 
-used to reconstruct spectrotemporal stimulus information given new response 
-data.
-
-mTRF Toolbox facilitates the use of continuous stimuli in
-electrophysiological studies as opposed to time-locked averaging
-techniques which require discrete stimuli. This enables examination of
-how neural systems process more natural and ecologically valid stimuli
-such as speech, music, motion and contrast.
+The mTRF Toolbox is a MATLAB repository that permits the fast computation 
+of the linear stimulus-response mapping of any sensory system in the 
+forward or backward direction. It is suitable for analysing multi-channel 
+EEG, MEG, ECoG and EMG data. The forward encoding model, or temporal 
+response function (TRF) as it is commonly known, can be used to investigate 
+information processing in neuronal populations using conventional time-
+frequency and source analysis techniques. In addition, TRFs can be used to 
+predict the spectrotemporal dynamics of future neural responses to unseen 
+stimulus sequences. Stimulus reconstruction can also be performed using 
+backward decoding models that project the multi-channel population 
+responses back to the dynamics of the causal stimulus signal. The mTRF 
+Toolbox facilitates the use of extended continuous stimuli in 
+electrophysiological studies compared to conventional time-locked averaging 
+approaches which require the use of discrete, isolated stimulus events. 
+This allows researchers to investigate of how neural systems process 
+dynamic environmental signals such as speech, music and motion.
 
 Table of Contents
 =================
@@ -257,9 +256,9 @@ Tips on Practical Use
   and number of samples.
 * Downsample the data when conducting large-scale multivariate analyses
   to reduce running time, e.g., 128 Hz or 64 Hz.
-* Normalise all data, e.g., between [-1,1] or [0,1] or z-score. This will 
-  stabalise regularisation across trials and enable a smaller parameter 
-  search.
+* Normalise or standardise the data beforehand. We recommend normalising 
+  by the standard deviation. This will stabalise regularisation across 
+  trials/subjects/groups and facilitate a smaller parameter search.
 * Enter the start and finish time lags in milliseconds. Enter positive
   lags for post-stimulus mapping and negative lags for pre-stimulus
   mapping. This is the same for both forward and backward mapping - the 
@@ -268,7 +267,7 @@ Tips on Practical Use
   3-dimensional form, i.e., do not remove any singleton dimensions.
 * When using MTRFCROSSVAL, the trials do not have to be the same length,
   but using trials of the same length will optimise performance.
-* When using mTRFmulticrossval, the trials in each of the three sensory
+* When using MTRFMULTICROSSVAL, the trials in each of the three sensory
   conditions should correspond to the stimuli in STIM.
 
 Examples
@@ -276,25 +275,25 @@ Examples
 
 Contrast: Forward model (TRF/VESPA)
 >> load('contrast_data.mat');
->> [w,t] = mTRFtrain(contrastLevel,EEG,128,0,-150,450,1);
+>> [w,t] = mTRFtrain(contrastLevel,EEG,128,1,-150,450,1);
 >> figure; plot(t,squeeze(w(1,:,23))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Motion: Forward model (TRF/VESPA)
 >> load('coherentmotion_data.mat');
->> [w,t] = mTRFtrain(coherentMotionLevel,EEG,128,0,-150,450,1);
+>> [w,t] = mTRFtrain(coherentMotionLevel,EEG,128,1,-150,450,1);
 >> figure; plot(t,squeeze(w(1,:,21))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Speech: Forward model (TRF/AESPA)
 >> load('speech_data.mat');
->> [w,t] = mTRFtrain(envelope,EEG,128,0,-150,450,0.1);
+>> [w,t] = mTRFtrain(envelope,EEG,128,1,-150,450,0.1);
 >> figure; plot(t,squeeze(w(1,:,85))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Speech: Spectrotemporal forward model (STRF)
 >> load('speech_data.mat');
->> [w,t] = mTRFtrain(spectrogram,EEG,128,0,-150,450,100);
+>> [w,t] = mTRFtrain(spectrogram,EEG,128,1,-150,450,100);
 >> figure; imagesc(t,1:16,squeeze(w(:,:,85))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Frequency band')
 
@@ -302,21 +301,22 @@ Speech: Backward model (stimulus reconstruction)
 >> load('speech_data.mat');
 >> envelope = resample(envelope,64,128); EEG = resample(EEG,64,128);
 >> stimTrain = envelope(1:64*60,1); respTrain = EEG(1:64*60,:);
->> [g,t,con] = mTRFtrain(stimTrain,respTrain,64,1,0,500,1e5);
+>> [g,t,con] = mTRFtrain(stimTrain,respTrain,64,-1,0,500,1e5);
 >> stimTest = envelope(64*60+1:end,1); respTest = EEG(64*60+1:end,:);
->> [recon,r,p,MSE] = mTRFpredict(stimTest,respTest,g,64,1,0,500,con);
+>> [recon,r,p,MSE] = mTRFpredict(stimTest,respTest,g,64,-1,0,500,con);
 
 Additional Information
 ======================
 
 mTRF Toolbox is available for download at:
-http://sourceforge.net/projects/aespa
+SourceForge: http://sourceforge.net/projects/aespa
+GitHub: https://github.com/mickcrosse/mTRF_Toolbox
 
 mTRF Toolbox support documentation is available at:
 http://dx.doi.org/10.3389/fnhum.2016.00604
 
-For any questions and comments, please email Dr. Edmund Lalor at:
-edmundlalor@gmail.com
+For any questions and comments, please email:
+mickcrosse@gmail.com (Mick Crosse) or edmundlalor@gmail.com (Ed Lalor)
 
 Acknowledgments:
 This work was supported in part by Science Foundation Ireland (SFI), the
@@ -324,15 +324,15 @@ Irish Higher Education Authority (HEA) and the Irish Research Council
 (IRC).
 
 References:
-* Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006) The
-  VESPA: a method for the rapid estimation of a visual evoked potential.
-  NeuroImage 32:1549-1561.
-* Gonçalves NR, Whelan R, Foxe JJ, Lalor EC (2014) Towards obtaining
-  spatiotemporally precise responses to continuous sensory stimuli in
-  humans: a general linear modeling approach to EEG. NeuroImage 97(2014):196-205.
-* Lalor, EC, & Foxe, JJ (2010) Neural responses to uninterrupted natural
-  speech can be extracted with precise temporal resolution. Eur J Neurosci 
-  31(1):189-193.
 * Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2015) The multivariate 
   temporal response function (mTRF) toolbox: a MATLAB toolbox for relating 
   neural signals to continuous stimuli. Front Hum Neurosci 10:604.
+* Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006) The
+  VESPA: a method for the rapid estimation of a visual evoked potential.
+  NeuroImage 32:1549-1561.
+* Lalor, EC, & Foxe, JJ (2010) Neural responses to uninterrupted natural
+  speech can be extracted with precise temporal resolution. Eur J Neurosci 
+  31(1):189-193.
+* Gonçalves NR, Whelan R, Foxe JJ, Lalor EC (2014) Towards obtaining
+  spatiotemporally precise responses to continuous sensory stimuli in
+  humans: a general linear modeling approach to EEG. NeuroImage 97(2014):196-205.

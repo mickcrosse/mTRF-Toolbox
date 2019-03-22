@@ -29,11 +29,11 @@ function [model_t,t,c_t] = mTRFtransform(stim,resp,model,fs,map,tmin,tmax,c)
 %          Bießmann F (2014) On the interpretation of weight vectors of
 %          linear models in multivariate neuroimaging. NeuroImage 87:96-110.
 
-%   Authors: Adam Bednar, Emily Teoh, Giovanni Di Liberto, Michael Crosse
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Email: edmundlalor@gmail.com
+%   Authors: Adam Bednar, Emily Teoh, Giovanni Di Liberto, Mick Crosse
+%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Website: www.lalorlab.net
-%   April 2016; Last revision: 15 July 2016
+%   Lalor Lab, Trinity College Dublin, IRELAND
+%   April 2014; Last revision: 4-Feb-2019
 
 % Define x and y
 if tmin > tmax
@@ -55,15 +55,16 @@ tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
 % Generate lag matrix
-X = [ones(size(x)),lagGen(x,tmin:tmax)];
+X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
 
 % Transform model weights
 model = [c;reshape(model,size(model,1)*size(model,2),size(model,3))];
-model_t = (X'*X)*model*inv(y'*y);
+model_t = (X'*X)*model/(y'*y);
 
 % Format outputs
-c_t = model_t(1:size(x,2),:);
-model_t = reshape(model_t(size(x,2)+1:end,:),size(x,2),length(tmin:tmax),size(y,2));
 t = (tmin:tmax)/fs*1e3;
+c_t = model_t(1,:);
+model_t = reshape(model_t(2:end,:),size(x,2),length(t),size(y,2));
+model_t = permute(model_t,[3,2,1]);
 
 end

@@ -1,4 +1,4 @@
-function [r,p,mse,pred,model] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,map,tmin,tmax,lambda1,lambda2)
+function [r,p,rmse,pred,model] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,map,tmin,tmax,lambda1,lambda2)
 %mTRFmulticrossval mTRF Toolbox multisensory cross-validation function.
 %   [R,P,MSE] = MTRFMULTICROSSVAL(STIM,RESP,RESP1,RESP2,FS,MAP,TMIN,TMAX,
 %   LAMBDA1,LAMBDA2) performs leave-one-out cross-validation of an
@@ -53,11 +53,11 @@ function [r,p,mse,pred,model] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,map,t
 %          enhances cortical entrainment to continuous auditory speech in
 %          noise-free conditions. J Neurosci 35(42):14195-14204.
 
-%   Author: Michael Crosse
+%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
+%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
+%   Website: www.lalorlab.net
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Email: edmundlalor@gmail.com
-%   Website: http://lalorlab.net/
-%   April 2014; Last revision: 13 December 2016
+%   April 2014; Last revision: 4-Feb-2019
 
 % Define x and y
 if tmin > tmax
@@ -80,23 +80,23 @@ tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
 % Set up regularisation
-dim1 = size(x{1},2)*length(tmin:tmax)+size(x{1},2);
+dim1 = size(x{1},2)*length(tmin:tmax)+1;
 dim2 = size(y{1},2);
 model = zeros(numel(x),numel(lambda1),numel(lambda2),dim1,dim2);
 if size(x{1},2) == 1
-    d = 2*eye(dim1,dim1); d([1,end]) = 1;
+    d = 2*eye(dim1);d([dim1+2,end]) = 1;
     u = [zeros(dim1,1),eye(dim1,dim1-1)];
     l = [zeros(1,dim1);eye(dim1-1,dim1)];
-    M = d-u-l;
+    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
 else
-    M = eye(dim1,dim1);
+    M = eye(dim1,dim1); M(1,1) = 0;
 end
 
 % Training
 X = cell(1,numel(x));
 for i = 1:numel(x)
     % Generate lag matrix
-    X{i} = [ones(size(x{i})),lagGen(x{i},tmin:tmax)];
+    X{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)];
     if map == 1
         % Calculate unisensory models for each lambda value
         model1 = zeros(numel(lambda1),dim1,dim2);
@@ -109,8 +109,8 @@ for i = 1:numel(x)
         end
     elseif map == -1
         % Generate lag matrices
-        X1 = [ones(size(resp1{i})),lagGen(resp1{i},tmin:tmax)];
-        X2 = [ones(size(resp2{i})),lagGen(resp2{i},tmin:tmax)];
+        X1 = [ones(size(resp1{i},1),1),lagGen(resp1{i},tmin:tmax)];
+        X2 = [ones(size(resp2{i},1),1),lagGen(resp2{i},tmin:tmax)];
         % Calculate unisensory models for each lambda value
         model1 = zeros(numel(lambda1),dim1,dim2);
         for j = 1:numel(lambda1)
@@ -120,7 +120,6 @@ for i = 1:numel(x)
         for j = 1:numel(lambda2)
             model2(j,:,:) = (X2'*X2+lambda2(j)*M)\X2'*y{i};
         end
-        clear X1 X2
     end
     % Sum unisensory models for every combination of lambda values
     for j = 1:numel(lambda1)
@@ -128,15 +127,13 @@ for i = 1:numel(x)
             model(i,j,k,:,:) = model1(j,:,:)+model2(k,:,:);
         end
     end
-    clear model1 model2
 end
-clear resp1 resp2
 
 % Testing
 pred = cell(1,numel(x));
 r = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
 p = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
-mse = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
+rmse = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
 for i = 1:numel(x)
     pred{i} = zeros(numel(lambda1),numel(lambda2),size(y{i},1),dim2);
     % Define training trials
@@ -148,10 +145,9 @@ for i = 1:numel(x)
             % Calculate prediction
             pred{i}(j,k,:,:) = X{i}*squeeze(mean(model(trials,j,k,:,:),1));
             % Calculate accuracy
-            for l = 1:dim2
-                [r(i,j,k,l),p(i,j,k,l)] = corr(y{i}(:,l),squeeze(pred{i}(j,k,:,l)));
-                mse(i,j,k,l) = mean((y{i}(:,l)-squeeze(pred{i}(j,k,:,l))).^2);
-            end
+            [rtmp,ptmp] = corr(y{i},squeeze(pred{i}(j,k,:,:)));
+            r(i,j,k,:) = diag(rtmp); p(i,j,k,:) = diag(ptmp);
+            rmse(i,j,k,:) = sqrt(mean((y{i}-squeeze(pred{i}(j,k,:,:))).^2,1));
         end
     end
 end

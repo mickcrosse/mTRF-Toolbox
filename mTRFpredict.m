@@ -1,4 +1,4 @@
-function [pred,r,p,mse] = mTRFpredict(stim,resp,model,fs,map,tmin,tmax,c)
+function [pred,r,p,rmse] = mTRFpredict(stim,resp,model,fs,map,tmin,tmax,c)
 %mTRFpredict mTRF Toolbox prediction function.
 %   PRED = MTRFPREDICT(STIM,RESP,MODEL,FS,MAP,TMIN,TMAX,C) performs a
 %   convolution of the stimulus property STIM or the neural response data
@@ -8,9 +8,9 @@ function [pred,r,p,mse] = mTRFpredict(stim,resp,model,fs,map,tmin,tmax,c)
 %   lags should be set in milliseconds between TMIN and TMAX. The
 %   regression constant C absorbs any bias in MODEL.
 %
-%   [...,R,P,MSE] = MTRFPREDICT(...) also returns the correlation
+%   [...,R,P,RMSE] = MTRFPREDICT(...) also returns the correlation
 %   coefficients R between the original and predicted values, the
-%   corresponding p-values P and the mean squared errors MSE.
+%   corresponding p-values P and the root-mean-square errors RMSE.
 %
 %   Inputs:
 %   stim   - stimulus property (time by features)
@@ -27,17 +27,17 @@ function [pred,r,p,mse] = mTRFpredict(stim,resp,model,fs,map,tmin,tmax,c)
 %   pred   - prediction (MAP==1: time by chans, MAP==-1: time by feats)
 %   r      - correlation coefficients
 %   p      - p-values of the correlations
-%   mse    - mean squared errors
+%   rmse   - root-mean-square errors
 %
 %   See README for examples of use.
 %
 %   See also LAGGEN MTRFTRAIN MTRFCROSSVAL MTRFMULTICROSSVAL.
 
-%   Author: Michael Crosse, Giovanni Di Liberto
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Email: edmundlalor@gmail.com
+%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
+%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Website: www.lalorlab.net
-%   April 2014; Last revision: Jan 8, 2016
+%   Lalor Lab, Trinity College Dublin, IRELAND
+%   April 2014; Last revision: 4-Feb-2019
 
 % Define x and y
 if tmin > tmax
@@ -59,7 +59,7 @@ tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
 % Generate lag matrix
-X = [ones(size(x)),lagGen(x,tmin:tmax)];
+X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
 
 % Calculate prediction
 model = [c;reshape(model,size(model,1)*size(model,2),size(model,3))];
@@ -67,13 +67,9 @@ pred = X*model;
 
 % Calculate accuracy
 if ~isempty(y)
-    r = zeros(1,size(y,2));
-    p = zeros(1,size(y,2));
-    mse = zeros(1,size(y,2));
-    for i = 1:size(y,2)
-        [r(i),p(i)] = corr(y(:,i),pred(:,i));
-        mse(i) = mean((y(:,i)-pred(:,i)).^2);
-    end
+    [r,p] = corr(y,pred);
+    r = diag(r); p = diag(p);
+    rmse = sqrt(mean((y-pred).^2,1))';
 end
 
 end

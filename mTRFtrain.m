@@ -41,11 +41,11 @@ function [model,t,c] = mTRFtrain(stim,resp,fs,map,tmin,tmax,lambda)
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
 
-%   Author: Edmund Lalor, Michael Crosse, Giovanni Di Liberto
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Email: edmundlalor@gmail.com
+%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
+%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Website: www.lalorlab.net
-%   April 2014; Last revision: Jan 8, 2016
+%   Lalor Lab, Trinity College Dublin, IRELAND
+%   April 2014; Last revision: 4-Feb-2019
 
 % Define x and y
 if tmin > tmax
@@ -68,25 +68,25 @@ tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
 % Generate lag matrix
-X = [ones(size(x)),lagGen(x,tmin:tmax)];
+X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
 
 % Set up regularisation
 dim = size(X,2);
 if size(x,2) == 1
-    d = 2*eye(dim,dim);d([1,end]) = 1;
+    d = 2*eye(dim);d([dim+2,end]) = 1;
     u = [zeros(dim,1),eye(dim,dim-1)];
     l = [zeros(1,dim);eye(dim-1,dim)];
-    M = d-u-l;
+    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
 else
-    M = eye(dim,dim);
+    M = eye(dim,dim); M(1,1) = 0;
 end
 
 % Calculate model
 model = (X'*X+lambda*M)\(X'*y);
 
 % Format outputs
-c = model(1:size(x,2),:);
-model = reshape(model(size(x,2)+1:end,:),size(x,2),length(tmin:tmax),size(y,2));
 t = (tmin:tmax)/fs*1e3;
+c = model(1,:);
+model = reshape(model(2:end,:),size(x,2),length(t),size(y,2));
 
 end
