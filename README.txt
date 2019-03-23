@@ -275,35 +275,44 @@ Examples
 
 Contrast: Forward model (TRF/VESPA)
 >> load('contrast_data.mat');
->> [w,t] = mTRFtrain(contrastLevel,EEG,128,1,-150,450,1);
+>> [w,t] = mTRFtrain(contrastLevel,EEG,Fs,1,-150,450,1);
 >> figure; plot(t,squeeze(w(1,:,23))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Motion: Forward model (TRF/VESPA)
 >> load('coherentmotion_data.mat');
->> [w,t] = mTRFtrain(coherentMotionLevel,EEG,128,1,-150,450,1);
+>> [w,t] = mTRFtrain(coherentMotionLevel,EEG,Fs,1,-150,450,1);
 >> figure; plot(t,squeeze(w(1,:,21))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Speech: Forward model (TRF/AESPA)
 >> load('speech_data.mat');
->> [w,t] = mTRFtrain(envelope,EEG,128,1,-150,450,0.1);
+>> [w,t] = mTRFtrain(envelope,EEG,Fs,1,-150,450,0.1);
 >> figure; plot(t,squeeze(w(1,:,85))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Speech: Spectrotemporal forward model (STRF)
 >> load('speech_data.mat');
->> [w,t] = mTRFtrain(spectrogram,EEG,128,1,-150,450,100);
+>> [w,t] = mTRFtrain(spectrogram,EEG,Fs,1,-150,450,100);
 >> figure; imagesc(t,1:16,squeeze(w(:,:,85))); xlim([-100,400]);
 >> xlabel('Time lag (ms)'); ylabel('Frequency band')
 
 Speech: Backward model (stimulus reconstruction)
 >> load('speech_data.mat');
->> envelope = resample(envelope,64,128); EEG = resample(EEG,64,128);
+>> envelope = resample(envelope,64,Fs); EEG = resample(EEG,64,Fs);
 >> stimTrain = envelope(1:64*60,1); respTrain = EEG(1:64*60,:);
->> [g,t,con] = mTRFtrain(stimTrain,respTrain,64,-1,0,500,1e5);
+>> [g,t,c] = mTRFtrain(stimTrain,respTrain,64,-1,0,500,1e5);
 >> stimTest = envelope(64*60+1:end,1); respTest = EEG(64*60+1:end,:);
->> [recon,r,p,MSE] = mTRFpredict(stimTest,respTest,g,64,-1,0,500,con);
+>> [recon,r,p,rmse] = mTRFpredict(stimTest,respTest,g,64,-1,0,500,c);
+
+Speech: Transform backward model to forward model
+>> load('speech_data.mat');
+>> envelope = resample(envelope,64,Fs); EEG = resample(EEG,64,Fs);
+>> [g,t,c] = mTRFtrain(envelope,EEG,64,-1,-150,450,1.5e6);
+>> recon = mTRFpredict(envelope,EEG,g,64,-1,-150,450,c);
+>> w = mTRFtransform(g,EEG,recon);
+>> figure; plot(fliplr(-t),squeeze(w(85,:))); xlim([-100,400]);
+>> xlabel('Time lag (ms)'); ylabel('Amplitude (a.u.)')
 
 Additional Information
 ======================
