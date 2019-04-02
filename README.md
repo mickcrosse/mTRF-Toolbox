@@ -24,7 +24,7 @@ dynamic environmental signals such as speech, music and motion.
 * Downsample the data when conducting large-scale multivariate analyses
   to reduce running time, e.g., 128 Hz or 64 Hz.
 * Normalise or standardise the data beforehand. We recommend normalising 
-  by the standard deviation. This will stabalise regularisation across 
+  by the standard deviation. This will stabalise regularization across 
   trials/subjects/groups and facilitate a smaller parameter search.
 * Enter the start and finish time lags in milliseconds. Enter positive
   lags for post-stimulus mapping and negative lags for pre-stimulus
