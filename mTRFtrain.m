@@ -1,4 +1,4 @@
-function [model,t,c] = mTRFtrain(stim,resp,fs,map,tmin,tmax,lambda)
+function [model,t] = mTRFtrain(stim,resp,fs,map,tmin,tmax,lambda,tlims)
 %mTRFtrain mTRF Toolbox training function.
 %   MODEL = MTRFTRAIN(STIM,RESP,FS,MAP,TMIN,TMAX,LAMBDA) performs ridge
 %   regression on the stimulus property STIM and the neural response data
@@ -13,19 +13,26 @@ function [model,t,c] = mTRFtrain(stim,resp,fs,map,tmin,tmax,lambda)
 %   when testing MODEL.
 %
 %   Inputs:
-%   stim   - stimulus property (time by features)
-%   resp   - neural response data (time by channels)
+%   stim   - stimulus property (time by features), this can be a cell array
+%            where each cell is a different trial
+%   resp   - neural response data (time by channels), this can be a cell array
+%            where each cell is a different trial
 %   fs     - sampling frequency (Hz)
 %   map    - mapping direction (forward==1, backward==-1)
 %   tmin   - minimum time lag (ms)
 %   tmax   - maximum time lag (ms)
 %   lambda - ridge parameter
+%   tlims  - (optional) (NEW, NZ, 2019) specifies range or indexes of times 
+%      that should be included in the model training and testing. If specific 
+%      indexes are desired, then they should be specified in each cell of 
+%      tlims, where the number of cells equals the number of trials.
+%      (default: all indexes are used)
+%      (see usetinds.m for more information on specifying tlims)
 %
 %   Outputs:
 %   model  - linear mapping function (MAP==1: feats by lags by chans,
 %            MAP==-1: chans by lags by feats)
 %   t      - vector of time lags used (ms)
-%   c      - regression constant
 %
 %   See README for examples of use.
 %
@@ -47,6 +54,15 @@ function [model,t,c] = mTRFtrain(stim,resp,fs,map,tmin,tmax,lambda)
 %   Lalor Lab, Trinity College Dublin, IRELAND
 %   April 2014; Last revision: 4-Feb-2019
 
+% If tlims isn't specified, use all indexes
+if nargin<8, tlims = []; end
+
+% If x and y are not cell arrays (if they contain data from just one trial,
+% for example), make them cell arrays with one cell
+% (needed to make the design matrices later)
+if ~iscell(x), x = {x}; end
+if ~iscell(y), y = {y}; end
+
 % Define x and y
 if tmin > tmax
     error('Value of TMIN must be < TMAX')
@@ -67,8 +83,28 @@ clear stim resp
 tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
-% Generate lag matrix
-X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
+% Generate lag matrix for each trial
+%X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
+disp('Creating the design matrices...');
+% Create the design matrices trial by trial
+std_tm = tic;
+for i = 1:numel(x)
+    % Generate lag matrix
+    x{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)]; %%% skip constant term (NZ)
+    % Set X and y to the same length
+    minlen = min([size(x{i},1) size(y{i},1)]);
+    x{i} = x{i}(1:minlen,:);
+    y{i} = y{i}(1:minlen,:);
+    % Remove time indexes, if specified
+    if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
+        tinds = tlims{i};
+    else
+        tinds = usetinds(tlims,fs,minlen);
+    end
+    x{i} = x{i}(tinds,:);
+    y{i} = y{i}(tinds,:);
+end
+fprintf('Completed in %.3f s\n',toc(std_tm));
 
 % Set up regularisation
 dim = size(X,2);
@@ -81,12 +117,18 @@ else
     M = eye(dim,dim); M(1,1) = 0;
 end
 
+fprintf('Training the model...');
+mdl_tm = tic;
+[xtx,xty] = compute_linreg_matrices(x,y);
 % Calculate model
-model = (X'*X+lambda*M)\(X'*y);
+% model = (X'*X+lambda*M)\(X'*y);
+model = (xtx+lambda*M)\xty;
+fprintf('Completed in %.3f s\n',toc(mdl_tm));
 
 % Format outputs
 t = (tmin:tmax)/fs*1e3;
-c = model(1,:);
-model = reshape(model(2:end,:),size(x,2),length(t),size(y,2));
+% c = model(1,:);
+% model = reshape(model(2:end,:),size(x,2),length(t),size(y,2));
+model = reshape(model,size(x,2),length(t),size(y,2));
 
 end
