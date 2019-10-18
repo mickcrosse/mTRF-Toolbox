@@ -14,6 +14,8 @@ function [xtx,xty] = compute_linreg_matrices(Xc,Yc,useidx,iteridxlim,varargin)
 
 verbose = 1;
 
+if nargin < 2, Yc = {}; end % if Yc isn't specified, make it an empty cell array
+
 % Put Xc and Yc in cells if they aren't cell array
 if ~iscell(Xc), Xc = {Xc}; end
 if ~iscell(Yc), Yc = {Yc}; end
@@ -31,19 +33,25 @@ if ~isempty(varargin),
 end
 
 ndims = size(Xc{1},2); % number of dimensions in model
-nouts = size(Yc{1},2); % number of output columns in each y
+if ~isempty(Yc),
+    nouts = size(Yc{1},2); % number of output columns in each y
+end
 
 % Compute the X'X and X'y for linear regression
 iteridx = [1:iteridxlim:length(useidx) length(useidx)+1]; % range of training indexes on each iteration
 xtx = zeros(ndims);
-xty = zeros(ndims,nouts);
+if ~isempty(Yc)
+    xty = zeros(ndims,nouts);
+end
 if verbose, fprintf('Computing matrices in %d iterations',length(iteridx)-1); end
 for ii = 2:length(iteridx),
     if verbose, fprintf('.'); end
     idx = useidx(iteridx(ii-1):iteridx(ii)-1); % training indexes
     x = cell_to_time_samples(Xc,idx); % compute design matrix for iteration
-    y = cell_to_time_samples(Yc,idx); % compute output vector for iteration
     xtx = xtx + x'*x; % add to overall xtx
-    xty = xty + x'*y; % add to overall xty
+    if ~isempty(Yc)
+        y = cell_to_time_samples(Yc,idx); % compute output vector for iteration
+        xty = xty + x'*y; % add to overall xty
+    end
 end  
 if verbose, fprintf('\n'); end

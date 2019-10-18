@@ -55,8 +55,8 @@ if nargin<8, tlims = []; end
 % If x and y are not cell arrays (if they contain data from just one trial,
 % for example), make them cell arrays with one cell
 % (needed to make the design matrices later)
-if ~iscell(x), x = {x}; end
-if ~iscell(y), y = {y}; end
+if ~iscell(stim), stim = {stim}; end
+if ~iscell(resp), resp = {resp}; end
 
 % Define x and y
 if tmin > tmax
@@ -91,7 +91,8 @@ for i = 1:numel(x)
     y{i} = y{i}(1:minlen,:);
     % Remove time indexes, if specified
     if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
-        tinds = tlims{i};
+%         tinds = tlims{i};
+        tinds = usetinds(tlims{i},fs,minlen);
     else
         tinds = usetinds(tlims,fs,minlen);
     end
@@ -113,7 +114,7 @@ for i = 1:length(x)
     pred{i} = x{i}*model;
     % Calculate accuracy
     if ~isempty(y{i})
-        [all_r,all_p] = corr(y,pred);
+        [all_r,all_p] = corr(y{i},pred{i});
         r(i,:) = diag(all_r); p(i,:) = diag(all_p);
         rmse(i,:) = sqrt(mean((y{i}-pred{i}).^2,1))';
     end

@@ -66,10 +66,10 @@ function [r,p,rmse,model,t] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tli
 %   April 2014; Last revision: 17-Oct-2019
 
 % If tlims isn't specified, use all indexes
-if nargin<9, tlims = []; end
+if nargin<8, tlims = []; end
 
 % If nfolds isn't specified, do 10-fold cross-validation
-if nargin<10, nfolds = 10; end
+if nargin<9, nfolds = 10; end
 
 % Parse any addition function inputs
 %if ~isempty(varargin),
@@ -77,6 +77,11 @@ if nargin<10, nfolds = 10; end
 %        eval([varargin{n-1} '=varargin{n};']);
 %    end
 %end
+
+% if the stim or response aren't cell arrays (only one trial was
+% presented), make them a one element cell array
+if ~iscell(stim), stim = {stim}; end
+if ~iscell(resp), resp = {resp}; end
 
 % Define x and y
 if tmin > tmax
@@ -125,7 +130,8 @@ for i = 1:numel(x)
     y{i} = y{i}(1:minlen,:);
     % Remove time indexes, if specified
     if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
-        tinds = tlims{i};
+%         tinds = tlims{i};
+        tinds = usetinds(tlims{i},fs,minlen);
     else
         tinds = usetinds(tlims,fs,minlen);
     end
@@ -171,7 +177,8 @@ for n = 1:nfolds,
         pred_fold = xtst*model_fold; % compute prediction
         [rtmp,ptmp] = corr(ytst,squeeze(pred_fold)); % Pearson's
         r(n,j,:) = diag(rtmp); p(n,j,:) = diag(ptmp);
-        rmse(n,j,:) = sqrt(mean((ytst-pred_fold).^2,1)); % root mean squared error
+%         rmse(n,j,:) = sqrt(mean((ytst-pred_fold).^2,1)); % root mean squared error
+        rmse(n,j,:) = std(ytst-pred_fold,1);
         fprintf('.');
     end 
     fprintf('\n');
