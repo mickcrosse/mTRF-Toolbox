@@ -1,9 +1,12 @@
 % Demonstrate using tlims to skip silences when computing a model for
 % envelope reconstruction
+% !! This demo will take 20-25 min to complete
 % Nate Zuk (2019)
 
-% trial_num = 1; % number of the trial to use
-ntrials = 5; % number of trials to use
+addpath('..');
+
+train_trials = 1:4; % trials to use for training
+test_trials = 5; % trial to use for testing
 sbj = 'Subject2'; % subject identifier
 fs = 128; % sampling rate (in Hz) of the stimulus envelope and EEG in the dataset
 data_path = '..\sample_data\';
@@ -12,13 +15,19 @@ trf_minlag = -50; % minimum lag in the TRF (in ms)
 lambdas = 10.^(0:0.5:10);
 db_thres = -67; % threshold in dB V for identifying a silent section
 
+% Get the set of all trials so that they can be loaded in one go
+all_trials = unique([train_trials test_trials]); % get the set of all training and testing trials
+[~,train_idx] = intersect(all_trials,train_trials); % get the indexes in "all_trials" for training
+[~,test_idx] = intersect(all_trials,test_trials); % get the indexes in "all_trials" for testing
+ntrials = length(all_trials);
+
 %% Load data
 % Load the stimulus envelopes
 disp('Loading the stimulus envelope...');
 stims = cell(ntrials,1);
 for n = 1:ntrials
     % get the filename for the stimulus file
-    stim_filename = sprintf('audio%d_128Hz',n);
+    stim_filename = sprintf('audio%d_128Hz',all_trials(n));
     % load the stimulus envelope file
     S = load([data_path 'envs\' stim_filename]);
     % store the envelope
@@ -31,7 +40,7 @@ disp('Loading the EEG data...');
 eegs = cell(ntrials,1);
 for n = 1:ntrials
     % get the filename for the stimulus file
-    eeg_filename = sprintf('%s_Run%d',sbj,n);
+    eeg_filename = sprintf('%s_Run%d',sbj,all_trials(n));
     % load the stimulus envelope file
     S = load([data_path 'eegs\' eeg_filename]);
     % remove the average of the mastoids, and store the EEG
@@ -40,8 +49,8 @@ for n = 1:ntrials
 end
 
 %% EEG preprocessing
-%%% Do very basic EEG preprocessing -- highpass filter the EEG using a zero-phase 
-%%% moving average filter with a window equal to the size of the TRF
+% Do very basic EEG preprocessing -- highpass filter the EEG using a zero-phase 
+% moving average filter with a window equal to the size of the TRF
 disp('Do some very basic EEG preprocessing (high pass filter...');
 % compute the window size
 trf_window_size = ceil(trf_maxlag/1000*fs)-floor(trf_minlag/1000*fs);
@@ -51,8 +60,8 @@ for n = 1:ntrials
 end
 
 %% Identify silences
-%%% Identify silent periods, and select the ranges of time
-%%% around them
+% Identify silent periods, and select the ranges of time
+% around them
 % make sure the envelope is at least 0
 disp('Identifying silent periods in the stimulus...');
 % concatenate stimuli together
@@ -80,59 +89,60 @@ ylabel('# samples');
 legend('dB envelope values','Threshold for silences');
 
 % Get start and end times encompassing silent periods
+sil_chk = cell(ntrials,1);
 sil_tlims = cell(ntrials,1);
 for n = 1:ntrials
-    sil_chk = stims{n}<10.^(db_thres/20); % identify silences
-    sil_starts = find(diff(sil_chk)==1); % get the indexes just before silences
-    sil_ends = find(diff(-sil_chk)==1)+1; % get the indexes just after silences
+    sil_chk{n} = stims{n}<10.^(db_thres/20); % identify silences
+    sil_starts = find(diff(sil_chk{n})==1); % get the indexes just before silences
+    sil_ends = find(diff(-sil_chk{n})==1)+1; % get the indexes just after silences
     sil_idx = sort([sil_starts; sil_ends]); % put these indexes in ascending order
     sil_tlims{n} = (sil_idx-1)/fs; % convert to time (usetinds assumes first index is t=0)
 end
 
 fprintf('\n'); % add a break in the text before modeling
 
-%% Envelope reconstructions
-%%% Do envelope reconstruction using the full envelope
+%% Training
+% Do envelope reconstruction using the full envelope
 disp('** Compute the model for the full envelope **');
-[r_full,~,~,model_full,dly] = mTRFcrossval(stims,eegs,fs,-1,trf_minlag,trf_maxlag,lambdas);
+[r_full,~,~,model_full,dly] = mTRFcrossval(stims(train_idx),eegs(train_idx),fs,-1,...
+    trf_minlag,trf_maxlag,lambdas);
+% get the optimal lambda
 opt_lmb_idx_full = find(mean(r_full)==max(mean(r_full)),1);
 fprintf('Optimal lambda = %.0f\n',lambdas(opt_lmb_idx_full));
 
 %%% Do envelope reconstruction without silent periods
 disp('** Compute the model for the envelope without silences **');
-[r_nosil,~,~,model_nosil] = mTRFcrossval(stims,eegs,fs,-1,trf_minlag,trf_maxlag,lambdas,sil_tlims);
+[r_nosil,~,~,model_nosil] = mTRFcrossval(stims(train_idx),eegs(train_idx),fs,-1,...
+    trf_minlag,trf_maxlag,lambdas,sil_tlims(train_idx));
+% get the optimal lambda
 opt_lmb_idx_nosil = find(mean(r_nosil)==max(mean(r_nosil)),1);
 fprintf('Optimal lambda = %.0f\n',lambdas(opt_lmb_idx_full));
 
-%%% Test on another 5 left-out trials (like trials 6-10), and show
-%%% reconstruction accuracies of both
+%% Testing
+disp('** Testing **');
+% Generate the predictions for both models
+[recon_full,r_full] = mTRFpredict(stims(test_idx),eegs(test_idx),...
+    model_full(:,:,opt_lmb_idx_full),fs,-1,trf_minlag,trf_maxlag);
+[recon_nosil,r_nosil] = mTRFpredict(stims(test_idx),eegs(test_idx),...
+    model_nosil(:,:,opt_lmb_idx_nosil),fs,-1,trf_minlag,trf_maxlag,...
+    sil_tlims(test_idx));
 
 %% Plotting
-%%% Plot the forward TRF for both cases
-% Generate the predictions for both models
-recon_full = mTRFpredict(stims,eegs,model_full(:,:,opt_lmb_idx_full),fs,-1,trf_minlag,trf_maxlag);
-recon_nosil = mTRFpredict(stims,eegs,model_nosil(:,:,opt_lmb_idx_nosil),fs,-1,trf_minlag,trf_maxlag,sil_tlims);
+% Plot the example testing reconstruction for one trial
 t = (0:length(recon_full{1})-1)/fs; % time array, for plotting the envelopes
 figure
 hold on
-plot(t,stims{1},'k'); % original envelope
+plot(t,stims{test_idx(1)},'k'); % original envelope
 plot(t,recon_full{1},'b'); % reconstructed envelope, including silences
 recon_nosil_fulllength = NaN(length(recon_full{1}),1); % create an array of NaNs
-recon_nosil_fulllength(~sil_chk) = recon_nosil{1}; % insert the reconstruction
+recon_nosil_fulllength(~sil_chk{test_idx(1)}) = recon_nosil{1}; % insert the reconstruction
     % this is so that silences won't be plotted
 plot(t,recon_nosil_fulllength,'r');
 set(gca,'FontSize',16);
 xlabel('Time (s)');
 ylabel('Envelope');
 legend('Original','Recon with full envelope','Recon without silences');
-
-% mTRFtransform both of the optimal models into forward models
-% (need to edit mTRFtransform to account for tlims)
-opt_model_full = reshape(model_full(2:end,:,opt_lmb_idx_full),[128 length(dly)]);
-fmodel_full = mTRFtransform(opt_model_full,eegs,recon_full);
-    % skip the constant term
-% (need to edit mTRFtransform to account for tlims)
-opt_model_nosil = reshape(model_full(2:end,:,opt_lmb_idx_nosil),[128 length(dly)]);
-fmodel_nosil = mTRFtransform(opt_model_nosil,eegs,recon_nosil,sil_tlims,fs);
-
-% then use the plot_trf function
+% Display the reconstruction accuracies in the title
+tle = sprintf('Trail %d: r_{full}=%.3f, r_{no silences}=%.3f',...
+    all_trials(test_idx(1)),r_full(1),r_nosil(1));
+title(tle);

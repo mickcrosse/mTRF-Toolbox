@@ -44,7 +44,7 @@ if ~iscell(recon), recon = {recon}; end
 if ~isempty(tlims)
     for n = 1:length(resp)
         if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
-            tinds = tlims{i};
+            tinds = usetinds(tlims{i},fs,length(resp{n}));
         else
             tinds = usetinds(tlims,fs,length(resp{n}));
         end
