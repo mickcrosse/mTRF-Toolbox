@@ -1,6 +1,8 @@
 % Demonstrate using tlims to skip silences when computing a model for
 % envelope reconstruction
-% !! This demo will take 20-25 min to complete
+% The data for this demo is taken from the dryad dataset by Broderick et
+% al (2018): https://doi.org/10.1016/j.cub.2018.01.080
+% !! This demo can take 20-25 minutes to complete
 % Nate Zuk (2019)
 
 addpath('..');

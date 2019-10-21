@@ -1,7 +1,8 @@
 % Envelope reconstruction demo, show tuning curves as a function of lambda
 % using 10-fold cross-validation and trial-by-trial cross-validation
-% !! This program can take 15-20 minutes to run for 4 trials and a 400
-%    ms TRF window. It will take even longer with more trials.
+% The data for this demo is taken from the dryad dataset by Broderick et
+% al (2018): https://doi.org/10.1016/j.cub.2018.01.080
+% !! This demo can take 15-20 minutes to complete
 % Nate Zuk (2019)
 
 addpath('..');

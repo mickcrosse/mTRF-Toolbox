@@ -60,8 +60,8 @@ if nargin<8, tlims = []; end
 % If x and y are not cell arrays (if they contain data from just one trial,
 % for example), make them cell arrays with one cell
 % (needed to make the design matrices later)
-if ~iscell(x), x = {x}; end
-if ~iscell(y), y = {y}; end
+if ~iscell(stim), stim = {stim}; end
+if ~iscell(resp), resp = {resp}; end
 
 % Define x and y
 if tmin > tmax
@@ -107,8 +107,8 @@ end
 fprintf('Completed in %.3f s\n',toc(std_tm));
 
 % Set up regularisation
-dim = size(X,2);
-if size(x,2) == 1
+dim = size(x{1},2);
+if size(x{1},2) == 1
     d = 2*eye(dim);d([dim+2,end]) = 1;
     u = [zeros(dim,1),eye(dim,dim-1)];
     l = [zeros(1,dim);eye(dim-1,dim)];
@@ -117,7 +117,7 @@ else
     M = eye(dim,dim); M(1,1) = 0;
 end
 
-fprintf('Training the model...');
+fprintf('Training the model...\n');
 mdl_tm = tic;
 [xtx,xty] = compute_linreg_matrices(x,y);
 % Calculate model
@@ -129,6 +129,6 @@ fprintf('Completed in %.3f s\n',toc(mdl_tm));
 t = (tmin:tmax)/fs*1e3;
 % c = model(1,:);
 % model = reshape(model(2:end,:),size(x,2),length(t),size(y,2));
-model = reshape(model,size(x,2),length(t),size(y,2));
+% model = reshape(model,size(x{1},2),length(t),size(y{1},2));
 
 end

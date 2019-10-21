@@ -1,5 +1,7 @@
 % EEG prediction demo, based on envelope, show tuning curves as a function of lambda
 % using 10-fold cross-validation and trial-by-trial cross-validation
+% The data for this demo is taken from the dryad dataset by Broderick et
+% al (2018): https://doi.org/10.1016/j.cub.2018.01.080
 % Nate Zuk (2019)
 
 addpath('..');
@@ -55,14 +57,14 @@ fprintf('\n'); % put a break in the output text, before the modeling starts
 
 %%% Run the mTRFcrossval with map=-1 (backwards modeling, envelope reconstruction)
 disp('** Doing 10-fold cross-validation, with a random sampling of data for each fold **');
-[r_cv,~,mse_cv,model_cv,t] = mTRFcrossval(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambdas);
+[r_cv,~,~,model_cv,t] = mTRFcrossval(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambdas);
 % average across channels
 r_cv = mean(r_cv,3);
 mse_cv = mean(mse_cv,3);
 
 %%% Run leave-one-out, trial-by-trial cross-validation
 disp('** Doing leave-one-out, trial-by-trial cross-validation **');
-[r_loo,~,mse_loo,model_loo] = mTRFcrossval_loo(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambdas);
+[r_loo,~,~,model_loo] = mTRFcrossval_loo(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambdas);
 r_loo = mean(r_loo,3);
 mse_loo = mean(mse_loo,3);
 
@@ -70,7 +72,7 @@ mse_loo = mean(mse_loo,3);
 %%% and mse
 figure
 % plot r for 10-fold cross-validation
-subplot(2,2,1);
+subplot(1,2,1);
 plot(lambdas,r_cv);
 set(gca,'XScale','log','FontSize',16);
 xlabel('\lambda');
@@ -80,31 +82,11 @@ tle = sprintf('10-fold CV (opt lambda = %.0f)',opt_lambda_rcv);
 title(tle);
 
 % plot r for leave-one-out cross-validation
-subplot(2,2,2);
+subplot(1,2,2);
 plot(lambdas,r_loo);
 set(gca,'XScale','log','FontSize',16);
 xlabel('\lambda');
 ylabel('Pearson''s correlation');
 opt_lambda_rloo = lambdas(mean(r_loo)==max(mean(r_loo))); % compute the optimum lambda
 tle = sprintf('Leave-one-out CV (opt lambda = %.0f)',opt_lambda_rloo);
-title(tle);
-
-% plot mse for 10-fold cross-validation
-subplot(2,2,3);
-plot(lambdas,mse_cv);
-set(gca,'XScale','log','FontSize',16);
-xlabel('\lambda');
-ylabel('Mean squared error');
-opt_lambda_msecv = lambdas(mean(mse_cv)==min(mean(mse_cv))); % compute the optimum lambda
-tle = sprintf('10-fold CV (opt lambda = %.0f)',opt_lambda_msecv);
-title(tle);
-
-% plot mse for leave-one-out cross-validation
-subplot(2,2,4);
-plot(lambdas,mse_loo);
-set(gca,'XScale','log','FontSize',16);
-xlabel('\lambda');
-ylabel('Mean squared error');
-opt_lambda_mseloo = lambdas(mean(mse_loo)==min(mean(mse_loo))); % compute the optimum lambda
-tle = sprintf('Leave-one-out CV (opt lambda = %.0f)',opt_lambda_mseloo);
 title(tle);

@@ -104,7 +104,7 @@ fprintf('Completed in %.3f s\n',toc(std_tm));
 fprintf('Computing model prediction...\n');
 % Calculate prediction
 % model = [c;reshape(model,size(model,1)*size(model,2),size(model,3))];
-model = [reshape(model,size(model,1)*size(model,2),size(model,3))];
+model = reshape(model,size(model,1)*size(model,2),size(model,3));
 % getting variables ready to store each trial
 pred = cell(length(x));
 r = NaN(length(x),size(model,3));
