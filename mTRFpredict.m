@@ -1,75 +1,136 @@
-function [pred,r,p,rmse] = mTRFpredict(stim,resp,model,fs,map,tmin,tmax,c)
-%mTRFpredict mTRF Toolbox prediction function.
-%   PRED = MTRFPREDICT(STIM,RESP,MODEL,FS,MAP,TMIN,TMAX,C) performs a
-%   convolution of the stimulus property STIM or the neural response data
-%   RESP with their linear mapping function MODEL to solve for the
-%   prediction PRED. Pass in MAP==1 to predict RESP or MAP==-1 to predict
-%   STIM. The sampling frequency FS should be defined in Hertz and the time
-%   lags should be set in milliseconds between TMIN and TMAX. The
-%   regression constant C absorbs any bias in MODEL.
+function [yhat,r,p,rmse] = mTRFpredict(stim,resp,w,fs,dir,tmin,tmax,b,varargin)
+%MTRFPREDICT mTRF Toolbox model prediction.
+%   YHAT = MTRFPREDICT(STIM,RESP,W,FS,DIR,TMIN,TMAX,B) returns the values
+%   YHAT predicted by convolving the model weights W with the stimulus
+%   features STIM or the brain responses RESP. To calculate the predictions
+%   of an encoding model (stimulus to brain) pass in DIR=1, or to calculate
+%   the predictions of a decoding model (brain to stimulus) pass in DIR=-1.
+%   FS is a scalar containing the sample rate in Hertz. TMIN and TMAX are
+%   scalars containing the minimum and maximum time lags in milliseconds
+%   for generating time-lagged input features and should be the same as
+%   those used to generate W. B is the bias term associated with W.
 %
-%   [...,R,P,RMSE] = MTRFPREDICT(...) also returns the correlation
-%   coefficients R between the original and predicted values, the
-%   corresponding p-values P and the root-mean-square errors RMSE.
+%   If STIM or RESP are multivariate, it is assumed that rows correspond to
+%   observations and columns to variables. If they are univariate, it is
+%   assumed that the first non-singleton dimension corresponds to
+%   observations. STIM and RESP must have the same number of observations.
 %
-%   Inputs:
-%   stim   - stimulus property (time by features)
-%   resp   - neural response data (time by channels)
-%   model  - linear mapping function (MAP==1: feats by lags by chans,
-%            MAP==-1: chans by lags by feats)
-%   fs     - sampling frequency (Hz)
-%   map    - mapping direction (forward==1, backward==-1)
-%   tmin   - minimum time lag (ms)
-%   tmax   - maximum time lag (ms)
-%   c      - regression constant
+%   [...,R] = MTRFPREDICT(...) returns a scalar or a vector containing the
+%   correlation coefficients between the predicted and observed values.
 %
-%   Outputs:
-%   pred   - prediction (MAP==1: time by chans, MAP==-1: time by feats)
-%   r      - correlation coefficients
-%   p      - p-values of the correlations
-%   rmse   - root-mean-square errors
+%   [...,P] = MTRFPREDICT(...) returns a scalar or a vector containing the
+%   probabilities of the correlation coefficients.
+%
+%   [...,RMSE] = MTRFPREDICT(...) returns a scalar or a vector containing
+%   the root-mean-square error between the predicted and observed values.
+%
+%   [...] = MTRFTRAIN(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
+%   additional parameters and their values. Valid parameters are the
+%   following:
+%
+%   Parameter   Value
+%   'dim'       a scalar specifying the dimension to work along: pass in 1
+%               to work along the columns (default) or 2 to work along the
+%               rows
+%   'rows'      a string specifying the rows to use in the case of any
+%               missing values (NaNs)
+%                   'all'       use all rows, regardless of NaNs (default)
+%                   'complete'  use only rows with no NaN values
 %
 %   See README for examples of use.
 %
-%   See also LAGGEN MTRFTRAIN MTRFCROSSVAL MTRFMULTICROSSVAL.
+%   See also LAGGEN, MTRFTRAIN, MTRFTRANSFORM, MTRFCROSSVAL.
+%
+%   mTRF Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
 %   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Website: www.lalorlab.net
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   April 2014; Last revision: 4-Feb-2019
+%   April 2014; Last revision: 23-Oct-2019
 
-% Define x and y
+% Decode input variable arguments
+[dim,rows] = decode_varargin(varargin);
+
+% Define X and Y
 if tmin > tmax
-    error('Value of TMIN must be < TMAX')
-end
-if map == 1
-    x = stim;
-    y = resp;
-elseif map == -1
-    x = resp;
-    y = stim;
+    error('Value of TMIN must be < TMAX.')
+elseif dir == 1
+    x = stim; y = resp;
+elseif dir == -1
+    x = resp; y = stim;
     [tmin,tmax] = deal(tmax,tmin);
-else
-    error('Value of MAP must be 1 (forward) or -1 (backward)')
+end
+clear stim resp
+
+% Arrange data column-wise
+if dim == 2
+    x = x'; y = y';
+end
+if size(x,1) == 1 && size(x,2) > 1
+    x = x';
+end
+if size(y,1) == 1 && size(y,2) > 1
+    y = y';
+end
+if size(x,1) ~= size(y,1)
+    error('STIM and RESP must have the same number of observations.')
+end
+
+% Use only rows with no NaN values if specified
+if strcmpi(rows,'complete')
+    x = x(~any(isnan(y),2),:);
+    y = y(~any(isnan(y),2),:);
+    y = y(~any(isnan(x),2),:);
+    x = x(~any(isnan(x),2),:);
+elseif strcmpi(rows,'all') && (any(any(isnan(x))) || any(any(isnan(y))))
+    error(['STIM or RESP missing values. Set argument ROWS to '...
+        '''complete''.'])
 end
 
 % Convert time lags to samples
-tmin = floor(tmin/1e3*fs*map);
-tmax = ceil(tmax/1e3*fs*map);
+tmin = floor(tmin/1e3*fs*dir);
+tmax = ceil(tmax/1e3*fs*dir);
 
-% Generate lag matrix
+% Generate time-lagged features
 X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
 
-% Calculate prediction
-model = [c;reshape(model,size(model,1)*size(model,2),size(model,3))];
-pred = X*model;
+% Reformat and normalize model weights
+w = [b;reshape(w,size(w,1)*size(w,2),size(w,3))]/fs;
 
-% Calculate accuracy
+% Compute prediction
+yhat = X*w;
+
+% Compute accuracy
 if ~isempty(y)
-    [r,p] = corr(y,pred);
+    [r,p] = corr(y,yhat);
     r = diag(r); p = diag(p);
-    rmse = sqrt(mean((y-pred).^2,1))';
+    rmse = sqrt(mean((y-yhat).^2,1))';
 end
 
+function [dim,rows] = decode_varargin(varargin)
+%decode_varargin decode input variable arguments
+%   [PARAM1,PARAM2,...] = DECODE_VARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
+%   decodes the input variable arguments of the main function.
+
+varargin = varargin{1,1};
+if any(strcmpi(varargin,'dim')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'dim'))+1})
+    dim = varargin{find(strcmpi(varargin,'dim'))+1};
+    if ~isscalar(dim) || dim~=1 && dim~=2
+        error(['Dimension argument must be a positive integer scalar '...
+            'within indexing range.'])
+    end
+else
+    dim = 1; % default: work along columns
+end
+if any(strcmpi(varargin,'rows')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'rows'))+1})
+    rows = varargin{find(strcmpi(varargin,'rows'))+1};
+    if ~any(strcmpi(rows,{'all','complete'}))
+        error(['Invalid value for argument ROWS. Valid values are: '...
+            '''all'', ''complete''.'])
+    end
+else
+    rows = 'all'; % default: use all rows
 end
