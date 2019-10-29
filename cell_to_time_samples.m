@@ -9,6 +9,10 @@ function A = cell_to_time_samples(xcells,idx)
 % - A = concatenated array or matrix of all included time points
 % Nate Zuk (2018)
 
+if size(xcells,1)==1, % if it's a row cell array
+    xcells = xcells'; % turn it into a column array
+end
+
 allidx = cellfun(@(x) size(x,1),xcells); % length of time (indexes) for each cell
 if nargin<2, idx = sum(allidx); end % if idx isn't specified, use all time (indexes)
 ncols = size(xcells{1},2); % number of columns
