@@ -61,8 +61,16 @@ function [w,t,b] = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   Lalor Lab, Trinity College Dublin, IRELAND
 %   April 2014; Last revision: 23-Oct-2019
 
+%%% NZ edits:
+%%% - Allow mTRFtrain to work with multiple trials (cells) of data
+
 % Decode input variable arguments
 [method,scale,dim,rows] = decode_varargin(varargin);
+
+% if the stim or response aren't cell arrays (only one trial was
+% presented), make them a one element cell array
+if ~iscell(stim), stim = {stim}; end
+if ~iscell(resp), resp = {resp}; end
 
 % Define X and Y
 if tmin > tmax
@@ -75,40 +83,55 @@ elseif dir == -1
 end
 clear stim resp
 
-% Arrange data column-wise
-if dim == 2
-    x = x'; y = y';
-end
-if size(x,1) == 1 && size(x,2) > 1
-    x = x';
-end
-if size(y,1) == 1 && size(y,2) > 1
-    y = y';
-end
-if size(x,1) ~= size(y,1)
-    error('STIM and RESP must have the same number of observations.')
+for n = 1:length(x) % iterate through each trial
+    % Arrange data column-wise
+    if dim == 2
+        x{n} = x{n}'; y{n} = y{n}';
+    end
+    % if it's a row array, flip to be a column array
+    if size(x{n},1) == 1 && size(x{n},2) > 1
+        x{n} = x{n}';
+    end
+    if size(y{n},1) == 1 && size(y{n},2) > 1
+        y{n} = y{n}';
+    end
+%     if size(x{n},1) ~= size(y{n},1)
+%         error('Trial %d: STIM and RESP must have the same number of observations.',n)
+%     end
 end
 
+%%% This needs to be added elsewhere
 % Use only rows with no NaN values if specified
-if strcmpi(rows,'complete')
-    x = x(~any(isnan(y),2),:);
-    y = y(~any(isnan(y),2),:);
-    y = y(~any(isnan(x),2),:);
-    x = x(~any(isnan(x),2),:);
-elseif strcmpi(rows,'all') && (any(any(isnan(x))) || any(any(isnan(y))))
-    error(['STIM or RESP missing values. Set argument ROWS to '...
-        '''complete''.'])
-end
+% if strcmpi(rows,'complete')
+%     x = x(~any(isnan(y),2),:);
+%     y = y(~any(isnan(y),2),:);
+%     y = y(~any(isnan(x),2),:);
+%     x = x(~any(isnan(x),2),:);
+% elseif strcmpi(rows,'all') && (any(any(isnan(x))) || any(any(isnan(y))))
+%     error(['STIM or RESP missing values. Set argument ROWS to '...
+%         '''complete''.'])
+% end
 
 % Convert time lags to samples
 tmin = floor(tmin/1e3*fs*dir);
 tmax = ceil(tmax/1e3*fs*dir);
 
 % Generate time-lagged features
-X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
+% X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
+ninputs = size(x{1},2); % get the number of columns in x, before it is 
+    % replaced by the design matrix
+for n = 1:length(x)
+    % generate time-lagged features for each trial
+    x{n} = [ones(size(x{n},1),1),lagGen(x{n},tmin:tmax)];
+    % truncate x and y to the same length
+    minlen = min([size(x{n},1) size(y{n},1)]);
+    x{n} = x{n}(1:minlen,:);
+    y{n} = y{n}(1:minlen,:);
+end
 
 % Set up regularization method
-dim = size(X,2);
+% dim = size(X,2);
+dim = size(x{1},2); % get the number of model parameters
 if strcmpi(method,'Ridge') % Ridge regularization
     M = eye(dim,dim); M(1,1) = 0;
 elseif strcmpi(method,'Tikhonov')  % Tikhonov regularization
@@ -126,14 +149,17 @@ end
 % Scale lambda according to data dimensions if specified
 if scale
     if strcmpi(method,'Ridge')
-        lambda = lambda*size(x,1)*size(x,2)*fs;
+        lambda = lambda*size(x{1},1)*size(x{1},2)*fs;
     elseif strcmpi(method,'Tikhonov')
-        lambda = lambda*size(x,1)*size(x,2)*fs^3;
+        lambda = lambda*size(x{1},1)*size(x{1},2)*fs^3;
     end
 end
 
 % Compute model weights
-w = (X'*X+lambda*M)\(X'*y);
+% make the linear regression matrices XtX and Xty
+[xtx,xty] = compute_linreg_matrices(x,y);
+w = (xtx+lambda*M)\xty;
+% w = (X'*X+lambda*M)\(X'*y);
 
 % Normalize W to account for sample rate
 w = w*fs;
@@ -141,7 +167,7 @@ w = w*fs;
 % Format output variable arguments
 t = (tmin:tmax)/fs*1e3;
 b = w(1,:);
-w = reshape(w(2:end,:),[size(x,2),length(t),size(y,2)]);
+w = reshape(w(2:end,:),[ninputs,length(t),size(y{1},2)]);
 
 function [method,scale,dim,rows] = decode_varargin(varargin)
 %decode_varargin decode input variable arguments

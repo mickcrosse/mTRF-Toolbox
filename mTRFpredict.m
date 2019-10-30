@@ -49,8 +49,19 @@ function [yhat,r,p,rmse] = mTRFpredict(stim,resp,w,fs,dir,tmin,tmax,b,varargin)
 %   Lalor Lab, Trinity College Dublin, IRELAND
 %   April 2014; Last revision: 23-Oct-2019
 
+%%% NZ edits:
+%%% - Allow mTRFtrain to work with multiple trials (cells) of data
+%%% - Output yhat as a cell array only if there is more than one cell in
+%%% stim & resp (aka. multiple trials), otherwise output a column array or
+%%% matrix
+
 % Decode input variable arguments
 [dim,rows] = decode_varargin(varargin);
+
+% if the stim or response aren't cell arrays (only one trial was
+% presented), make them a one element cell array
+if ~iscell(stim), stim = {stim}; end
+if ~iscell(resp), resp = {resp}; end
 
 % Define X and Y
 if tmin > tmax
@@ -64,49 +75,72 @@ end
 clear stim resp
 
 % Arrange data column-wise
-if dim == 2
-    x = x'; y = y';
-end
-if size(x,1) == 1 && size(x,2) > 1
-    x = x';
-end
-if size(y,1) == 1 && size(y,2) > 1
-    y = y';
-end
-if size(x,1) ~= size(y,1)
-    error('STIM and RESP must have the same number of observations.')
+for n = 1:length(x) % for each trial
+    if dim == 2
+        x{n} = x{n}'; y{n} = y{n}';
+    end
+    if size(x{n},1) == 1 && size(x{n},2) > 1
+        x{n} = x{n}';
+    end
+    if size(y{n},1) == 1 && size(y{n},2) > 1
+        y{n} = y{n}';
+    end
+%     if size(x{n},1) ~= size(y{n},1)
+%         error('Trial %d: STIM and RESP must have the same number of observations.',n)
+%     end
 end
 
 % Use only rows with no NaN values if specified
-if strcmpi(rows,'complete')
-    x = x(~any(isnan(y),2),:);
-    y = y(~any(isnan(y),2),:);
-    y = y(~any(isnan(x),2),:);
-    x = x(~any(isnan(x),2),:);
-elseif strcmpi(rows,'all') && (any(any(isnan(x))) || any(any(isnan(y))))
-    error(['STIM or RESP missing values. Set argument ROWS to '...
-        '''complete''.'])
-end
+% if strcmpi(rows,'complete')
+%     x = x(~any(isnan(y),2),:);
+%     y = y(~any(isnan(y),2),:);
+%     y = y(~any(isnan(x),2),:);
+%     x = x(~any(isnan(x),2),:);
+% elseif strcmpi(rows,'all') && (any(any(isnan(x))) || any(any(isnan(y))))
+%     error(['STIM or RESP missing values. Set argument ROWS to '...
+%         '''complete''.'])
+% end
 
 % Convert time lags to samples
 tmin = floor(tmin/1e3*fs*dir);
 tmax = ceil(tmax/1e3*fs*dir);
 
 % Generate time-lagged features
-X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
+for n = 1:length(x)
+    % generate time-lagged features for each trial
+    x{n} = [ones(size(x{n},1),1),lagGen(x{n},tmin:tmax)];
+    % truncate x and y to the same length
+    minlen = min([size(x{n},1) size(y{n},1)]);
+    x{n} = x{n}(1:minlen,:);
+    y{n} = y{n}(1:minlen,:);
+end
+% X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
 
 % Reformat and normalize model weights
 w = [b;reshape(w,size(w,1)*size(w,2),size(w,3))]/fs;
 
 % Compute prediction
-yhat = X*w;
+% separate for each trial
+yhat = cell(length(x),1);
+for n = 1:length(x)
+    yhat{n} = x{n}*w;
+%     yhat = X*w;
+end
 
 % Compute accuracy
+% setup arrays to store prediction/reconstruction accuracy
 if ~isempty(y)
-    [r,p] = corr(y,yhat);
-    r = diag(r); p = diag(p);
-    rmse = sqrt(mean((y-yhat).^2,1))';
+    r = NaN(length(x),size(y{1},2));
+    p = NaN(length(x),size(y{1},2));
+    rmse = NaN(length(x),size(y{1},2));
+    for n = 1:length(x)
+        [r_tmp,p_tmp] = corr(y{n},yhat{n});
+        r(n,:) = diag(r_tmp); p(n,:) = diag(p_tmp);
+        rmse(n,:) = sqrt(mean((y{n}-yhat{n}).^2,1)); %%% use variance instead?
+    end
 end
+
+if length(yhat)==1, yhat = yhat{1}; end % convert to numerical array if there's only one trial
 
 function [dim,rows] = decode_varargin(varargin)
 %decode_varargin decode input variable arguments

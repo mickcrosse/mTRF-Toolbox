@@ -1,4 +1,4 @@
-function [r,p,rmse,model,t] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tlims,nfolds)
+function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tlims,varargin)
 %mTRFcrossval mTRF Toolbox cross-validation function.
 %   [R,P,RMSE] = MTRFCROSSVAL(STIM,RESP,FS,MAP,TMIN,TMAX,LAMBDA) performs
 %   10-fold cross-validation on the set of stimuli STIM and the
@@ -17,8 +17,8 @@ function [r,p,rmse,model,t] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tli
 %     Once the optimal model is identified, please use mTRFpredict.m to
 %     compute model performance.
 %
-%   [...,PRED,MODEL] = MTRFCROSSVAL(...) also returns the predictions PRED
-%   and the linear mapping functions MODEL.
+%   [...,W,B,T] = MTRFCROSSVAL(...) also returns the model W, the bias term
+%   B, and the corresponding time array T for the model
 %
 %   Inputs:
 %   stim   - set of stimuli [cell{1,trials}(time by features)]
@@ -65,18 +65,12 @@ function [r,p,rmse,model,t] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tli
 %   Lalor Lab, Trinity College Dublin, IRELAND
 %   April 2014; Last revision: 17-Oct-2019
 
-% If tlims isn't specified, use all indexes
-if nargin<8, tlims = []; end
+%%% NZ edits (as of 30-10-2019):
+%%% - Edit variable names, based on Mick's edits to mTRFtrain
+%%% - Edit model dimensions, to match dimensions output by mTRFtrain
 
-% If nfolds isn't specified, do 10-fold cross-validation
-if nargin<9, nfolds = 10; end
-
-% Parse any addition function inputs
-%if ~isempty(varargin),
-%    for n = 2:2:length(varargin),
-%        eval([varargin{n-1} '=varargin{n};']);
-%    end
-%end
+% Decode input variable arguments
+[method,dim,rows,nfolds] = decode_varargin(varargin);
 
 % if the stim or response aren't cell arrays (only one trial was
 % presented), make them a one element cell array
@@ -99,25 +93,46 @@ else
 end
 clear stim resp
 
+for n = 1:length(x) % iterate through each trial
+    % Arrange data column-wise
+    if dim == 2
+        x{n} = x{n}'; y{n} = y{n}';
+    end
+    % if it's a row array, flip to be a column array
+    if size(x{n},1) == 1 && size(x{n},2) > 1
+        x{n} = x{n}';
+    end
+    if size(y{n},1) == 1 && size(y{n},2) > 1
+        y{n} = y{n}';
+    end
+%     if size(x{n},1) ~= size(y{n},1)
+%         error('Trial %d: STIM and RESP must have the same number of observations.',n)
+%     end
+end
+
+ncond = size(y{1},2); % number of conditions (columns of y) to fit
+
 % Convert time lags to samples
 tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
 % Set up regularisation
-dim1 = size(x{1},2)*length(tmin:tmax)+1;
-dim2 = size(y{1},2);
-model = zeros(numel(x),numel(lambda),dim1,dim2);
-% If the inputs are a one-column array, do first-order Tikhonov regularization
-% (Wong et al, 2018)
-if size(x{1},2) == 1
-    d = 2*eye(dim1);d([dim1+2,end]) = 1;
-    u = [zeros(dim1,1),eye(dim1,dim1-1)];
-    l = [zeros(1,dim1);eye(dim1-1,dim1)];
-    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
-else % otherwise, do traditional ridge
-    M = eye(dim1,dim1); M(1,1) = 0;
-end
+% dim1 = size(x{1},2)*length(tmin:tmax)+1;
+% dim2 = size(y{1},2);
+% w = zeros(numel(x),numel(lambda),dim1,dim2);
+% % If the inputs are a one-column array, do first-order Tikhonov regularization
+% % (Wong et al, 2018)
+% if size(x{1},2) == 1
+%     d = 2*eye(dim1);d([dim1+2,end]) = 1;
+%     u = [zeros(dim1,1),eye(dim1,dim1-1)];
+%     l = [zeros(1,dim1);eye(dim1-1,dim1)];
+%     M = d-u-l; M(:,1) = 0; M(1,:) = 0;
+% else % otherwise, do traditional ridge
+%     M = eye(dim1,dim1); M(1,1) = 0;
+% end
 
+ninputs = size(x{1},2); % get the number of columns in x, before it is 
+    % replaced by the design matrix
 disp('Creating the design matrices...');
 % Create the design matrices trial by trial
 std_tm = tic;
@@ -125,6 +140,8 @@ for i = 1:numel(x)
     % Generate lag matrix
     x{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)]; %%% skip constant term (NZ)
     % Set X and y to the same length
+    %%% Newer version of mTRFtrain makes sure x and y have the same number
+    %%% of observations...
     minlen = min([size(x{i},1) size(y{i},1)]);
     x{i} = x{i}(1:minlen,:);
     y{i} = y{i}(1:minlen,:);
@@ -140,20 +157,34 @@ for i = 1:numel(x)
 end
 fprintf('Completed in %.3f s\n',toc(std_tm));
 
+% Create the regularization matrix
+dim = size(x{1},2); % get the number of model parameters
+if strcmpi(method,'Ridge') % Ridge regularization
+    M = eye(dim,dim); M(1,1) = 0;
+elseif strcmpi(method,'Tikhonov')  % Tikhonov regularization
+    if size(x,2) > 1
+        warning(['Tikhonov regularization may cause cross-channel '...
+            'leakage for multivariate regression.'])
+    end
+    d = 2*eye(dim);d([dim+2,end]) = 1;
+    u = [zeros(dim,1),eye(dim,dim-1)];
+    l = [zeros(1,dim);eye(dim-1,dim)];
+    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
+    M = M/2;
+end
+
 % Randomly resample time points
 tottmidx = sum(cellfun(@(n) size(n,1),x));
-% rndtmsmp = randperm(tottmidx);
-rndtmsmp = 1:tottmidx;
+rndtmsmp = randperm(tottmidx);
 % Determine the starting index for each fold, with respect to the randomized samples
-% foldidx = (0:nfolds-1)*floor(tottmidx/nfolds);
+foldidx = (0:nfolds-1)*floor(tottmidx/nfolds);
     % the last fold has at most tottmidx/nfolds samples more than the others
-foldidx = cumsum([0; cellfun(@(n) size(n,1),x)]);
 
 disp('Starting model fitting...');
 % Make the variables that will store the error and correlation values for each lambda and each fold
-rmse = NaN(nfolds,numel(lambda),dim2); % root mean squared error
-r = NaN(nfolds,numel(lambda),dim2); % Pearson's correlation
-p = NaN(nfolds,numel(lambda),dim2); % significance of Pearson's correlation
+rmse = NaN(nfolds,numel(lambda),ncond); % root mean squared error
+r = NaN(nfolds,numel(lambda),ncond); % Pearson's correlation
+p = NaN(nfolds,numel(lambda),ncond); % significance of Pearson's correlation
 % For each fold...
 for n = 1:nfolds,
     mdlfitting_tm = tic;
@@ -179,8 +210,8 @@ for n = 1:nfolds,
         pred_fold = xtst*model_fold; % compute prediction
         [rtmp,ptmp] = corr(ytst,squeeze(pred_fold)); % Pearson's
         r(n,j,:) = diag(rtmp); p(n,j,:) = diag(ptmp);
-%         rmse(n,j,:) = sqrt(mean((ytst-pred_fold).^2,1)); % root mean squared error
-        rmse(n,j,:) = std(ytst-pred_fold,1);
+        rmse(n,j,:) = sqrt(mean((ytst-pred_fold).^2,1)); % root mean squared error
+%         rmse(n,j,:) = std(ytst-pred_fold,1);
         fprintf('.');
     end 
     fprintf('\n');
@@ -192,12 +223,60 @@ if nargout>3, % if the model is one of the outputs
     % Compute the final models for all training data using each lambda parameter
     disp('Computing model on all training data...');
     [xtx,xty] = compute_linreg_matrices(x,y);
-    model = NaN(size(x{1},2),dim2,length(lambda));
+    w = NaN(dim,ncond,length(lambda));
     for j = 1:length(lambda)
-        model(:,:,j) = (xtx+lambda(j)*M)\xty;
+        w(:,:,j) = (xtx+lambda(j)*M)\xty;
     end
-    % Get the model lags (in ms)
     t = (tmin:tmax)/fs*1e3;
+    b = w(1,:,:); % get the bias terms for each lambda
+    w = reshape(w(2:end,:,:),[ninputs,length(t),ncond,length(lambda)]);
+    % Get the model lags (in ms)
 end
 
+%% Decode varargin
+function [method,dim,rows,nfolds] = decode_varargin(varargin)
+%decode_varargin decode input variable arguments
+%   [PARAM1,PARAM2,...] = DECODE_VARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
+%   decodes the input variable arguments of the main function.
+
+varargin = varargin{1,1};
+if any(strcmpi(varargin,'method')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'method'))+1})
+    method = varargin{find(strcmpi(varargin,'method'))+1};
+    if ~any(strcmpi(method,{'Ridge','Tikhonov'}))
+        error(['Invalid value for argument METHOD. Valid values are: '...
+            '''Ridge'', ''Tikhonov''.'])
+    end
+else
+    method = 'Ridge'; % default: use ridge method
+end
+if any(strcmpi(varargin,'dim')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'dim'))+1})
+    dim = varargin{find(strcmpi(varargin,'dim'))+1};
+    if ~isscalar(dim) || dim~=1 && dim~=2
+        error(['Dimension argument must be a positive integer scalar '...
+            'within indexing range.'])
+    end
+else
+    dim = 1; % default: work along columns
+end
+if any(strcmpi(varargin,'rows')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'rows'))+1})
+    rows = varargin{find(strcmpi(varargin,'rows'))+1};
+    if ~any(strcmpi(rows,{'all','complete'}))
+        error(['Invalid value for argument ROWS. Valid values are: '...
+            '''all'', ''complete''.'])
+    end
+else
+    rows = 'all'; % default: use all rows
+end
+% # folds
+if any(strcmpi(varargin,'nfolds')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'nfolds'))+1})
+    nfolds = varargin{find(strcmpi(varargin,'nfolds'))+1};
+    if ~isinteger(nfolds)
+        error('Invalid value for argument NFOLDS, it must be an integer')
+    end
+else
+    nfolds = 10; % default: use all rows
 end
