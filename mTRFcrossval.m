@@ -142,10 +142,12 @@ fprintf('Completed in %.3f s\n',toc(std_tm));
 
 % Randomly resample time points
 tottmidx = sum(cellfun(@(n) size(n,1),x));
-rndtmsmp = randperm(tottmidx);
+% rndtmsmp = randperm(tottmidx);
+rndtmsmp = 1:tottmidx;
 % Determine the starting index for each fold, with respect to the randomized samples
-foldidx = (0:nfolds-1)*floor(tottmidx/nfolds);
+% foldidx = (0:nfolds-1)*floor(tottmidx/nfolds);
     % the last fold has at most tottmidx/nfolds samples more than the others
+foldidx = cumsum([0; cellfun(@(n) size(n,1),x)]);
 
 disp('Starting model fitting...');
 % Make the variables that will store the error and correlation values for each lambda and each fold

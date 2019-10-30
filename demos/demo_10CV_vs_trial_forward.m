@@ -60,13 +60,11 @@ disp('** Doing 10-fold cross-validation, with a random sampling of data for each
 [r_cv,~,~,model_cv,t] = mTRFcrossval(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambdas);
 % average across channels
 r_cv = mean(r_cv,3);
-mse_cv = mean(mse_cv,3);
 
 %%% Run leave-one-out, trial-by-trial cross-validation
 disp('** Doing leave-one-out, trial-by-trial cross-validation **');
 [r_loo,~,~,model_loo] = mTRFcrossval_loo(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambdas);
 r_loo = mean(r_loo,3);
-mse_loo = mean(mse_loo,3);
 
 %%% Plot the reconstruction accuracy as a function of lambda, for both r
 %%% and mse
