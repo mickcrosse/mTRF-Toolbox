@@ -100,18 +100,6 @@ for n = 1:length(x) % iterate through each trial
 %     end
 end
 
-%%% This needs to be added elsewhere
-% Use only rows with no NaN values if specified
-% if strcmpi(rows,'complete')
-%     x = x(~any(isnan(y),2),:);
-%     y = y(~any(isnan(y),2),:);
-%     y = y(~any(isnan(x),2),:);
-%     x = x(~any(isnan(x),2),:);
-% elseif strcmpi(rows,'all') && (any(any(isnan(x))) || any(any(isnan(y))))
-%     error(['STIM or RESP missing values. Set argument ROWS to '...
-%         '''complete''.'])
-% end
-
 % Convert time lags to samples
 tmin = floor(tmin/1e3*fs*dir);
 tmax = ceil(tmax/1e3*fs*dir);
@@ -123,10 +111,20 @@ ninputs = size(x{1},2); % get the number of columns in x, before it is
 for n = 1:length(x)
     % generate time-lagged features for each trial
     x{n} = [ones(size(x{n},1),1),lagGen(x{n},tmin:tmax)];
-    % truncate x and y to the same length
-    minlen = min([size(x{n},1) size(y{n},1)]);
-    x{n} = x{n}(1:minlen,:);
-    y{n} = y{n}(1:minlen,:);
+%     % truncate x and y to the same length
+%     minlen = min([size(x{n},1) size(y{n},1)]);
+%     x{n} = x{n}(1:minlen,:);
+%     y{n} = y{n}(1:minlen,:);
+    % Use only rows with no NaN values if specified
+    if strcmpi(rows,'complete')
+        x{n} = x{n}(~any(isnan(y{n}),2),:);
+        y{n} = y{n}(~any(isnan(y{n}),2),:);
+        y{n} = y{n}(~any(isnan(x{n}),2),:);
+        x{n} = x{n}(~any(isnan(x{n}),2),:);
+    elseif strcmpi(rows,'all') && (any(any(isnan(x{n}))) || any(any(isnan(y{n}))))
+        error(['STIM or RESP missing values. Set argument ROWS to '...
+            '''complete''.'])
+    end
 end
 
 % Set up regularization method

@@ -2,14 +2,14 @@
 
 addpath('..');
 
-ntrials = 10; % # of trials in dataset
+ntrials = 4; % # of trials in dataset
 sbj = 'Subject10'; % subject label
 fs = 128; % sampling rate (in Hz) of the stimulus envelope and EEG in the dataset
 data_path = '..\sample_data\';
 trf_maxlag = 350; % maximum lag in the TRF (in ms)
 trf_minlag = -50; % minimum lag in the TRF (in ms)
-lambda = 10.^(0:0.5:3); % use a single lambda value
-
+% lambda = 10.^(0:0.5:3); % use a single lambda value
+lambda = 10.^5;
 
 % Load the stimulus envelopes
 disp('Loading the stimulus envelopes...');
@@ -52,5 +52,8 @@ end
 
 fprintf('\n'); % put a break in the output text, before the modeling starts
 
-% Do leave-one-out testing
-[r,p,rmse,yhat,w,t,b,opt_lambda] = mTRFtrialbytrial(stims,eegs,fs,1,trf_minlag,trf_maxlag,lambda);
+%% Do leave-one-out testing
+[r,p,rmse,yhat,w,t,b,opt_lambda] = mTRFtrialbytrial(stims,eegs,fs,-1,trf_minlag,trf_maxlag,lambda);
+
+%% Plotting
+% Plot one of the models

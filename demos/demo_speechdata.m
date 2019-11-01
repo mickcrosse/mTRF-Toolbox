@@ -18,7 +18,7 @@ disp('** Envelope **');
 R_env = mean(r_env,3); % average r across channels
 opt_lmb_idx = find(mean(R_env)==max(mean(R_env)),1);
 fprintf('Optimal lambda = %.2f\n',lambdas(opt_lmb_idx));
-opt_env_model = env_forward_model(:,:,opt_lmb_idx);
+opt_env_model = env_forward_model(:,:,:,opt_lmb_idx);
 
 % Plot the TRF model
 nchans = size(EEG,2);
@@ -33,7 +33,7 @@ disp('** Spectrogram **');
 R_spec = mean(r_spec,3); % average r across channels
 opt_lmb_idx = find(mean(R_spec)==max(mean(R_spec)),1);
 fprintf('Optimal lambda = %.2f\n',lambdas(opt_lmb_idx));
-opt_spec_model = spec_forward_model(:,:,opt_lmb_idx);
+opt_spec_model = spec_forward_model(:,:,:,opt_lmb_idx);
 
 % Plot the mTRF spectrogram model, 16 different frequencies
 plot_multifeature_trf('Speech spectrogram',opt_spec_model,Fs,minlag,maxlag,1:16);

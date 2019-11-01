@@ -1,13 +1,11 @@
-function [TRF,C] = plot_multifeature_trf(plot_title,forward_trf,fs,minlag,maxlag,feats,chan_select,constant_term_check)
+function plot_multifeature_trf(plot_title,forward_trf,fs,minlag,maxlag,feats,chan_select)
 % PLOT_TRF(TRF,FS,MINLAG,MAXLAG,CHAN_SELECT)
 % Plot a forward TRF model for multiple features:
 %  - In two color images, plot the average across EEG channels and the
 %    global field power (standard deviation across channels), with each
 %    feature separated along the y axis
 %  - Plot the average and GFP in separate plots, using the same y axis
-% ** Make sure the model is a forward model (predicting EEG). If you are
-%    using a forward model output by mTRFtransform, set constant_term_check
-%    to 0
+% ** Make sure the model is a forward model (predicting EEG).
 % Inputs:
 % - plot_title = title for all of the plots
 % - trf = the forward TRF model (lags x channels)
@@ -21,30 +19,23 @@ function [TRF,C] = plot_multifeature_trf(plot_title,forward_trf,fs,minlag,maxlag
 % - constant_term_check = 1 if the model contains a constant term, 0
 %     otherwise (default = 1; set this to 0 if the model was output by
 %     mTRFtransform)
-% Outputs:
-% - TRF = reformatted TRF (channels x lags)
-% - C = array of constant terms (one for each feature)
 % Nate Zuk (2019)
 
 % if channels aren't specified, use all of them
 if nargin<7, chan_select = 1:size(forward_trf,2); end
 
-% identifies if the model contains a constant term
-% (it does by default after running mTRFtrain or mTRFcrossval, but
-% mTRFtransform does not retain a constant term)
-if nargin<8, constant_term_check = true;  end
-
 % Create the lags array
 lags = (floor(minlag/1000*fs):ceil(maxlag/1000*fs))/fs*1000;
 
 % Reshape the trf into channels x lags
-if constant_term_check % if the first index of each channel is the constant term
-    C = forward_trf(1,:);
-    TRF = reshape(forward_trf(2:end,:),[length(feats) length(lags) size(forward_trf,2)]);
-else % only use if the forward model came from mTRFtransform
-    TRF = reshape(forward_trf,[length(feats) length(lags) size(forward_trf,2)]);
-    C = [];
-end
+% if constant_term_check % if the first index of each channel is the constant term
+%     C = forward_trf(1,:);
+%     TRF = reshape(forward_trf(2:end,:),[length(feats) length(lags) size(forward_trf,2)]);
+% else % only use if the forward model came from mTRFtransform
+%     TRF = reshape(forward_trf,[length(feats) length(lags) size(forward_trf,2)]);
+%     C = [];
+% end
+TRF = forward_trf;
 
 % Plot an image of the average across channels, where each channel is
 % separated along the y axis

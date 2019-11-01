@@ -1,4 +1,4 @@
-function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tlims,varargin)
+function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,varargin)
 %mTRFcrossval mTRF Toolbox cross-validation function.
 %   [R,P,RMSE] = MTRFCROSSVAL(STIM,RESP,FS,MAP,TMIN,TMAX,LAMBDA) performs
 %   10-fold cross-validation on the set of stimuli STIM and the
@@ -28,10 +28,11 @@ function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tlims
 %   tmin   - minimum time lag (ms)
 %   tmax   - maximum time lag (ms)
 %   lambda - ridge parameter values
-%   tlims  - (optional) (NEW, NZ, 2019) specifies range or indexes of times 
+%   tlims (optional) - (NEW, NZ, 2019) specifies range or indexes of times 
 %      that should be included in the model training and testing. If specific 
 %      indexes are desired, then they should be specified in each cell of 
 %      tlims, where the number of cells equals the number of trials.
+%      Otherwise, set tlims=[] to use all of the data.
 %      (default: all indexes are used)
 %      (see usetinds.m for more information on specifying tlims)
 %   nfolds - (optional) specify the number of cross-validation folds 
@@ -70,7 +71,7 @@ function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tlims
 %%% - Edit model dimensions, to match dimensions output by mTRFtrain
 
 % Decode input variable arguments
-[method,dim,rows,nfolds] = decode_varargin(varargin);
+[method,dim,rows,nfolds,tlims] = decode_varargin(varargin);
 
 % if the stim or response aren't cell arrays (only one trial was
 % presented), make them a one element cell array
@@ -116,21 +117,6 @@ ncond = size(y{1},2); % number of conditions (columns of y) to fit
 tmin = floor(tmin/1e3*fs*map);
 tmax = ceil(tmax/1e3*fs*map);
 
-% Set up regularisation
-% dim1 = size(x{1},2)*length(tmin:tmax)+1;
-% dim2 = size(y{1},2);
-% w = zeros(numel(x),numel(lambda),dim1,dim2);
-% % If the inputs are a one-column array, do first-order Tikhonov regularization
-% % (Wong et al, 2018)
-% if size(x{1},2) == 1
-%     d = 2*eye(dim1);d([dim1+2,end]) = 1;
-%     u = [zeros(dim1,1),eye(dim1,dim1-1)];
-%     l = [zeros(1,dim1);eye(dim1-1,dim1)];
-%     M = d-u-l; M(:,1) = 0; M(1,:) = 0;
-% else % otherwise, do traditional ridge
-%     M = eye(dim1,dim1); M(1,1) = 0;
-% end
-
 ninputs = size(x{1},2); % get the number of columns in x, before it is 
     % replaced by the design matrix
 disp('Creating the design matrices...');
@@ -140,11 +126,11 @@ for i = 1:numel(x)
     % Generate lag matrix
     x{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)]; %%% skip constant term (NZ)
     % Set X and y to the same length
-    %%% Newer version of mTRFtrain makes sure x and y have the same number
-    %%% of observations...
+%     %%% Newer version of mTRFtrain makes sure x and y have the same number
+%     %%% of observations...
     minlen = min([size(x{i},1) size(y{i},1)]);
-    x{i} = x{i}(1:minlen,:);
-    y{i} = y{i}(1:minlen,:);
+%     x{i} = x{i}(1:minlen,:);
+%     y{i} = y{i}(1:minlen,:);
     % Remove time indexes, if specified
     if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
 %         tinds = tlims{i};
@@ -154,6 +140,16 @@ for i = 1:numel(x)
     end
     x{i} = x{i}(tinds,:);
     y{i} = y{i}(tinds,:);
+    % Use only rows with no NaN values if specified
+    if strcmpi(rows,'complete')
+        x{i} = x{i}(~any(isnan(y{i}),2),:);
+        y{i} = y{i}(~any(isnan(y{i}),2),:);
+        y{i} = y{i}(~any(isnan(x{i}),2),:);
+        x{i} = x{i}(~any(isnan(x{i}),2),:);
+    elseif strcmpi(rows,'all') && (any(any(isnan(x{i}))) || any(any(isnan(y{i}))))
+        error(['STIM or RESP missing values. Set argument ROWS to '...
+            '''complete''.'])
+    end
 end
 fprintf('Completed in %.3f s\n',toc(std_tm));
 
@@ -234,7 +230,7 @@ if nargout>3, % if the model is one of the outputs
 end
 
 %% Decode varargin
-function [method,dim,rows,nfolds] = decode_varargin(varargin)
+function [method,dim,rows,nfolds,tlims] = decode_varargin(varargin)
 %decode_varargin decode input variable arguments
 %   [PARAM1,PARAM2,...] = DECODE_VARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
 %   decodes the input variable arguments of the main function.
@@ -279,4 +275,14 @@ if any(strcmpi(varargin,'nfolds')) && ~isempty(varargin{find(strcmpi(...
     end
 else
     nfolds = 10; % default: use all rows
+end
+% tlims
+if any(strcmpi(varargin,'tlims')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'tlims'))+1})
+    tlims = varargin{find(strcmpi(varargin,'tlims'))+1};
+%     if ~isinteger(nfolds)
+%         error('Invalid value for argument NFOLDS, it must be an integer')
+%     end
+else
+    tlims = []; % default: use all rows
 end
