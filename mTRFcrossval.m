@@ -17,7 +17,7 @@ function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,varar
 %     Once the optimal model is identified, please use mTRFpredict.m to
 %     compute model performance.
 %
-%   [...,W,B,T] = MTRFCROSSVAL(...) also returns the model W, the bias term
+%   [...,W,T,B] = MTRFCROSSVAL(...) also returns the model W, the bias term
 %   B, and the corresponding time array T for the model
 %
 %   Inputs:
@@ -66,10 +66,6 @@ function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,varar
 %   Lalor Lab, Trinity College Dublin, IRELAND
 %   April 2014; Last revision: 17-Oct-2019
 
-%%% NZ edits (as of 30-10-2019):
-%%% - Edit variable names, based on Mick's edits to mTRFtrain
-%%% - Edit model dimensions, to match dimensions output by mTRFtrain
-
 % Decode input variable arguments
 [method,dim,rows,nfolds,tlims] = decode_varargin(varargin);
 
@@ -94,6 +90,7 @@ else
 end
 clear stim resp
 
+size_chk = zeros(length(x),1); % flag if the # time samples in x and y aren't the same
 for n = 1:length(x) % iterate through each trial
     % Arrange data column-wise
     if dim == 2
@@ -106,9 +103,17 @@ for n = 1:length(x) % iterate through each trial
     if size(y{n},1) == 1 && size(y{n},2) > 1
         y{n} = y{n}';
     end
-%     if size(x{n},1) ~= size(y{n},1)
+    if size(x{n},1) ~= size(y{n},1)
 %         error('Trial %d: STIM and RESP must have the same number of observations.',n)
-%     end
+        size_chk(n) = 1;
+    end
+end
+
+% Warn the user if the # of time samples of any of the x-y pairs isn't the same
+if sum(size_chk)>0
+    warning(['STIM and RESP have a different number of time samples for at\n'...
+        'least one of the trials. Arrays will be truncated to have the same\n'...
+        'number of samples.']);
 end
 
 ncond = size(y{1},2); % number of conditions (columns of y) to fit
@@ -126,14 +131,11 @@ for i = 1:numel(x)
     % Generate lag matrix
     x{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)]; %%% skip constant term (NZ)
     % Set X and y to the same length
-%     %%% Newer version of mTRFtrain makes sure x and y have the same number
-%     %%% of observations...
     minlen = min([size(x{i},1) size(y{i},1)]);
-%     x{i} = x{i}(1:minlen,:);
-%     y{i} = y{i}(1:minlen,:);
+    x{i} = x{i}(1:minlen,:);
+    y{i} = y{i}(1:minlen,:);
     % Remove time indexes, if specified
     if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
-%         tinds = tlims{i};
         tinds = usetinds(tlims{i},fs,minlen);
     else
         tinds = usetinds(tlims,fs,minlen);
@@ -223,6 +225,7 @@ if nargout>3, % if the model is one of the outputs
     for j = 1:length(lambda)
         w(:,:,j) = (xtx+lambda(j)*M)\xty;
     end
+    w = w*fs;
     t = (tmin:tmax)/fs*1e3;
     b = w(1,:,:); % get the bias terms for each lambda
     w = reshape(w(2:end,:,:),[ninputs,length(t),ncond,length(lambda)]);
@@ -280,9 +283,6 @@ end
 if any(strcmpi(varargin,'tlims')) && ~isempty(varargin{find(strcmpi(...
         varargin,'tlims'))+1})
     tlims = varargin{find(strcmpi(varargin,'tlims'))+1};
-%     if ~isinteger(nfolds)
-%         error('Invalid value for argument NFOLDS, it must be an integer')
-%     end
 else
     tlims = []; % default: use all rows
 end

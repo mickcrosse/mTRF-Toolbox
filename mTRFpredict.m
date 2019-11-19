@@ -36,6 +36,13 @@ function [yhat,r,p,rmse] = mTRFpredict(stim,resp,w,fs,dir,tmin,tmax,b,varargin)
 %               missing values (NaNs)
 %                   'all'       use all rows, regardless of NaNs (default)
 %                   'complete'  use only rows with no NaN values
+%   'tlims'     (NEW, NZ, 2019) specifies range or indexes of times 
+%               that should be included in the model training and testing. If specific 
+%               indexes are desired, then they should be specified in each cell of 
+%               tlims, where the number of cells equals the number of trials.
+%               Otherwise, set tlims=[] to use all of the data.
+%               (default: all indexes are used)
+%               (see usetinds.m for more information on specifying tlims)
 %
 %   See README for examples of use.
 %
@@ -47,16 +54,10 @@ function [yhat,r,p,rmse] = mTRFpredict(stim,resp,w,fs,dir,tmin,tmax,b,varargin)
 %   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Website: www.lalorlab.net
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   April 2014; Last revision: 23-Oct-2019
-
-%%% NZ edits:
-%%% - Allow mTRFtrain to work with multiple trials (cells) of data
-%%% - Output yhat as a cell array only if there is more than one cell in
-%%% stim & resp (aka. multiple trials), otherwise output a column array or
-%%% matrix
+%   April 2014; Last revision: (NZ - 19-Nov-2019)
 
 % Decode input variable arguments
-[dim,rows] = decode_varargin(varargin);
+[dim,rows,tlims] = decode_varargin(varargin);
 
 % if the stim or response aren't cell arrays (only one trial was
 % presented), make them a one element cell array
@@ -75,6 +76,7 @@ end
 clear stim resp
 
 % Arrange data column-wise
+size_chk = zeros(length(x),1);
 for n = 1:length(x) % for each trial
     if dim == 2
         x{n} = x{n}'; y{n} = y{n}';
@@ -85,9 +87,17 @@ for n = 1:length(x) % for each trial
     if size(y{n},1) == 1 && size(y{n},2) > 1
         y{n} = y{n}';
     end
-%     if size(x{n},1) ~= size(y{n},1)
+    if size(x{n},1) ~= size(y{n},1)
 %         error('Trial %d: STIM and RESP must have the same number of observations.',n)
-%     end
+        size_chk(n) = 1;
+    end
+end
+
+% Warn the user if the # of time samples of any of the x-y pairs isn't the same
+if sum(size_chk)>0
+    warning(['STIM and RESP have a different number of time samples for at\n'...
+        'least one of the trials. Arrays will be truncated to have the same\n'...
+        'number of samples.']);
 end
 
 % Use only rows with no NaN values if specified
@@ -109,10 +119,18 @@ tmax = ceil(tmax/1e3*fs*dir);
 for n = 1:length(x)
     % generate time-lagged features for each trial
     x{n} = [ones(size(x{n},1),1),lagGen(x{n},tmin:tmax)];
-%     % truncate x and y to the same length
-%     minlen = min([size(x{n},1) size(y{n},1)]);
-%     x{n} = x{n}(1:minlen,:);
-%     y{n} = y{n}(1:minlen,:);
+    % truncate x and y to the same length
+    minlen = min([size(x{n},1) size(y{n},1)]);
+    x{n} = x{n}(1:minlen,:);
+    y{n} = y{n}(1:minlen,:);
+    % Remove time indexes, if specified
+    if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
+        tinds = usetinds(tlims{n},fs,minlen);
+    else
+        tinds = usetinds(tlims,fs,minlen);
+    end
+    x{n} = x{n}(tinds,:);
+    y{n} = y{n}(tinds,:);
     % Use only rows with no NaN values if specified
     if strcmpi(rows,'complete')
         x{n} = x{n}(~any(isnan(y{n}),2),:);

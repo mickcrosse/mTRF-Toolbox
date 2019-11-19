@@ -39,6 +39,13 @@ function [w,t,b] = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %               missing values (NaNs)
 %                   'all'       use all rows, regardless of NaNs (default)
 %                   'complete'  use only rows with no NaN values
+%   'tlims'     (NEW, NZ, 2019) specifies range or indexes of times 
+%               that should be included in the model training and testing. If specific 
+%               indexes are desired, then they should be specified in each cell of 
+%               tlims, where the number of cells equals the number of trials.
+%               Otherwise, set tlims=[] to use all of the data.
+%               (default: all indexes are used)
+%               (see usetinds.m for more information on specifying tlims)
 %
 %   See README for examples of use.
 %
@@ -59,13 +66,10 @@ function [w,t,b] = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Website: www.lalorlab.net
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   April 2014; Last revision: 23-Oct-2019
-
-%%% NZ edits:
-%%% - Allow mTRFtrain to work with multiple trials (cells) of data
+%   April 2014; Last revision: (NZ - 19-Nov-2019)
 
 % Decode input variable arguments
-[method,scale,dim,rows] = decode_varargin(varargin);
+[method,scale,dim,rows,tlims] = decode_varargin(varargin);
 
 % if the stim or response aren't cell arrays (only one trial was
 % presented), make them a one element cell array
@@ -83,6 +87,7 @@ elseif dir == -1
 end
 clear stim resp
 
+size_chk = zeros(length(x),1);
 for n = 1:length(x) % iterate through each trial
     % Arrange data column-wise
     if dim == 2
@@ -95,9 +100,17 @@ for n = 1:length(x) % iterate through each trial
     if size(y{n},1) == 1 && size(y{n},2) > 1
         y{n} = y{n}';
     end
-%     if size(x{n},1) ~= size(y{n},1)
+    if size(x{n},1) ~= size(y{n},1)
 %         error('Trial %d: STIM and RESP must have the same number of observations.',n)
-%     end
+        size_chk(n) = 1;
+    end
+end
+
+% Warn the user if the # of time samples of any of the x-y pairs isn't the same
+if sum(size_chk)>0
+    warning(['STIM and RESP have a different number of time samples for at\n'...
+        'least one of the trials. Arrays will be truncated to have the same\n'...
+        'number of samples.']);
 end
 
 % Convert time lags to samples
@@ -105,16 +118,23 @@ tmin = floor(tmin/1e3*fs*dir);
 tmax = ceil(tmax/1e3*fs*dir);
 
 % Generate time-lagged features
-% X = [ones(size(x,1),1),lagGen(x,tmin:tmax)];
 ninputs = size(x{1},2); % get the number of columns in x, before it is 
     % replaced by the design matrix
 for n = 1:length(x)
     % generate time-lagged features for each trial
     x{n} = [ones(size(x{n},1),1),lagGen(x{n},tmin:tmax)];
-%     % truncate x and y to the same length
-%     minlen = min([size(x{n},1) size(y{n},1)]);
-%     x{n} = x{n}(1:minlen,:);
-%     y{n} = y{n}(1:minlen,:);
+    % truncate x and y to the same length
+    minlen = min([size(x{n},1) size(y{n},1)]);
+    x{n} = x{n}(1:minlen,:);
+    y{n} = y{n}(1:minlen,:);
+    % Remove time indexes, if specified
+    if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
+        tinds = usetinds(tlims{n},fs,minlen);
+    else
+        tinds = usetinds(tlims,fs,minlen);
+    end
+    x{n} = x{n}(tinds,:);
+    y{n} = y{n}(tinds,:);
     % Use only rows with no NaN values if specified
     if strcmpi(rows,'complete')
         x{n} = x{n}(~any(isnan(y{n}),2),:);
@@ -167,7 +187,7 @@ t = (tmin:tmax)/fs*1e3;
 b = w(1,:);
 w = reshape(w(2:end,:),[ninputs,length(t),size(y{1},2)]);
 
-function [method,scale,dim,rows] = decode_varargin(varargin)
+function [method,scale,dim,rows,tlims] = decode_varargin(varargin)
 %decode_varargin decode input variable arguments
 %   [PARAM1,PARAM2,...] = DECODE_VARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
 %   decodes the input variable arguments of the main function.
@@ -212,4 +232,11 @@ if any(strcmpi(varargin,'rows')) && ~isempty(varargin{find(strcmpi(...
     end
 else
     rows = 'all'; % default: use all rows
+end
+% tlims
+if any(strcmpi(varargin,'tlims')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'tlims'))+1})
+    tlims = varargin{find(strcmpi(varargin,'tlims'))+1};
+else
+    tlims = []; % default: use all rows
 end
