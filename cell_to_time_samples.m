@@ -14,7 +14,7 @@ if size(xcells,1)==1, % if it's a row array
 end
 
 allidx = cellfun(@(x) size(x,1),xcells); % length of time (indexes) for each cell
-if nargin<2, idx = sum(allidx); end % if idx isn't specified, use all time (indexes)
+if nargin<2, idx = 1:sum(allidx); end % if idx isn't specified, use all time (indexes)
 ncols = size(xcells{1},2); % number of columns
 A = zeros(length(idx),ncols); % preallocate matrix
 

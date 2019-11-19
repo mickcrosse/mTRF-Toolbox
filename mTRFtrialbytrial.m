@@ -4,6 +4,7 @@ function [r,p,rmse,yhat,w,t,b,opt_lambda] = mTRFtrialbytrial(stim,resp,fs,map,tm
 % one value, then mTRFtrain is used to fit the model. Otherwise,
 % mTRFcrossval is used, and the optimal model is selected that maximizes
 % the cross-validation fit based on Pearson's correlation.
+% Nate Zuk (19-Nov-2019)
 
 % check if the inputs are cell arrays
 if ~iscell(stim) || ~iscell(resp)

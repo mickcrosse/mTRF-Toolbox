@@ -38,6 +38,31 @@ function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,varar
 %   nfolds - (optional) specify the number of cross-validation folds 
 %      (default: 10)
 %
+%   Optional parameters (specify as 'parameter',value in function input)
+%   Parameter   Value
+%   'method'    a string specifying the regularization method to be used
+%                   'Ridge'     Ridge regularization (default)
+%                   'Tikhonov'  Tikhonov regularization
+%   'scale'     a logical scalar specifying whether to scale regularization
+%               parameter LAMBDA according to the data dimensions: pass in
+%               0 to apply no scaling (default) or 1 to apply scaling
+%   'dim'       a scalar specifying the dimension to work along: pass in 1
+%               to work along the columns (default) or 2 to work along the
+%               rows
+%   'rows'      a string specifying the rows to use in the case of any
+%               missing values (NaNs)
+%                   'all'       use all rows, regardless of NaNs (default)
+%                   'complete'  use only rows with no NaN values
+%   'tlims'     specifies range or indexes of times that should be included 
+%               in the model training and testing. If specific indexes are 
+%               desired, then they should be specified in each cell of 
+%               tlims, where the number of cells equals the number of trials.
+%               Otherwise, set tlims=[] to use all of the data.
+%               (default: all indexes are used)
+%               (see usetinds.m for more information on specifying tlims)
+%   'nfolds' -  specify the number of cross-validation folds 
+%               (default: 10)
+%
 %   Outputs:
 %   r      - correlation coefficients
 %   p      - p-values of the correlations
@@ -51,7 +76,7 @@ function [r,p,rmse,w,t,b] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,varar
 %
 %   See README for examples of use.
 %
-%   See also lagGen.m, mTRFTrain.m, mTRFpredict.m, mTRFcrossval.m.
+%   See also lagGen.m, mTRFtrain.m, mTRFpredict.m, mTRFcrossval.m.
 
 %   References:
 %      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2015) The
