@@ -250,7 +250,8 @@ if nargout>3, % if the model is one of the outputs
     for j = 1:length(lambda)
         w(:,:,j) = (xtx+lambda(j)*M)\xty;
     end
-    w = w*fs;
+    w = w*fs; % NZ (7-11-2019), normalize weights to be compatible with new version
+        % of mTRFpredict
     t = (tmin:tmax)/fs*1e3;
     b = w(1,:,:); % get the bias terms for each lambda
     w = reshape(w(2:end,:,:),[ninputs,length(t),ncond,length(lambda)]);
