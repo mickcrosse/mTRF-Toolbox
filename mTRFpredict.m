@@ -170,7 +170,7 @@ end
 
 if length(yhat)==1, yhat = yhat{1}; end % convert to numerical array if there's only one trial
 
-function [dim,rows] = decode_varargin(varargin)
+function [dim,rows,tlims] = decode_varargin(varargin)
 %decode_varargin decode input variable arguments
 %   [PARAM1,PARAM2,...] = DECODE_VARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
 %   decodes the input variable arguments of the main function.
@@ -195,4 +195,11 @@ if any(strcmpi(varargin,'rows')) && ~isempty(varargin{find(strcmpi(...
     end
 else
     rows = 'all'; % default: use all rows
+end
+% tlims
+if any(strcmpi(varargin,'tlims')) && ~isempty(varargin{find(strcmpi(...
+        varargin,'tlims'))+1})
+    tlims = varargin{find(strcmpi(varargin,'tlims'))+1};
+else
+    tlims = []; % default: use all rows
 end
