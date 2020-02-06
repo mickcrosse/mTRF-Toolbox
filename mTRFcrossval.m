@@ -1,213 +1,274 @@
-function [r,p,rmse,model] = mTRFcrossval(stim,resp,fs,map,tmin,tmax,lambda,tlims,varargin)
-%mTRFcrossval mTRF Toolbox cross-validation function.
-%   [R,P,RMSE] = MTRFCROSSVAL(STIM,RESP,FS,MAP,TMIN,TMAX,LAMBDA) performs
-%   leave-one-out cross-validation on the set of stimuli STIM and the
-%   neural responses RESP for the range of ridge parameter values LAMBDA.
-%   As a measure of performance, it returns the correlation coefficients R
-%   between the predicted and original signals, the corresponding p-values
-%   P and the root-mean-square errors RMSE. Pass in MAP==1 to map in the
-%   forward direction or MAP==-1 to map backwards. The sampling frequency
-%   FS should be defined in Hertz and the time lags should be set in
-%   milliseconds between TMIN and TMAX.
+function [r,p,rmse,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
+%MTRFCROSSVAL  mTRF-Toolbox cross-validation.
+%   [R,P,RMSE] = MTRFCROSSVAL(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) cross
+%   validates a forward encoding model (stimulus to neural response) or a
+%   backward decoding model (neural response to stimulus) using time-lagged
+%   input features. Pass in 1 for DIR to validate a forward model, or -1 to
+%   validate a backward model. STIM and RESP are cell arrays containing
+%   corresponding trials of continuous data over which to cross-validate.
+%   FS is a scalar specifying the sample rate in Hertz, and TMIN and TMAX
+%   are scalars specifying the minimum and maximum time lags in
+%   milliseconds. For backward models, MTRFCROSSVAL automatically reverses
+%   the time lags. LAMBDA is a scalar or vector of regularization values
+%   to be validated and controls overfitting.
 %
-%   [...,PRED,MODEL] = MTRFCROSSVAL(...) also returns the predictions PRED
-%   and the linear mapping functions MODEL.
+%   As a measure of performance, MTRFCROSSVAL returns matrices containing
+%   the correlation coefficients R between the predicted and observed
+%   variables, the the probabilities of the correlation coefficients P and
+%   the root-mean-square errors RMSE between the predicted and observed
+%   variables. The size of each matrix is ntrial-by-nlambda-by-yvar. For
+%   single-lag models, a fourth dimension is added to specify the lag.
 %
-%   Inputs:
-%   stim   - set of stimuli [cell{1,trials}(time by features)]
-%   resp   - set of neural responses [cell{1,trials}(time by channels)]
-%   fs     - sampling frequency (Hz)
-%   map    - mapping direction (forward==1, backward==-1)
-%   tmin   - minimum time lag (ms)
-%   tmax   - maximum time lag (ms)
-%   lambda - ridge parameter values
-%   tlims  - (NEW, NZ, 2019) specifies range of time that should be included 
-%      in the model training and testing. If specific indexes are desired,
-%      then they should be specified in each cell of tlims, where the
-%      number of cells equals the number of trials.
-%      (default: all indexes are used)
+%   MTRFCROSSVAL performs a leave-one-out cross-validation across trials.
+%   To achieve a k-fold cross-validation, arrange STIM and RESP in k-by-1
+%   cell arrays. The number of folds can also be increased by an integer
+%   factor using the 'split' parameter (see below). It is not recommended
+%   to concatenate discontinuous data segments or to use cross-validation
+%   as a way to test model performance. Models should be tested on separate
+%   data after cross-validation using the mTRFpredict function.
 %
-%   Outputs:
-%   r      - correlation coefficients
-%   p      - p-values of the correlations
-%   rmse   - root-mean-square errors
-%   XX pred   - prediction [MAP==1: cell{1,trials}(lambdas by time by chans),
-%            MAP==-1: cell{1,trials}(lambdas by time by feats)]
-%          (NZ -- I would not recommend saving trial-by-trial predictions
-%          here. At the end I compute the model based on all the training
-%          data. Users should then create a prediction based on new data.)
-%   model  - linear mapping function (MAP==1: trials by lambdas by feats by
-%            lags by chans, MAP==-1: trials by lambdas by chans by lags by
-%            feats)
+%   If STIM or RESP contain matrices, it is assumed that the rows
+%   correspond to observations and the columns to variables, unless
+%   otherwise stated via the 'dim' parameter (see below). If they contain
+%   vectors, it is assumed that the first non-singleton dimension
+%   corresponds to observations. Each trial of STIM and RESP must have the
+%   same number of observations.
 %
-%   See README for examples of use.
+%   [R,P,RMSE,T] = MTRFCROSSVAL(...) returns a vector containing the time
+%   lags used in milliseconds. This is useful for plotting single-lag model
+%   results.
 %
-%   See also LAGGEN MTRFTRAIN MTRFPREDICT MTRFMULTICROSSVAL.
+%   [...] = MTRFCROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
+%   additional parameters and their values. Valid parameters are the
+%   following:
+%
+%       Parameter   Value
+%       'dim'       A scalar specifying the dimension to work along: pass
+%                   in 1 to work along the columns (default), or 2 to work
+%                   along the rows. Applies to both STIM and RESP.
+%       'method'    A string specifying the regularization method to use:
+%                       'ridge'     ridge regression (default): suitable
+%                                   for multivariate input features
+%                       'Tikhonov'  Tikhonov regularization: dampens fast
+%                                   oscillatory components of the solution
+%                                   but may cause cross-channel leakage for
+%                                   multivariate input features
+%                       'ols'       ordinary least squares: equivalent to
+%                                   setting LAMBDA=0 (no regularization)
+%       'type'      A string specifying type of model to fit:
+%                       'multi'     use all lags simultaneously to fit a
+%                                   multi-lag model (default)
+%                       'single'    use each lag individually to fit
+%                                   separate single-lag models
+%       'split'     A scalar specifying the number of segments in which to
+%                   split each trial of data when computing the covariance
+%                   matrices. This is useful for reducing memory usage on
+%                   large datasets. By default, the entire trial is used.
+%       'zeropad'   A numeric or logical specifying whether to zero-pad the
+%                   outer rows of the design matrix or delete them: pass in
+%                   1 to zero-pad them (default), or 0 to delete them.
+%       'fast'      A numeric or logical specifying whether to use the fast
+%                   cross-validation method (requires more memory) or the
+%                   slower method (requires less memory): pass in 1 to use
+%                   the fast method (default) or 0 to use the slower
+%                   method. Note, both methods are numerically equivalent.
+%
+%   See mTRFdemos for examples of use.
+%
+%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
+%
+%   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   References:
 %      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2015) The
 %          multivariate temporal response function (mTRF) toolbox: a MATLAB
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
+%      [2] Alickovic E, Lunner T, Gustafsson F, Ljung L (2019) A Tutorial
+%          on Auditory Attention Identification Methods. Front Neurosci
+%          13:153.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
-%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Website: www.lalorlab.net
+%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
+%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   April 2014; Last revision: 4-Feb-2019
+%   Apr 2014; Last revision: 05-Feb-2020
 
-% Initial parameters
-nfolds = 10; % number of CV folds (NZ, 2019)
+% Parse input arguments
+arg = parsevarargin(varargin);
 
-if nargin<9, tlims = []; end
-
-if ~isempty(varargin),
-    for n = 2:2:length(varargin),
-        eval([varargin{n-1} '=varargin{n};']);
-    end
+% Validate parameter values
+if ~isnumeric(fs) || ~isscalar(fs) || fs <= 0
+    error('FS argument must be a positive numeric scalar.')
+elseif ~isnumeric([tmin,tmax]) || ~isscalar(tmin) || ~isscalar(tmax)
+    error('TMIN and TMAX arguments must be numeric scalars.')
+elseif tmin > tmax
+    error('The value of TMIN must be less than that of TMAX.')
+elseif ~isnumeric(lambda) || any(lambda < 0)
+    error('LAMBDA argument must be positive numeric values.')
 end
 
-% Define x and y
-if tmin > tmax
-    error('Value of TMIN must be < TMAX')
-end
-if map == 1
-    x = stim;
-    y = resp;
-elseif map == -1
-    x = resp;
-    y = stim;
+% Define X and Y variables
+if dir == 1
+    x = stim; y = resp;
+elseif dir == -1
+    x = resp; y = stim;
     [tmin,tmax] = deal(tmax,tmin);
 else
-    error('Value of MAP must be 1 (forward) or -1 (backward)')
+    error('DIR argument must have a value of 1 or -1.')
 end
-clear stim resp
+
+% Format data in cells column-wise
+[x,xobs,xvar] = formatcells(x,arg.dim);
+[y,yobs,yvar] = formatcells(y,arg.dim);
+
+% Check equal number of observations
+if ~isequal(xobs,yobs)
+    error(['STIM and RESP arguments must have the same number of '...
+        'observations.'])
+end
 
 % Convert time lags to samples
-tmin = floor(tmin/1e3*fs*map);
-tmax = ceil(tmax/1e3*fs*map);
+tmin = floor(tmin/1e3*fs*dir);
+tmax = ceil(tmax/1e3*fs*dir);
+lags = tmin:tmax;
 
-% Set up regularisation
-dim1 = size(x{1},2)*length(tmin:tmax)+1;
-dim2 = size(y{1},2);
-model = zeros(numel(x),numel(lambda),dim1,dim2);
-if size(x{1},2) == 1
-    d = 2*eye(dim1);d([dim1+2,end]) = 1;
-    u = [zeros(dim1,1),eye(dim1,dim1-1)];
-    l = [zeros(1,dim1);eye(dim1-1,dim1)];
-    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
+% Compute sampling interval
+delta = 1/fs;
+
+% Get dimensions
+nlag = numel(lags);
+xvar = unique(xvar);
+yvar = unique(yvar);
+nvar = xvar*nlag+1;
+switch arg.type
+    case 'multi'
+        nlag = 1;
+        mvar = nvar;
+    case 'single'
+        mvar = xvar+1;
+end
+ntrial = numel(x);
+nlambda = numel(lambda);
+
+% Compute covariance matrices
+if arg.fast
+    [CXX,CXY,XLAG] = olscovmat(x,y,lags,arg.type,arg.split,arg.zeropad,0);
 else
-    M = eye(dim1,dim1); M(1,1) = 0;
+    [CXX,CXY] = olscovmat(x,y,lags,arg.type,arg.split,arg.zeropad,1);
 end
 
-%%% NZ edit -- creating trial-by-trial design matrices
-disp('Creating the design matrices...');
-% Create the design matrices
-std_tm = tic;
-for i = 1:numel(x)
-    % Generate lag matrix
-    x{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)]; %%% skip constant term (NZ)
-    % Set X and y to the same length
-    minlen = min([size(x{i},1) size(y{i},1)]);
-    x{i} = x{i}(1:minlen,:);
-    y{i} = y{i}(1:minlen,:);
-    % Remove time indexes, if specified
-    if iscell(tlims), % if tlims is a cell array, it means that specific indexes were supplied
-        tinds = tlims{i};
-    else
-        tinds = usetinds(tlims,fs,minlen);
-    end
-    x{i} = x{i}(tinds,:);
-    y{i} = y{i}(tinds,:);
+% Set up sparse regularization matrix
+M = sparse(eye(mvar));
+switch arg.method
+    case 'ridge'
+        M(1,1) = 0;
+    case 'Tikhonov'
+        M = M - 0.5*(diag(ones(mvar-1,1),1)+diag(ones(mvar-1,1),-1));
+        M([mvar+2,end]) = 0.5;
+        M([1,2,mvar+1]) = 0;
+    case 'ols'
+        lambda(:) = 0;
 end
-fprintf('** Completed design matrices in %.3f s\n',toc(std_tm));
+M = M/delta;
 
-%%% NZ edit -- Randomly resample time points, in order to determine the time indexes for
-%%% each fold
-tottmidx = sum(cellfun(@(n) size(n,1),x));
-rndtmsmp = randperm(tottmidx);
-% Determine the starting index for each fold
-foldidx = (0:nfolds-1)*floor(tottmidx/nfolds);
-    % the last fold has at most nfolds-1 samples more than the others
-
-% Training
-% disp('Training');
-% X = cell(1,numel(x));
-% for i = 1:numel(x)
-%     % Generate lag matrix
-%     X{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)];
-%     % Calculate model for each lambda value
-%     for j = 1:length(lambda)
-%         model(i,j,:,:) = (X{i}'*X{i}+lambda(j)*M)\(X{i}'*y{i});
-%     end
-% end
-
-disp('Starting model fitting...');
-% Make the variables that will store the error and correlation values for each lambda and each fold
-rmse = NaN(nfolds,numel(lambda),dim2); % root mean squared error
-r = NaN(nfolds,numel(lambda),dim2); % Pearson's correlation
-p = NaN(nfolds,numel(lambda),dim2); % significance of Pearson's correlation
-% For each fold...
-for n = 1:nfolds,
-    mdlfitting_tm = tic;
-    fprintf('Fold %d/%d\n',n,nfolds); % display which fold is being run
-    % Identify the time samples used for this fold
-    if n==nfolds,
-        tstinds = rndtmsmp(foldidx(n)+1:end); % grab the rest of the samples if it's the last fold
-    else
-        tstinds = rndtmsmp(foldidx(n)+1:foldidx(n+1));
-    end
-    trninds = setxor(rndtmsmp,tstinds); % use the rest of the samples for training
-
-    % Get the testing data
-    xtst = cell_to_time_samples(x,tstinds);
-    ytst = cell_to_time_samples(y,tstinds);
-    [xtx,xty] = compute_linreg_matrices(x,y,trninds);
+% Leave-one-out cross-validation
+m = 0;
+r = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+p = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+rmse = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+for i = 1:ntrial
     
-    % Calculate model for each lambda value
-    fprintf('Cross-validating to each lambda (%d iterations)',length(lambda));
-    for j = 1:numel(lambda)
-        model_fold = (xtx+lambda(j)*M)\xty; % compute model
-        pred_fold = xtst*model_fold; % compute prediction
-        [rtmp,ptmp] = corr(ytst,squeeze(pred_fold));
-        r(n,j,:) = diag(rtmp); p(n,j,:) = diag(ptmp);
-        rmse(n,j,:) = sqrt(mean((ytst-pred_fold).^2,1));
-        fprintf('.');
-    end 
-    fprintf('\n');
-    clear xtx xty xtst ytst
-    fprintf('Completed %.3f s\n',toc(mdlfitting_tm));
-end
-
-if nargout>3, % if the model is one of the outputs
-    % Compute the final models for all training data using each lambda parameter
-    disp('Computing models on all training data...');
-    [xtx,xty] = compute_linreg_matrices(x,y);
-    model = NaN(size(x{1},2),length(lambda),dim2);
-    for j = 1:length(lambda)
-        model(:,j,:) = (xtx+lambda(j)*M)\xty;
+    % Get segment size
+    nseg = ceil(xobs(i)/arg.split);
+    
+    for j = 1:arg.split
+        
+        m = m+1;
+        
+        % Get segment indices
+        iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+        
+        if arg.fast % fast CV method
+            
+            % Validation set
+            xlag = XLAG{m};
+            
+            % Training set
+            Cxx = 0; Cxy = 0;
+            itrain = 1:ntrial*arg.split;
+            itrain(m) = [];
+            for k = itrain
+                Cxx = Cxx + CXX{k};
+                Cxy = Cxy + CXY{k};
+            end
+            
+        else % memory-efficient CV method
+            
+            % Validation set
+            [xlag,ilag] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+            xlag = [ones(numel(ilag),1),xlag]; %#ok<*AGROW>
+            
+            % Training set
+            Cxx = CXX - xlag'*xlag;
+            Cxy = CXY - xlag'*y{i}(iseg(ilag),:);
+            
+        end
+        
+        % Remove zero-padded indices
+        if ~arg.zeropad
+            iseg = iseg(1+max(0,lags(end)):end+min(0,lags(1)));
+        end
+        
+        for n = 1:nlambda
+            
+            switch arg.type
+                
+                case 'multi'
+                    
+                    % Fit model
+                    w = (Cxx + lambda(n)*M)\Cxy;
+                    
+                    % Predict output
+                    pred = xlag*w;
+                    
+                    % Measure performance
+                    [rt,pt] = corr(y{i}(iseg,:),pred);
+                    r(m,n,:) = diag(rt);
+                    p(m,n,:) = diag(pt);
+                    rmse(m,n,:) = sqrt(mean((y{i}(iseg,:)-pred).^2,1))';
+                    
+                case 'single'
+                    
+                    ii = 0;
+                    for jj = 2:xvar:nvar
+                        
+                        ii = ii+1;
+                        
+                        % Fit model
+                        w = (Cxx(:,:,ii) + lambda(n)*M)\Cxy(:,:,ii);
+                        
+                        % Predict output
+                        idx = [1,jj:jj+xvar-1];
+                        pred = xlag(:,idx)*w;
+                        
+                        % Measure performance
+                        [rt,pt] = corr(y{i}(iseg,:),pred);
+                        r(m,n,:,ii) = diag(rt);
+                        p(m,n,:,ii) = diag(pt);
+                        rmse(m,n,:,ii) = sqrt(mean((y{i}(iseg,:) - ...
+                            pred).^2,1))';
+                        
+                    end
+                    
+            end
+            
+        end
+        
     end
+    
 end
 
-% Testing
-% pred = cell(1,numel(x));
-% r = zeros(numel(x),numel(lambda),dim2);
-% p = zeros(numel(x),numel(lambda),dim2);
-% rmse = zeros(numel(x),numel(lambda),dim2);
-% for i = 1:numel(x)
-%     pred{i} = zeros(numel(lambda),size(y{i},1),dim2);
-%     % Define training trials
-%     trials = 1:numel(x);
-%     trials(i) = [];
-%     % Perform cross-validation for each lambda value
-%     for j = 1:numel(lambda)
-%         % Calculate prediction
-%         pred{i}(j,:,:) = X{i}*squeeze(mean(model(trials,j,:,:),1));
-%         % Calculate accuracy
-%         [rtmp,ptmp] = corr(y{i},squeeze(pred{i}(j,:,:)));
-%         r(i,j,:) = diag(rtmp); p(i,j,:) = diag(ptmp);
-%         rmse(i,j,:) = sqrt(mean((y{i}-squeeze(pred{i}(j,:,:))).^2,1));
-%     end
-% end
-
+% Format output arguments
+if nargout > 3
+    t = lags/fs*1e3;
 end

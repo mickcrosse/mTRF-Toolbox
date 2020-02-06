@@ -1,61 +1,76 @@
-function xlag = lagGen(x,lags,stack)
-%LAGGEN mTRF Toolbox lag generator.
-%   XLAG = LAGGEN(X,LAGS) returns the matrix XLAG containing the time-
-%   lagged features of X for the set of time lags in the vector LAGS. X is
-%   a column vector or matrix, with rows corresponding to observations and
-%   columns to variables. LAGS is a scalar or vector of positive and/or
-%   negative integer values. Each lag feature is represented as a column of
-%   XLAG. If X is multivariate, each column is replaced with a matrix of
-%   variables, stacked in the same order as they occur X.
+function [xlag,idx] = lagGen(x,lags,zeropad,stack)
+%LAGGEN  mTRF-Toolbox lag generator.
+%   XLAG = LAGGEN(X,LAGS) returns a design matrix containing the time-
+%   lagged features of input data X. X is a column vector or a matrix, with
+%   the rows corresponding to observations and the columns to variables.
+%   LAGS is a scalar or a vector of time lags in samples. Each lagged
+%   feature is represented as a column in XLAG. If X is a matrix, each
+%   column of XLAG is replaced with a matrix of variables, stacked in the
+%   same order as they occur X.
 %
-%   XLAG = LAGGEN(...,STACK) specifies how lags and variables are stacked
-%   in XLAG. Pass in STACK=1 to stack variables in adjacent columns for
-%   each lag (default) and pass in STACK=2 to stack lags in adjacent
-%   columns for each variable. Note that MTRFTRAIN and MTRFPREDICT are
-%   designed to unwrap model weights computed using option 1.
+%   [XLAG,IDX] = LAGGEN(X,LAGS) returns the indices of the design matrix
+%   that were retained. If the design matrx is no zero-padded, this
+%   information is useful for subsequent analysis.
 %
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFCROSSVAL.
+%   XLAG = LAGGEN(X,LAGS,ZEROPAD) specifies whether to zero-pad the outer
+%   rows of the design matrix or delete them. Pass in 1 to zero-pad them
+%   (default), or 0 to delete them.
 %
-%   mTRF Toolbox https://github.com/mickcrosse/mTRF-Toolbox
+%   XLAG = LAGGEN(X,LAGS,ZEROPAD,STACK) specifies how to stack the lags and
+%   variables in XLAG. Pass in 1 for STACK to stack variables in adjacent
+%   columns for each lag (default), or 2 to stack lags in adjacent columns
+%   for each variable. Note that the mTRF-Toolbox functions are designed to
+%   unwrap model weights computed using option 1.
+%
+%   See also MTRFRESAMPLE, MTRFINTENSITY, MTRFPCA.
+%
+%   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Author: Mick Crosse
-%   Email: mickcrosse@gmail.com
-%   Website: www.lalorlab.net
+%   Authors: Mick Crosse
+%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   April 2014; Last revision: 24-Oct-2019
+%   Apr 2014; Last revision: 10-Jan-2020
 
-% Set default feature order
-if nargin < 3 || isempty(stack)
+% Set default values
+if nargin < 3 || isempty(zeropad)
+    zeropad = true;
+end
+if nargin < 4 || isempty(stack)
     stack = 1;
 end
 
-% Initialize variables
-j = 1;
-nfeat = size(x,2);
-nlags = length(lags);
-xlag = zeros(size(x,1),size(x,2)*length(lags));
+% Get dimensions
+nlag = numel(lags);
+[nobs,nvar] = size(x);
 
 % Generate time-lagged features
-for i = 1:nlags
+k = 1;
+xlag = zeros(nobs,nvar*nlag);
+for j = 1:nlag
     if stack == 1 % stack variables within lags
-        if lags(i) < 0
-            xlag(1:end+lags(i),j:j+nfeat-1) = x(-lags(i)+1:end,:);
-        elseif lags(i) > 0
-            xlag(lags(i)+1:end,j:j+nfeat-1) = x(1:end-lags(i),:);
+        if lags(j) < 0
+            xlag(1:end+lags(j),k:k+nvar-1) = x(-lags(j)+1:end,:);
+        elseif lags(j) > 0
+            xlag(lags(j)+1:end,k:k+nvar-1) = x(1:end-lags(j),:);
         else
-            xlag(:,j:j+nfeat-1) = x;
+            xlag(:,k:k+nvar-1) = x;
         end
-        j = j+nfeat;
+        k = k+nvar;
     elseif stack == 2 % stack lags within variables
-        if lags(i) < 0
-            xlag(1:end+lags(i),i:nlags:end) = x(-lags(i)+1:end,:);
-        elseif lags(i) > 0
-            xlag(lags(i)+1:end,i:nlags:end) = x(1:end-lags(i),:);
+        if lags(j) < 0
+            xlag(1:end+lags(j),j:nlag:end) = x(-lags(j)+1:end,:);
+        elseif lags(j) > 0
+            xlag(lags(j)+1:end,j:nlag:end) = x(1:end-lags(j),:);
         else
-            xlag(:,i:nlags:end) = x;
+            xlag(:,j:nlag:end) = x;
         end
-    else
-        error(['Argument STACK must be an integer scalar of value 1 '...
-            '(stack vars within lags) or 2 (stack lags within vars).'])
     end
+end
+
+% Remove zero-padded rows
+if zeropad
+    idx = 1:nobs;
+else
+    idx = 1+max(0,lags(end)):nobs+min(0,lags(1));
+    xlag = xlag(idx,:);
 end
