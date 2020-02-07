@@ -1,6 +1,6 @@
-function [r,p,rmse,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFCROSSVAL  mTRF-Toolbox cross-validation.
-%   [R,P,RMSE] = MTRFCROSSVAL(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) cross
+function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
+%MTRFCROSSVAL  mTRF cross-validation.
+%   STATS = MTRFCROSSVAL(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) cross
 %   validates a forward encoding model (stimulus to neural response) or a
 %   backward decoding model (neural response to stimulus) using time-lagged
 %   input features. Pass in 1 for DIR to validate a forward model, or -1 to
@@ -12,14 +12,15 @@ function [r,p,rmse,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   the time lags. LAMBDA is a scalar or vector of regularization values
 %   to be validated and controls overfitting.
 %
-%   As a measure of performance, MTRFCROSSVAL returns matrices containing
-%   the correlation coefficients R between the predicted and observed
-%   variables, the the probabilities of the correlation coefficients P and
-%   the root-mean-square errors RMSE between the predicted and observed
-%   variables. The size of each matrix is ntrial-by-nlambda-by-yvar. For
-%   single-lag models, a fourth dimension is added to specify the lag.
+%   MTRFCROSSVAL returns the cross-validation statistics in a structure
+%   with the following fields:
+%       'r'         -- the correlation coefficients between the predicted
+%                      and observed variables (ntrial-by-nlambda-by-yvar)
+%       'p'         -- the probabilities of the correlation coefficients
+%       'rmse'      -- the root-mean-square error between the predicted and
+%                      observed variables (ntrial-by-nlambda-by-yvar)
 %
-%   MTRFCROSSVAL performs a leave-one-out cross-validation across trials.
+%   MTRFCROSSVAL performs a leave-one-out cross-validation over trials.
 %   To achieve a k-fold cross-validation, arrange STIM and RESP in k-by-1
 %   cell arrays. The number of folds can also be increased by an integer
 %   factor using the 'split' parameter (see below). It is not recommended
@@ -34,9 +35,9 @@ function [r,p,rmse,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   corresponds to observations. Each trial of STIM and RESP must have the
 %   same number of observations.
 %
-%   [R,P,RMSE,T] = MTRFCROSSVAL(...) returns a vector containing the time
-%   lags used in milliseconds. This is useful for plotting single-lag model
-%   results.
+%   [STATS,T] = MTRFCROSSVAL(...) returns a vector containing the time lags
+%   used in milliseconds. These data are useful for interpreting the
+%   results of single-lag models.
 %
 %   [...] = MTRFCROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -75,7 +76,7 @@ function [r,p,rmse,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %
 %   See mTRFdemos for examples of use.
 %
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
+%   See also MTRFTRAIN, MTRFPREDICT, MTRFAADCROSSVAL, MTRFMULTICROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -96,7 +97,7 @@ function [r,p,rmse,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 % Parse input arguments
 arg = parsevarargin(varargin);
 
-% Validate parameter values
+% Validate input parameters
 if ~isnumeric(fs) || ~isscalar(fs) || fs <= 0
     error('FS argument must be a positive numeric scalar.')
 elseif ~isnumeric([tmin,tmax]) || ~isscalar(tmin) || ~isscalar(tmax)
@@ -117,7 +118,7 @@ else
     error('DIR argument must have a value of 1 or -1.')
 end
 
-% Format data in cells column-wise
+% Format data in cell arrays
 [x,xobs,xvar] = formatcells(x,arg.dim);
 [y,yobs,yvar] = formatcells(y,arg.dim);
 
@@ -171,32 +172,34 @@ switch arg.method
 end
 M = M/delta;
 
-% Leave-one-out cross-validation
-m = 0;
+% Initialize performance variables
 r = zeros(ntrial*arg.split,nlambda,yvar,nlag);
 p = zeros(ntrial*arg.split,nlambda,yvar,nlag);
 rmse = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+
+% Leave-one-out cross-validation
+n = 0;
 for i = 1:ntrial
     
-    % Get segment size
+    % Max segment size
     nseg = ceil(xobs(i)/arg.split);
     
     for j = 1:arg.split
         
-        m = m+1;
+        n = n+1;
         
-        % Get segment indices
+        % Segment indices
         iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
         
         if arg.fast % fast CV method
             
             % Validation set
-            xlag = XLAG{m};
+            xlag = XLAG{n};
             
             % Training set
-            Cxx = 0; Cxy = 0;
             itrain = 1:ntrial*arg.split;
-            itrain(m) = [];
+            itrain(n) = [];
+            Cxx = 0; Cxy = 0;
             for k = itrain
                 Cxx = Cxx + CXX{k};
                 Cxy = Cxy + CXY{k};
@@ -205,12 +208,12 @@ for i = 1:ntrial
         else % memory-efficient CV method
             
             % Validation set
-            [xlag,ilag] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
-            xlag = [ones(numel(ilag),1),xlag]; %#ok<*AGROW>
+            [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+            xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
             
             % Training set
             Cxx = CXX - xlag'*xlag;
-            Cxy = CXY - xlag'*y{i}(iseg(ilag),:);
+            Cxy = CXY - xlag'*y{i}(iseg(idx),:);
             
         end
         
@@ -219,43 +222,40 @@ for i = 1:ntrial
             iseg = iseg(1+max(0,lags(end)):end+min(0,lags(1)));
         end
         
-        for n = 1:nlambda
+        for k = 1:nlambda
             
             switch arg.type
                 
                 case 'multi'
                     
-                    % Fit model
-                    w = (Cxx + lambda(n)*M)\Cxy;
+                    % Fit linear model
+                    w = (Cxx + lambda(k)*M)\Cxy;
                     
                     % Predict output
                     pred = xlag*w;
                     
                     % Measure performance
                     [rt,pt] = corr(y{i}(iseg,:),pred);
-                    r(m,n,:) = diag(rt);
-                    p(m,n,:) = diag(pt);
-                    rmse(m,n,:) = sqrt(mean((y{i}(iseg,:)-pred).^2,1))';
+                    r(n,k,:) = diag(rt);
+                    p(n,k,:) = diag(pt);
+                    rmse(n,k,:) = sqrt(mean((y{i}(iseg,:)-pred).^2,1))';
                     
                 case 'single'
                     
-                    ii = 0;
-                    for jj = 2:xvar:nvar
+                    for l = 1:nlag
                         
-                        ii = ii+1;
-                        
-                        % Fit model
-                        w = (Cxx(:,:,ii) + lambda(n)*M)\Cxy(:,:,ii);
+                        % Fit linear model
+                        w = (Cxx(:,:,l) + lambda(k)*M)\Cxy(:,:,l);
                         
                         % Predict output
-                        idx = [1,jj:jj+xvar-1];
-                        pred = xlag(:,idx)*w;
+                        ilag = [1,xvar*(l-1)+2:xvar*l+1];
+                        pred = xlag(:,ilag)*w;
                         
                         % Measure performance
                         [rt,pt] = corr(y{i}(iseg,:),pred);
-                        r(m,n,:,ii) = diag(rt);
-                        p(m,n,:,ii) = diag(pt);
-                        rmse(m,n,:,ii) = sqrt(mean((y{i}(iseg,:) - ...
+                        r(n,k,:,l) = diag(rt);
+                        p(n,k,:,l) = diag(pt);
+                        rmse(n,k,:,l) = sqrt(mean((y{i}(iseg,:) - ...
                             pred).^2,1))';
                         
                     end
@@ -269,6 +269,7 @@ for i = 1:ntrial
 end
 
 % Format output arguments
-if nargout > 3
+stats = struct('r',r,'p',p,'rmse',rmse);
+if nargout > 1
     t = lags/fs*1e3;
 end

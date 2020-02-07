@@ -1,5 +1,5 @@
 function [xlag,idx] = lagGen(x,lags,zeropad,stack)
-%LAGGEN  mTRF-Toolbox lag generator.
+%LAGGEN  Time lag generator.
 %   XLAG = LAGGEN(X,LAGS) returns a design matrix containing the time-
 %   lagged features of input data X. X is a column vector or a matrix, with
 %   the rows corresponding to observations and the columns to variables.
@@ -9,8 +9,8 @@ function [xlag,idx] = lagGen(x,lags,zeropad,stack)
 %   same order as they occur X.
 %
 %   [XLAG,IDX] = LAGGEN(X,LAGS) returns the indices of the design matrix
-%   that were retained. If the design matrx is no zero-padded, this
-%   information is useful for subsequent analysis.
+%   that were retained. If the design matrix is not zero-padded (i.e., the
+%   end rows are deleted), these data are useful for subsequent analysis.
 %
 %   XLAG = LAGGEN(X,LAGS,ZEROPAD) specifies whether to zero-pad the outer
 %   rows of the design matrix or delete them. Pass in 1 to zero-pad them
@@ -19,17 +19,17 @@ function [xlag,idx] = lagGen(x,lags,zeropad,stack)
 %   XLAG = LAGGEN(X,LAGS,ZEROPAD,STACK) specifies how to stack the lags and
 %   variables in XLAG. Pass in 1 for STACK to stack variables in adjacent
 %   columns for each lag (default), or 2 to stack lags in adjacent columns
-%   for each variable. Note that the mTRF-Toolbox functions are designed to
+%   for each variable. Note that mTRF-Toolbox functions are designed to
 %   unwrap model weights computed using option 1.
 %
-%   See also MTRFRESAMPLE, MTRFINTENSITY, MTRFPCA.
+%   See also MTRFRESAMPLE, MTRFENVELOPE, MTRFPCA.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   Authors: Mick Crosse
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 10-Jan-2020
+%   Apr 2014; Last revision: 05-Feb-2020
 
 % Set default values
 if nargin < 3 || isempty(zeropad)
@@ -44,25 +44,24 @@ nlag = numel(lags);
 [nobs,nvar] = size(x);
 
 % Generate time-lagged features
-k = 1;
 xlag = zeros(nobs,nvar*nlag);
-for j = 1:nlag
+for i = 1:nlag
     if stack == 1 % stack variables within lags
-        if lags(j) < 0
-            xlag(1:end+lags(j),k:k+nvar-1) = x(-lags(j)+1:end,:);
-        elseif lags(j) > 0
-            xlag(lags(j)+1:end,k:k+nvar-1) = x(1:end-lags(j),:);
+        ilag = nvar*(i-1)+1:nvar*i;
+        if lags(i) < 0
+            xlag(1:end+lags(i),ilag) = x(-lags(i)+1:end,:);
+        elseif lags(i) > 0
+            xlag(lags(i)+1:end,ilag) = x(1:end-lags(i),:);
         else
-            xlag(:,k:k+nvar-1) = x;
+            xlag(:,ilag) = x;
         end
-        k = k+nvar;
     elseif stack == 2 % stack lags within variables
-        if lags(j) < 0
-            xlag(1:end+lags(j),j:nlag:end) = x(-lags(j)+1:end,:);
-        elseif lags(j) > 0
-            xlag(lags(j)+1:end,j:nlag:end) = x(1:end-lags(j),:);
+        if lags(i) < 0
+            xlag(1:end+lags(i),i:nlag:end) = x(-lags(i)+1:end,:);
+        elseif lags(i) > 0
+            xlag(lags(i)+1:end,i:nlag:end) = x(1:end-lags(i),:);
         else
-            xlag(:,j:nlag:end) = x;
+            xlag(:,i:nlag:end) = x;
         end
     end
 end

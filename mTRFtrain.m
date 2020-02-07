@@ -1,5 +1,5 @@
 function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFTRAIN  mTRF-Toolbox model training.
+%MTRFTRAIN  mTRF model training.
 %   MODEL = MTRFTRAIN(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) trains a forward
 %   encoding model (stimulus to neural response) or a backward decoding
 %   model (neural response to stimulus) using time-lagged input features.
@@ -12,13 +12,13 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   is a scalar specifying the regularization parameter for controlling
 %   overfitting.
 %
-%   MTRFTRAIN returns a structure with the following fields:
+%   MTRFTRAIN returns the model in a structure with the following fields:
 %       'w'         -- normalized model weights (xvar-by-nlag-by-yvar)
 %       'b'         -- normalized bias term (1-by-nlag-by-yvar)
 %       't'         -- time lags (ms)
 %       'fs'        -- sample rate (Hz)
 %       'dir'       -- direction of causality (forward=1, backward=-1)
-%       'type'      -- model type (multi-lag, single-lag)
+%       'type'      -- type of model (multi-lag, single-lag)
 %
 %   MTRFTRAIN normalizes the model weights and regularization matrix by the
 %   sampling interval (1/FS) to produce consistent scaling and smoothing of
@@ -46,7 +46,7 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %                       'ridge'     ridge regression (default): suitable
 %                                   for multivariate input features
 %                       'Tikhonov'  Tikhonov regularization: dampens fast
-%                                   oscillatory components of the weights
+%                                   oscillatory components of the solution
 %                                   but may cause cross-channel leakage for
 %                                   multivariate input features
 %                       'ols'       ordinary least squares: equivalent to
@@ -87,7 +87,7 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 % Parse input arguments
 arg = parsevarargin(varargin);
 
-% Validate parameter values
+% Validate input parameters
 if ~isnumeric(fs) || ~isscalar(fs) || fs <= 0
     error('FS argument must be a positive numeric scalar.')
 elseif ~isnumeric([tmin,tmax]) || ~isscalar(tmin) || ~isscalar(tmax)
@@ -108,7 +108,7 @@ else
     error('DIR argument must have a value of 1 or -1.')
 end
 
-% Format data in cells column-wise
+% Format data in cell arrays
 [x,xobs,xvar] = formatcells(x,arg.dim);
 [y,yobs,yvar] = formatcells(y,arg.dim);
 
@@ -154,19 +154,16 @@ switch arg.method
 end
 M = lambda*M/delta;
 
-% Fit model
+% Fit linear model
 switch arg.type
     case 'multi'
-        w = (Cxx + M)\Cxy;
+        w = (Cxx + M)\Cxy/delta;
     case 'single'
         w = zeros(xvar+1,nlag,yvar);
         for i = 1:nlag
-            w(:,i,:) = (Cxx(:,:,i) + M)\Cxy(:,:,i);
+            w(:,i,:) = (Cxx(:,:,i) + M)\Cxy(:,:,i)/delta;
         end
 end
-
-% Normalize weights by sampling interval
-w = w/delta;
 
 % Format output arguments
 model = struct('w',reshape(w(2:end,:,:),[xvar,nlag,yvar]),'b',w(1,:,:),...

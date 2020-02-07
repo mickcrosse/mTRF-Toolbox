@@ -46,6 +46,7 @@ addParameter(p,'fast',true,validFcn); % fast cross-validation method
 addParameter(p,'gpu',false,validFcn); % run on GPU
 addParameter(p,'demean',true,validFcn); % demean data
 addParameter(p,'plot',false,validFcn); % plot results
+addParameter(p,'keepstate',false,validFcn); % keep state
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});

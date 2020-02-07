@@ -1,5 +1,5 @@
 function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
-%MTRFPREDICT  mTRF-Toolbox model prediction.
+%MTRFPREDICT  mTRF model prediction.
 %   PRED = MTRFPREDICT(STIM,RESP,MODEL) predicts the output of a forward
 %   encoding model (stimulus to neural response) or a backward decoding
 %   model (neural response to stimulus) using time-lagged input features.
@@ -12,7 +12,7 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %       't'         -- time lags (ms)
 %       'fs'        -- sample rate (Hz)
 %       'dir'       -- direction of causality (forward=1, backward=-1)
-%       'type'      -- model type (multi-lag, single-lag)
+%       'type'      -- type of model (multi-lag, single-lag)
 %
 %   If STIM or RESP are matrices, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
@@ -24,13 +24,13 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %   predictions are made for each trial and returned in a cell array. STIM
 %   and RESP must contain the same number of trials.
 %
-%   [PRED,STATS] = MTRFPREDICT(...) returns a structure with the following
-%   fields:
+%   [PRED,STATS] = MTRFPREDICT(...) returns the statistics in a structure
+%   with the following fields:
 %       'r'         -- the correlation coefficients between the predicted
-%                      and observed variables (ntrial-by-yvar-by-nlag)
+%                      and observed variables (ntrial-by-yvar)
 %       'p'         -- the probabilities of the correlation coefficients
 %       'rmse'      -- the root-mean-square error between the predicted and
-%                      observed variables (ntrial-by-yvar-by-nlag)
+%                      observed variables (ntrial-by-yvar)
 %
 %   [...] = MTRFPREDICT(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -78,7 +78,7 @@ elseif model.dir == -1
     x = resp; y = stim;
 end
 
-% Format data in cells column-wise
+% Format data in cell arrays
 [x,xobs,xvar] = formatcells(x,arg.dim);
 [y,yobs,yvar] = formatcells(y,arg.dim);
 if yobs == 0 || yvar == 0
@@ -104,7 +104,6 @@ delta = 1/model.fs;
 nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
-nvar = xvar*nlag+1;
 ntrial = numel(x);
 
 % Format model weights
@@ -116,12 +115,14 @@ switch arg.type
         model.w = [model.b;model.w]*delta;
 end
 
-% Test model
-m = 0;
+% Initialize performance variables
 pred = cell(ntrial*arg.split,1);
 r = zeros(ntrial*arg.split,yvar,nlag);
 p = zeros(ntrial*arg.split,yvar,nlag);
 rmse = zeros(ntrial*arg.split,yvar,nlag);
+
+% Test model
+n = 0;
 for i = 1:ntrial
     
     % Max segment size
@@ -129,52 +130,51 @@ for i = 1:ntrial
     
     for j = 1:arg.split
         
-        m = m+1;
+        n = n+1;
         
         % Test data
         iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
-        [xlag,ilag] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
-        xlag = [ones(numel(ilag),1),xlag]; %#ok<*AGROW>
-
+        [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+        xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
+        
         switch arg.type
             
             case 'multi'
                 
                 % Predict output
-                pred{m} = xlag*model.w;
+                pred{n} = xlag*model.w;
                 
                 % Measure performance
                 if nargout > 1
-                    [rt,pt] = corr(y{i}(ilag,:),pred{m});
-                    r(m,:) = diag(rt);
-                    p(m,:) = diag(pt);
-                    rmse(m,:) = sqrt(mean((y{i}(ilag,:)-pred{m}).^2,1))';
+                    [rt,pt] = corr(y{i}(idx,:),pred{n});
+                    r(n,:) = diag(rt);
+                    p(n,:) = diag(pt);
+                    rmse(n,:) = sqrt(mean((y{i}(idx,:) - pred{n}).^2,1))';
                 end
                 
             case 'single'
                 
-                ii = 0;
-                pred{m} = zeros(numel(ilag),yvar,nlag);
-                for jj = 2:xvar:nvar
-                    
-                    ii = ii+1;
+                pred{n} = zeros(numel(idx),yvar,nlag);
+                
+                for k = 1:nlag
                     
                     % Predict output
-                    idx = [1,jj:jj+xvar-1];
-                    pred{m}(:,:,ii) = xlag(:,idx)*squeeze(model.w(:,ii,:));
+                    ilag = [1,xvar*(k-1)+2:xvar*k+1];
+                    pred{n}(:,:,k) = xlag(:,ilag)*squeeze(model.w(:,k,:));
                     
                     % Measure performance
                     if nargout > 1
-                        [rt,pt] = corr(y{i}(ilag,:),pred{m}(:,:,ii));
-                        r(m,:,ii) = diag(rt);
-                        p(m,:,ii) = diag(pt);
-                        rmse(m,:,ii) = sqrt(mean((y{i}(ilag,:)-pred{m}(:,:,ii)).^2,1))';
+                        [rt,pt] = corr(y{i}(idx,:),pred{n}(:,:,k));
+                        r(n,:,k) = diag(rt);
+                        p(n,:,k) = diag(pt);
+                        rmse(n,:,k) = sqrt(mean((y{i}(idx,:) - ...
+                            pred{n}(:,:,k)).^2,1))';
                     end
                     
                 end
                 
         end
-                
+        
     end
     
 end

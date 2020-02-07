@@ -1,18 +1,18 @@
 function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %OLSCOVMAT  Ordinary least squares covariance matrix estimation.
-%   [CXX,CXY] = OLSCOVMAT(X,Y,LAGS) returns a the covariance matrices for
-%   ordinary least squares (OLS) regression using time-lagged features of
-%   X. X and Y are matrices or cell arrays containing corresponding trials 
-%   of continuous training data, with columns corresponding to observations 
-%   and rows corresponding to variables. LAGS is a scalar or vector of time 
+%   [CXX,CXY] = OLSCOVMAT(X,Y,LAGS) returns the covariance matrices for
+%   ordinary least squares (OLS) regression using a time-lagged version of
+%   X. X and Y are matrices or cell arrays containing corresponding trials
+%   of continuous training data, with columns corresponding to observations
+%   and rows corresponding to variables. LAGS is a scalar or vector of time
 %   lags in samples.
 %
-%   [CXX,CXY,XLAG] = OLSCOVMAT(...) returns the time-lagged features of X
+%   [CXX,CXY,XLAG] = OLSCOVMAT(...) returns the time-lagged version of X
 %   used to compute the covariance matrices.
 %
 %   [...] = OLSCOVMAT(X,Y,LAGS,TYPE) specifies the type of model that the
 %   covariance matrices will be used to fit. Pass in 'multi' for TYPE to
-%   use all lags simultaneously (default), or 'single' to use each lag 
+%   use all lags simultaneously (default), or 'single' to use each lag
 %   individually.
 %
 %   [...] = OLSCOVMAT(X,Y,LAGS,TYPE,SPLIT) specifies the number of segments
@@ -22,11 +22,12 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %
 %   [...] = OLSCOVMAT(X,Y,LAGS,TYPE,SPLIT,ZEROPAD) specifies whether to
 %   zero-pad the outer rows of the design matrix or delete them. Pass in
-%   1 to zero-pad (default), or 0 to delete.
+%   1 to zero-pad them (default), or 0 to delete them.
 %
 %   [...] = OLSCOVMAT(X,Y,LAGS,TYPE,SPLIT,ZEROPAD,SUMCOV) specifies whether
 %   to sum over the covariance matrices of each trial or return each one in
-%   a separate cell. Pass in 1 to sum (default), or 0 to return separately.
+%   a separate cell. Pass in 1 to sum them (default), or 0 to return them
+%   separately.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -55,7 +56,6 @@ end
 nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
-nvar = xvar*nlag+1;
 ntrial = numel(x);
 
 % Initialize covariance matrices
@@ -77,33 +77,30 @@ if sumcov % sum over trials
     
     for i = 1:ntrial
         
-        % Get segment size
+        % Max segment size
         nseg = ceil(xobs(i)/split);
         
-        for j = 1:split % split trial into segments
+        for j = 1:split
             
-            % Get segment indices
+            % Segment indices
             iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
             
             % Generate time-lagged features
-            [xlag,ilag] = lagGen(x{i}(iseg,:),lags,zeropad);
-            xlag = [ones(numel(ilag),1),xlag];
-            iseg = iseg(ilag);
+            [xlag,idx] = lagGen(x{i}(iseg,:),lags,zeropad);
+            xlag = [ones(numel(idx),1),xlag];
             
             % Compute covariance matrices
             switch type
                 case 'multi'
                     Cxx = Cxx + xlag'*xlag;
-                    Cxy = Cxy + xlag'*y{i}(iseg,:);
+                    Cxy = Cxy + xlag'*y{i}(iseg(idx),:);
                 case 'single'
-                    jj = 0;
-                    for ii = 2:xvar:nvar
-                        jj = jj+1;
-                        idx = [1,ii:ii+xvar-1];
-                        Cxx(:,:,jj) = Cxx(:,:,jj) + ...
-                            xlag(:,idx)'*xlag(:,idx);
-                        Cxy(:,:,jj) = Cxy(:,:,jj) + ...
-                            xlag(:,idx)'*y{i}(iseg,:);
+                    for k = 1:nlag
+                        idx = [1,xvar*(k-1)+2:xvar*k+1];
+                        Cxx(:,:,k) = Cxx(:,:,k) + ...
+                            xlag(:,ilag)'*xlag(:,ilag);
+                        Cxy(:,:,k) = Cxy(:,:,k) + ...
+                            xlag(:,ilag)'*y{i}(iseg(idx),:);
                     end
             end
             
@@ -113,38 +110,35 @@ if sumcov % sum over trials
     
 else % keep trials separate
     
-    m = 0;
+    n = 0;
     for i = 1:ntrial
         
-        % Get segment size
+        % Max segment size
         nseg = ceil(xobs(i)/split);
         
-        for j = 1:split % split trial into segments
+        for j = 1:split
             
-            m = m+1;
+            n = n+1;
             
-            % Get segment indices
+            % Segment indices
             iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
             
             % Generate time-lagged features
-            [xlag{m},ilag] = lagGen(x{i}(iseg,:),lags,zeropad);
-            xlag{m} = [ones(numel(ilag),1),xlag{m}]; 
-            iseg = iseg(ilag);
+            [xlag{n},idx] = lagGen(x{i}(iseg,:),lags,zeropad);
+            xlag{n} = [ones(numel(idx),1),xlag{n}];
             
             % Compute covariance matrices
             switch type
                 case 'multi'
-                    Cxx{m} = xlag{m}'*xlag{m}; %#ok<*AGROW>
-                    Cxy{m} = xlag{m}'*y{i}(iseg,:);
+                    Cxx{n} = xlag{n}'*xlag{n}; %#ok<*AGROW>
+                    Cxy{n} = xlag{n}'*y{i}(iseg(idx),:);
                 case 'single'
-                    jj = 0;
-                    Cxx{m} = zeros(xvar+1,xvar+1,nlag);
-                    Cxy{m} = zeros(xvar+1,yvar,nlag);
-                    for ii = 2:xvar:nvar
-                        jj = jj+1;
-                        idx = [1,ii:ii+xvar-1];
-                        Cxx{m}(:,:,jj) = xlag{m}(:,idx)'*xlag{m}(:,idx);
-                        Cxy{m}(:,:,jj) = xlag{m}(:,idx)'*y{i}(iseg,:);
+                    Cxx{n} = zeros(xvar+1,xvar+1,nlag);
+                    Cxy{n} = zeros(xvar+1,yvar,nlag);
+                    for k = 1:nlag
+                        ilag = [1,xvar*(k-1)+2:xvar*k+1];
+                        Cxx{n}(:,:,k) = xlag{n}(:,ilag)'*xlag{n}(:,ilag);
+                        Cxy{n}(:,:,k) = xlag{n}(:,ilag)'*y{i}(iseg(idx),:);
                     end
             end
             
