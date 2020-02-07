@@ -1,49 +1,72 @@
 # mTRF-Toolbox
+mTRF-Toolbox is a MATLAB package for fast computation of forward encoding
+models (stimulus to neural response) or backward decoding models (neural
+response to stimulus). It is suitable for analysing various types of multi-
+channel neurophysiological data including MEG, EEG, iEEG, sEEG, ECoG and 
+EMG data. Forward encoding models, also known as response functions or 
+receptive fields, can be used to investigate information processing in 
+neuronal populations with respect to some temporal dimension (TRFs), or 
+spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to 
+conventional time-frequency and source analysis techniques used to analyse
+event related potentials (ERPs). In addition, TRFs can be used to predict
+the dynamics of neural responses to unseen stimulus sequences as away to 
+objectively measure information encoding. Stimulus reconstruction can be 
+performed using backward decoding models that project the multi-channel 
+neural responses back to the dynamics of the stimulus. mTRF-Toolbox 
+facilitates the use of natural continuous stimuli in electrophysiological 
+studies compared to conventional time-locked averaging approaches which 
+require the use of discrete stimulus events. This allows researchers to 
+investigate how neural systems process dynamic environmental signals such 
+as speech, music and motion, and to decode dynamic cognitive processes such
+as attention and multisensory integration.
 
-The mTRF Toolbox is a MATLAB repository that permits the fast computation 
-of the linear stimulus-response mapping of any sensory system in the 
-forward or backward direction. It is suitable for analysing multi-channel 
-MEG, EEG, iEEG, sEEG, ECoG and EMG data. The forward encoding model, or temporal 
-response function (TRF) as it is commonly known, can be used to investigate 
-information processing in neuronal populations using conventional time-
-frequency and source analysis techniques. In addition, TRFs can be used to 
-predict the spectrotemporal dynamics of future neural responses to unseen 
-stimulus sequences. Stimulus reconstruction can also be performed using 
-backward decoding models that project the multi-channel population 
-responses back to the dynamics of the causal stimulus signal. The mTRF 
-Toolbox facilitates the use of extended continuous stimuli in 
-electrophysiological studies compared to conventional time-locked averaging 
-approaches which require the use of discrete, isolated stimulus events. 
-This allows researchers to investigate of how neural systems process 
-dynamic environmental signals such as speech, music and motion.
+### Documentation
+Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf). Frontiers in Human Neuroscience 10:604.
 
-## Tips on Practical Use
+### mTRF Framework
+![mTRF-Toolbox](doc/mTRF-Toolbox.png "mTRF Modeling Framework")
 
-* Ensure that the stimulus and response data have the same sample rate
-  and number of samples.
+## Contents
+### Fitting Encoding and Decoding Models
+* `mTRFcrossval.m` - cross-validation for tuning encoding/decoding model parameters
+* `mTRFtrain.m` - encoding/decoding model fitting (TRF/STRF estimation)
+* `mTRFpredict.m` - model prediction and evaluation
+* `mTRFtransform.m` - transforms decoding models into neurophysiologically interpretable encoding models
+ 
+### Fitting Attention and Multisensory Models
+* `mTRFaadcrossval.m` - cross-validation for 2-speaker auditory attention decoding (AAD) 
+* `mTRFmulticrossval.m` - cross-validation for additive multisensory models
+
+### Modeling Tools
+* `lagGen.m` - generates time-lagged input features
+* `olscovmat.m` - ordinary least squares covariance matrix estimation
+
+## Tips on Practical Usage
+* Ensure that the stimulus and response data are temporally aligned and 
+  have the same sample rate and number of samples.
 * Downsample the data when conducting large-scale multivariate analyses
   to reduce running time, e.g., 128 Hz or 64 Hz.
-* Normalise or standardise the data beforehand. We recommend normalising 
+* Normalize or standardize the data beforehand. We recommend normalizing 
   by the standard deviation. This will stabalise regularization across 
   trials/subjects/groups and facilitate a smaller parameter search.
-* Enter the start and finish time lags in milliseconds. Enter positive
-  lags for post-stimulus mapping and negative lags for pre-stimulus
-  mapping. This is the same for both forward and backward mapping - the 
-  code will automatically reverse the lags for backward mapping.
-* When using MTRFPREDICT, always enter the model in its original
-  3-dimensional form, i.e., do not remove any singleton dimensions.
-* When using MTRFCROSSVAL, the trials do not have to be the same length,
-  but using trials of the same length will optimise performance.
-* When using MTRFMULTICROSSVAL, the trials in each of the three sensory
-  conditions should correspond to the stimuli in STIM.
+* Enter the min and max time lags in milliseconds, not seconds. Enter 
+  positive lags for post-stimulus mapping and negative lags for pre-
+  stimulus mapping. This applies to both forward and backward models - 
+  the code will automatically reverse the lags for backward models.
 
 ## Additional Information
-
-mTRF Toolbox is also available for download at:
+mTRF-Toolbox is also available for download at:
 SourceForge: http://sourceforge.net/projects/aespa
 
-mTRF Toolbox support documentation is available at:
+mTRF-Toolbox support documentation is available at:
 http://dx.doi.org/10.3389/fnhum.2016.00604
 
-For any questions and comments, please email:
-mickcrosse@gmail.com (Mick Crosse) or edmundlalor@gmail.com (Ed Lalor)
+For questions or suggestions, please contact:
+Mick Crosse (mickcrosse@gmail.com) or Ed Lalor (edmundlalor@gmail.com)
+
+## References
+1. Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli. Frontiers in Human Neuroscience 10:604.
+2. Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006) The VESPA: a method for the rapid estimation of a visual evoked potential. NeuroImage 32:1549-1561.
+3. Holdgraf CR, Rieger JW, Micheli C, Martin S, Knight RT, Theunissen FE (2017) Encoding and Decoding Models in Cognitive Electrophysiology Front Syst Neurosci 11:61.
+4. Alickovic E, Lunner T, Gustafsson F, Ljung L (2019) A Tutorial on Auditory Attention Identification Methods. Front Neurosci 13:153.
+5. Haufe S, Meinecke F, Gorgen K, Dahne S, Haynes JD, Blankertz B, Bießmann F (2014) On the interpretation of weight vectors of linear models in multivariate neuroimaging. NeuroImage 87:96-110.
