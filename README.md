@@ -28,18 +28,18 @@ Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal R
 
 ## Contents
 ### Fitting Encoding and Decoding Models
-* `mTRFcrossval.m` - cross-validation for tuning encoding/decoding model parameters
-* `mTRFtrain.m` - encoding/decoding model fitting (TRF/STRF estimation)
-* `mTRFpredict.m` - model prediction and evaluation
-* `mTRFtransform.m` - transforms decoding models into neurophysiologically interpretable encoding models
+* `mTRFcrossval()` - cross-validation for tuning encoding/decoding model parameters
+* `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
+* `mTRFpredict()` - model prediction and evaluation
+* `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
  
 ### Decoding Attention and Multisensory Integration
-* `mTRFaadcrossval.m` - cross-validation for 2-speaker auditory attention decoding (AAD) 
-* `mTRFmulticrossval.m` - cross-validation for additive multisensory models
+* `mTRFaadcrossval()` - cross-validation for 2-speaker auditory attention decoding (AAD) 
+* `mTRFmulticrossval()` - cross-validation for additive multisensory models
 
 ### Modeling Tools
-* `lagGen.m` - generates time-lagged input features
-* `olscovmat.m` - ordinary least squares covariance matrix estimation
+* `lagGen()` - generates time-lagged input features
+* `olscovmat()` - ordinary least squares covariance matrix estimation
 
 ## Tips on Practical Usage
 * Ensure that the stimulus and response data are temporally aligned and 
