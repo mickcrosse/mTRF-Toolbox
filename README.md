@@ -23,8 +23,8 @@ as attention and multisensory integration.
 ### Documentation
 Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf). Frontiers in Human Neuroscience 10:604.
 
-### mTRF Framework
-![mTRF-Toolbox](doc/mTRF-Toolbox.png "mTRF Modeling Framework")
+## mTRF Framework
+<img src="doc/mTRF-Toolbox.png" width="600" height="400">
 
 ## Contents
 ### Fitting Encoding and Decoding Models
