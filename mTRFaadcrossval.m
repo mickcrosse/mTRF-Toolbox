@@ -91,7 +91,7 @@ function [stats1,stats2,t] = mTRFaadcrossval(stim1,stim2,resp,fs,dir,tmin,tmax,l
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   References:
-%      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2015) The
+%      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
 %          multivariate temporal response function (mTRF) toolbox: a MATLAB
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
