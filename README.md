@@ -57,6 +57,7 @@ Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal R
 ## References
 1. Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli. Frontiers in Human Neuroscience 10:604.
 2. Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006) The VESPA: a method for the rapid estimation of a visual evoked potential. NeuroImage 32:1549-1561.
-3. Holdgraf CR, Rieger JW, Micheli C, Martin S, Knight RT, Theunissen FE (2017) Encoding and Decoding Models in Cognitive Electrophysiology Front Syst Neurosci 11:61.
-4. Alickovic E, Lunner T, Gustafsson F, Ljung L (2019) A Tutorial on Auditory Attention Identification Methods. Front Neurosci 13:153.
-5. Haufe S, Meinecke F, Gorgen K, Dahne S, Haynes JD, Blankertz B, Bießmann F (2014) On the interpretation of weight vectors of linear models in multivariate neuroimaging. NeuroImage 87:96-110.
+3. Gonçalves NR, Whelan R, Foxe JJ, Lalor EC (2014) Towards obtaining spatiotemporally precise responses to continuous sensory stimuli in humans: a general linear modeling approach to EEG. NeuroImage 97(2014):196-205.
+4. Holdgraf CR, Rieger JW, Micheli C, Martin S, Knight RT, Theunissen FE (2017) Encoding and Decoding Models in Cognitive Electrophysiology Front Syst Neurosci 11:61.
+5. Alickovic E, Lunner T, Gustafsson F, Ljung L (2019) A Tutorial on Auditory Attention Identification Methods. Front Neurosci 13:153.
+6. Haufe S, Meinecke F, Gorgen K, Dahne S, Haynes JD, Blankertz B, Bießmann F (2014) On the interpretation of weight vectors of linear models in multivariate neuroimaging. NeuroImage 87:96-110.
