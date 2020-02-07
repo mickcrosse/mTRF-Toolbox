@@ -28,7 +28,7 @@ Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal R
 
 ## Contents
 ### Fitting Encoding and Decoding Models
-* `mTRFcrossval()` - cross-validation for tuning encoding/decoding model parameters
+* `mTRFcrossval()` - cross-validation for tuning encoding/decoding model hyperparameters
 * `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
 * `mTRFpredict()` - model prediction and evaluation
 * `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
