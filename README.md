@@ -33,7 +33,7 @@ Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal R
 * `mTRFpredict.m` - model prediction and evaluation
 * `mTRFtransform.m` - transforms decoding models into neurophysiologically interpretable encoding models
  
-### Fitting Attention and Multisensory Models
+### Decoding Attention and Multisensory Integration
 * `mTRFaadcrossval.m` - cross-validation for 2-speaker auditory attention decoding (AAD) 
 * `mTRFmulticrossval.m` - cross-validation for additive multisensory models
 
