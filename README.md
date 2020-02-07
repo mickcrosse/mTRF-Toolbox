@@ -9,7 +9,7 @@ neuronal populations with respect to some temporal dimension (TRFs), or
 spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to 
 conventional time-frequency and source analysis techniques used to analyse
 event related potentials (ERPs). In addition, TRFs can be used to predict
-the dynamics of neural responses to unseen stimulus sequences as away to 
+the dynamics of neural responses to unseen stimulus sequences as a way to 
 objectively measure information encoding. Stimulus reconstruction can be 
 performed using backward decoding models that project the multi-channel 
 neural responses back to the dynamics of the stimulus. mTRF-Toolbox 
@@ -23,8 +23,8 @@ as attention and multisensory integration.
 ### Documentation
 Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf). Frontiers in Human Neuroscience 10:604.
 
-### mTRF Framework
-![mTRF-Toolbox](doc/mTRF-Toolbox.png "mTRF Modeling Framework")
+## mTRF Modeling Framework
+<img src="doc/mTRF-Toolbox.png" width="600" height="400">
 
 ## Contents
 ### Fitting Encoding and Decoding Models
@@ -33,7 +33,7 @@ Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal R
 * `mTRFpredict.m` - model prediction and evaluation
 * `mTRFtransform.m` - transforms decoding models into neurophysiologically interpretable encoding models
  
-### Fitting Attention and Multisensory Models
+### Decoding Attention and Multisensory Integration
 * `mTRFaadcrossval.m` - cross-validation for 2-speaker auditory attention decoding (AAD) 
 * `mTRFmulticrossval.m` - cross-validation for additive multisensory models
 
@@ -53,16 +53,6 @@ Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal R
   positive lags for post-stimulus mapping and negative lags for pre-
   stimulus mapping. This applies to both forward and backward models - 
   the code will automatically reverse the lags for backward models.
-
-## Additional Information
-mTRF-Toolbox is also available for download at:
-SourceForge: http://sourceforge.net/projects/aespa
-
-mTRF-Toolbox support documentation is available at:
-http://dx.doi.org/10.3389/fnhum.2016.00604
-
-For questions or suggestions, please contact:
-Mick Crosse (mickcrosse@gmail.com) or Ed Lalor (edmundlalor@gmail.com)
 
 ## References
 1. Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli. Frontiers in Human Neuroscience 10:604.
