@@ -3,7 +3,7 @@
 The mTRF Toolbox is a MATLAB repository that permits the fast computation 
 of the linear stimulus-response mapping of any sensory system in the 
 forward or backward direction. It is suitable for analysing multi-channel 
-EEG, MEG, ECoG and EMG data. The forward encoding model, or temporal 
+MEG, EEG, iEEG, sEEG, ECoG and EMG data. The forward encoding model, or temporal 
 response function (TRF) as it is commonly known, can be used to investigate 
 information processing in neuronal populations using conventional time-
 frequency and source analysis techniques. In addition, TRFs can be used to 
