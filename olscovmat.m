@@ -53,24 +53,26 @@ end
 % Get dimensions
 [~,xobs,xvar] = formatcells(x,1,0);
 [~,~,yvar] = formatcells(y,1,0);
-nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
 ntrial = numel(x);
+nbatch = ntrial*split;
+nlag = numel(lags);
 
 % Initialize covariance matrices
 if sumcov
     switch type
         case 'multi'
-            Cxx = 0; Cxy = 0;
+            Cxx = zeros(xvar+1,xvar+1);
+            Cxy = zeros(xvar+1,yvar);
         case 'single'
             Cxx = zeros(xvar+1,xvar+1,nlag);
             Cxy = zeros(xvar+1,yvar,nlag);
     end
 else
-    xlag = cell(ntrial*split,1);
-    Cxx = cell(ntrial*split,1);
-    Cxy = cell(ntrial*split,1);
+    xlag = cell(nbatch,1);
+    Cxx = cell(nbatch,1);
+    Cxy = cell(nbatch,1);
 end
 
 if sumcov % sum over trials
@@ -78,12 +80,12 @@ if sumcov % sum over trials
     for i = 1:ntrial
         
         % Max segment size
-        nseg = ceil(xobs(i)/split);
+        seg = ceil(xobs(i)/split);
         
         for j = 1:split
             
             % Segment indices
-            iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+            iseg = seg*(j-1)+1:min(seg*j,xobs(i));
             
             % Generate time-lagged features
             [xlag,idx] = lagGen(x{i}(iseg,:),lags,zeropad);
@@ -96,7 +98,7 @@ if sumcov % sum over trials
                     Cxy = Cxy + xlag'*y{i}(iseg(idx),:);
                 case 'single'
                     for k = 1:nlag
-                        idx = [1,xvar*(k-1)+2:xvar*k+1];
+                        ilag = [1,xvar*(k-1)+2:xvar*k+1];
                         Cxx(:,:,k) = Cxx(:,:,k) + ...
                             xlag(:,ilag)'*xlag(:,ilag);
                         Cxy(:,:,k) = Cxy(:,:,k) + ...
@@ -114,14 +116,14 @@ else % keep trials separate
     for i = 1:ntrial
         
         % Max segment size
-        nseg = ceil(xobs(i)/split);
+        seg = ceil(xobs(i)/split);
         
         for j = 1:split
             
             n = n+1;
             
             % Segment indices
-            iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+            iseg = seg*(j-1)+1:min(seg*j,xobs(i));
             
             % Generate time-lagged features
             [xlag{n},idx] = lagGen(x{i}(iseg,:),lags,zeropad);
