@@ -34,7 +34,7 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %   Authors: Mick Crosse, Nate Zuk
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 04-Feb-2020
+%   Jan 2020; Last revision: 08-Feb-2020
 
 % Set default values
 if nargin < 4 || isempty(type)
