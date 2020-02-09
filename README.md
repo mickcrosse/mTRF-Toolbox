@@ -25,7 +25,7 @@ processes such as auditory attention and multisensory integration.
 ### Documentation
 Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
-## mTRF Modeling Framework
+## mTRF Modelling Framework
 <img src="doc/mTRF-Toolbox.png" width="600" height="400">
 
 ## Contents
