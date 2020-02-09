@@ -21,25 +21,26 @@ as speech, music and motion, and to decode dynamic cognitive processes such
 as attention and multisensory integration.
 
 ### Documentation
-Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf). Frontiers in Human Neuroscience 10:604.
+Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 ## mTRF Modeling Framework
 <img src="doc/mTRF-Toolbox.png" width="600" height="400">
 
 ## Contents
 ### Fitting Encoding and Decoding Models
-* `mTRFcrossval()` - cross-validation for tuning encoding/decoding model hyperparameters
+* `mTRFcrossval()` - cross-validation for tuning model hyperparameters
 * `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
 * `mTRFpredict()` - model prediction and evaluation
 * `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
  
 ### Decoding Attention and Multisensory Integration
-* `mTRFaadcrossval()` - cross-validation for 2-speaker auditory attention decoding (AAD) 
-* `mTRFmulticrossval()` - cross-validation for additive multisensory models
+* `mTRFattncrossval()` - cross-validation for attention decoding
+* `mTRFmulticrossval()` - cross-validation for additive models of multisensory processing
 
-### Modeling Tools
+### Tools for Rapid Least Squares Estimation
 * `lagGen()` - generates time-lagged input features
 * `olscovmat()` - ordinary least squares covariance matrix estimation
+* `mlscovmat()` - multisensory least squares covariance matrix estimation
 
 ## Tips on Practical Usage
 * Ensure that the stimulus and response data are temporally aligned and 
