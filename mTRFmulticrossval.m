@@ -1,155 +1,330 @@
-function [r,p,rmse,pred,model] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,map,tmin,tmax,lambda1,lambda2)
-%mTRFmulticrossval mTRF Toolbox multisensory cross-validation function.
-%   [R,P,MSE] = MTRFMULTICROSSVAL(STIM,RESP,RESP1,RESP2,FS,MAP,TMIN,TMAX,
-%   LAMBDA1,LAMBDA2) performs leave-one-out cross-validation of an
-%   additive model for a multisensory dataset as follows:
-%   1. Separate unisensory models are calculated using the set of stimuli
-%      STIM and unisensory neural responses RESP1 and RESP2 for the range
-%      of ridge parameter values LAMBDA1 and LAMBDA2 respectively.
-%   2. The algebraic sums of the unisensory models for every combination of
-%      LAMBDA1 and LAMBDA2 are calculated, i.e., the additive models.
-%   3. The additive models are validated by testing them on the set of
-%      multisensory neural responses RESP.
-%   As a measure of performance, it returns the correlation coefficients R
-%   between the predicted and original signals, the corresponding p-values
-%   P and the mean squared errors MSE. The time lags T should be set in
-%   milliseconds between TMIN and TMAX and the sampling frequency FS should
-%   be defined in Hertz. Pass in MAP==1 to map in the forward direction or
-%   MAP==-1 to map backwards. The neural responses in all three sensory
-%   conditions must have been recorded for the same set of stimuli STIM.
+function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,lambda,varargin)
+%MTRFMULTICROSSVAL  mTRF cross-validation for multisensory additive models.
+%   STATS = MTRFMULTICROSSVAL(STIM,RESP,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA)
+%   cross validates a forward encoding model (stimulus to neural response)
+%   or a backward decoding model (neural response to stimulus) over
+%   multiple trials of data for a multisensory experiment. Models are
+%   trained on the sum of the unisensory responses (additive model), and
+%   validated on the multisensory responses as per Crosse et al. (2015).
+%   Pass in 1 for DIR to validate a forward model, or -1 to validate a
+%   backward model. STIM, RESP, RESP1 and RESP2 are cell arrays containing
+%   corresponding trials of continuous data. RESP are the responses to the
+%   multisensory condition, RESP1 are the responses to the first unisensory
+%   condition and RESP2 the responses to the second unisensory condition.
+%   FS is a scalar specifying the sample rate in Hertz, and TMIN  and TMAX
+%   are scalars specifying the minimum and maximum time lags in
+%   milliseconds. For backward models, MTRFMULTICROSSVAL automatically
+%   reverses the time lags. LAMBDA is a scalar or vector of regularization
+%   values to be validated and controls overfitting.
 %
-%   [...,PRED,MODEL] = MTRFMULTICROSSVAL(...) also returns the predictions
-%   PRED and the linear mapping functions MODEL.
+%   STATS = MTRFMULTICROSSVAL(...) returns the cross-validation statistics
+%   in a structure with the following fields:
+%       'r'         -- the correlation coefficients between the predicted
+%                      and observed variables (ntrial-by-nlambda-by-yvar)
+%       'p'         -- the probabilities of the correlation coefficients
+%       'rmse'      -- the root-mean-square error between the predicted and
+%                      observed variables (ntrial-by-nlambda-by-yvar)
 %
-%   Inputs:
-%   stim    - set of stimuli [cell{1,trials}(time by features)]
-%   resp    - set of multisensory neural responses [cell{1,trials}(time by channels)]
-%   resp1   - set of unisensory 1 neural responses [cell{1,trials}(time by channels)]
-%   resp2   - set of unisensory 2 neural responses [cell{1,trials}(time by channels)]
-%   fs      - sampling frequency (Hz)
-%   map     - mapping direction (forward==1, backward==-1)
-%   tmin    - minimum time lag (ms)
-%   tmax    - maximum time lag (ms)
-%   lambda1 - unisensory 1 ridge parameter values
-%   lambda2 - unisensory 2 ridge parameter values
+%   MTRFMULTICROSSVAL performs a leave-one-out cross-validation over all
+%   trials. To achieve a k-fold cross-validation, arrange STIM, RESP, RESP1
+%   and RESP2 in k-by-1 cell arrays. The number of folds can also be
+%   increased by an integer factor using the 'split' parameter (see below).
 %
-%   Outputs:
-%   r       - correlation coefficients
-%   p       - p-values of the correlations
-%   mse     - mean squared errors
-%   pred    - prediction [MAP==1: cell{1,trials}(lambdas1 by lambdas2 by
-%             time by chans), MAP==-1: cell{1,trials}(lambdas1 by lambdas2
-%             by time by feats)]
-%   model   - linear mapping function (MAP==1: trials by lambdas1 by
-%             lambdas2 by feats by lags by chans, MAP==-1: trials by
-%             lambdas1 by lambdas2 by chans by lags by feats)
+%   If STIM, RESP, RESP1 or RESP2 contain matrices, it is assumed that the
+%   rows correspond to observations and the columns to variables, unless
+%   otherwise stated via the 'dim' parameter (see below). If they contain
+%   vectors, it is assumed that the first non-singleton dimension
+%   corresponds to observations. Each trial of STIM, RESP, RESP1 or RESP2
+%   must have the same number of observations.
 %
-%   See README for examples of use.
+%   [STATS,T] = MTRFMULTICROSSVAL(...) returns a vector containing the time
+%   lags used in milliseconds. These data are useful for interpreting the
+%   results of single-lag models.
 %
-%   See also LAGGEN MTRFTRAIN MTRFPREDICT MTRFCROSSVAL.
+%   [...] = MTRFMULTICROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...)
+%   specifies additional parameters and their values. Valid parameters are
+%   the following:
+%
+%       Parameter   Value
+%       'dim'       A scalar specifying the dimension to work along: pass
+%                   in 1 to work along the columns (default), or 2 to work
+%                   along the rows. Applies to both STIM and RESP.
+%       'method'    A string specifying the regularization method to use:
+%                       'ridge'     ridge regression (default): suitable
+%                                   for multivariate input features
+%                       'Tikhonov'  Tikhonov regularization: dampens fast
+%                                   oscillatory components of the solution
+%                                   but may cause cross-channel leakage for
+%                                   multivariate input features
+%                       'ols'       ordinary least squares: equivalent to
+%                                   setting LAMBDA=0 (no regularization)
+%       'type'      A string specifying type of model to fit:
+%                       'multi'     use all lags simultaneously to fit a
+%                                   multi-lag model (default)
+%                       'single'    use each lag individually to fit
+%                                   separate single-lag models
+%       'split'     A scalar specifying the number of segments in which to
+%                   split each trial of data when computing the covariance
+%                   matrices. This is useful for reducing memory usage on
+%                   large datasets. By default, the entire trial is used.
+%       'zeropad'   A numeric or logical specifying whether to zero-pad the
+%                   outer rows of the design matrix or delete them: pass in
+%                   1 to zero-pad them (default), or 0 to delete them.
+%       'fast'      A numeric or logical specifying whether to use the fast
+%                   cross-validation method (requires more memory) or the
+%                   slower method (requires less memory): pass in 1 to use
+%                   the fast method (default) or 0 to use the slower
+%                   method. Note, both methods are numerically equivalent.
+%
+%   Notes:
+%   It is not recommended to use cross-validation as a way of testing model
+%   performance. Models should be tested on separate, held-out data after
+%   cross-validation using the mTRFpredict function.
+%   Discontinuous trials of data should not be concatenated prior to cross-
+%   validation as this will introduce artifacts in places where time lags
+%   cross over trial boundaries. Each trial should be input as an
+%   individual cell of continuous data and MTRFMULTICROSSVAL will zero-pad
+%   the trial boundaries appropriately.
+%
+%   See mTRFdemos for examples of use.
+%
+%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFAADCROSSVAL.
+%
+%   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   References:
-%      [1] Crosse MC, Butler JS, Lalor EC (2015) Congruent visual speech
-%          enhances cortical entrainment to continuous auditory speech in
-%          noise-free conditions. J Neurosci 35(42):14195-14204.
+%      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
+%      [2] Crosse MC, Butler JS, Lalor EC (2015) Congruent Visual Speech
+%          Enhances Cortical Entrainment to Continuous Auditory Speech in
+%          Noise-Free Conditions. J Neurosci 35(42):14195-14204.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
-%   Email: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Website: www.lalorlab.net
+%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
+%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   April 2014; Last revision: 4-Feb-2019
+%   Jan 2020; Last revision: 08-Feb-2020
 
-% Define x and y
-if tmin > tmax
-    error('Value of TMIN must be < TMAX')
+% Parse input arguments
+arg = parsevarargin(varargin);
+
+% Validate input parameters
+if ~isnumeric(fs) || ~isscalar(fs) || fs <= 0
+    error('FS argument must be a positive numeric scalar.')
+elseif ~isnumeric([tmin,tmax]) || ~isscalar(tmin) || ~isscalar(tmax)
+    error('TMIN and TMAX arguments must be numeric scalars.')
+elseif tmin > tmax
+    error('The value of TMIN must be less than that of TMAX.')
+elseif ~isnumeric(lambda) || any(lambda < 0)
+    error('LAMBDA argument must be positive numeric values.')
 end
-if map == 1
-    x = stim;
-    y = resp;
-elseif map == -1
-    x = resp;
-    y = stim;
+
+% Define X and Y variables
+if dir == 1
+    x = stim; y = resp;
+elseif dir == -1
+    x = resp; y = stim;
     [tmin,tmax] = deal(tmax,tmin);
 else
-    error('Value of MAP must be 1 (forward) or -1 (backward)')
+    error('DIR argument must have a value of 1 or -1.')
 end
-clear stim resp
+
+% Format data in cell arrays
+[x,xobs,xvar] = formatcells(x,arg.dim);
+[y,yobs,yvar] = formatcells(y,arg.dim);
+[z1,zobs1,~] = formatcells(resp1,arg.dim);
+[z2,zobs2,~] = formatcells(resp2,arg.dim);
+
+% Check equal number of observations
+if ~isequal(xobs,yobs,zobs1,zobs2)
+    error(['STIM and RESP arguments must have the same number of '...
+        'observations.'])
+end
 
 % Convert time lags to samples
-tmin = floor(tmin/1e3*fs*map);
-tmax = ceil(tmax/1e3*fs*map);
+tmin = floor(tmin/1e3*fs*dir);
+tmax = ceil(tmax/1e3*fs*dir);
+lags = tmin:tmax;
 
-% Set up regularisation
-dim1 = size(x{1},2)*length(tmin:tmax)+1;
-dim2 = size(y{1},2);
-model = zeros(numel(x),numel(lambda1),numel(lambda2),dim1,dim2);
-if size(x{1},2) == 1
-    d = 2*eye(dim1);d([dim1+2,end]) = 1;
-    u = [zeros(dim1,1),eye(dim1,dim1-1)];
-    l = [zeros(1,dim1);eye(dim1-1,dim1)];
-    M = d-u-l; M(:,1) = 0; M(1,:) = 0;
-else
-    M = eye(dim1,dim1); M(1,1) = 0;
+% Compute sampling interval
+delta = 1/fs;
+
+% Get dimensions
+xvar = unique(xvar);
+yvar = unique(yvar);
+switch arg.type
+    case 'multi'
+        mvar = xvar*numel(lags)+1;
+        nlag = 1;
+    case 'single'
+        mvar = xvar+1;
+        nlag = numel(lags);
 end
+ntrial = numel(x);
+nbatch = ntrial*arg.split;
+nlambda = numel(lambda);
 
-% Training
-X = cell(1,numel(x));
-for i = 1:numel(x)
-    % Generate lag matrix
-    X{i} = [ones(size(x{i},1),1),lagGen(x{i},tmin:tmax)];
-    if map == 1
-        % Calculate unisensory models for each lambda value
-        model1 = zeros(numel(lambda1),dim1,dim2);
-        for j = 1:numel(lambda1)
-            model1(j,:,:) = (X{i}'*X{i}+lambda1(j)*M)\X{i}'*resp1{i};
-        end
-        model2 = zeros(numel(lambda2),dim1,dim2);
-        for j = 1:numel(lambda2)
-            model2(j,:,:) = (X{i}'*X{i}+lambda2(j)*M)\X{i}'*resp2{i};
-        end
-    elseif map == -1
-        % Generate lag matrices
-        X1 = [ones(size(resp1{i},1),1),lagGen(resp1{i},tmin:tmax)];
-        X2 = [ones(size(resp2{i},1),1),lagGen(resp2{i},tmin:tmax)];
-        % Calculate unisensory models for each lambda value
-        model1 = zeros(numel(lambda1),dim1,dim2);
-        for j = 1:numel(lambda1)
-            model1(j,:,:) = (X1'*X1+lambda1(j)*M)\X1'*y{i};
-        end
-        model2 = zeros(numel(lambda2),dim1,dim2);
-        for j = 1:numel(lambda2)
-            model2(j,:,:) = (X2'*X2+lambda2(j)*M)\X2'*y{i};
-        end
+% Compute unisensory covariance matrices
+if dir == 1
+    if arg.fast
+        [CXX,CXY1,CXY2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,arg.zeropad,0);
+    else
+        [CXX,CXY1,CXY2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,arg.zeropad,1);
     end
-    % Sum unisensory models for every combination of lambda values
-    for j = 1:numel(lambda1)
-        for k = 1:numel(lambda2)
-            model(i,j,k,:,:) = model1(j,:,:)+model2(k,:,:);
-        end
+elseif dir == -1
+    if arg.fast
+        [CXX1,CXY1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad,0);
+        [CXX2,CXY2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad,0);
+    else
+        [CXX1,CXY1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad,1);
+        [CXX2,CXY2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad,1);
     end
 end
 
-% Testing
-pred = cell(1,numel(x));
-r = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
-p = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
-rmse = zeros(numel(x),numel(lambda1),numel(lambda2),dim2);
-for i = 1:numel(x)
-    pred{i} = zeros(numel(lambda1),numel(lambda2),size(y{i},1),dim2);
-    % Define training trials
-    trials = 1:numel(x);
-    trials(i) = [];
-    % Perform cross-validation for every combination of lambda values
-    for j = 1:numel(lambda1)
-        for k = 1:numel(lambda2)
-            % Calculate prediction
-            pred{i}(j,k,:,:) = X{i}*squeeze(mean(model(trials,j,k,:,:),1));
-            % Calculate accuracy
-            [rtmp,ptmp] = corr(y{i},squeeze(pred{i}(j,k,:,:)));
-            r(i,j,k,:) = diag(rtmp); p(i,j,k,:) = diag(ptmp);
-            rmse(i,j,k,:) = sqrt(mean((y{i}-squeeze(pred{i}(j,k,:,:))).^2,1));
+% Compute additive covariance matrices
+if dir == 1
+    if arg.fast
+        for i = 1:nbatch
+            CXX{i} = CXX{i} + CXX{i};
+            CXY{i} = CXY1{i} + CXY2{i};
         end
+    else
+        CXX = CXX + CXX;
+        CXY = CXY1 + CXY2;
+    end
+elseif dir == -1
+    if arg.fast
+        for i = 1:nbatch
+            CXX{i} = CXX1{i} + CXX2{i};
+            CXY{i} = CXY1{i} + CXY2{i};
+        end
+    else
+        CXX = CXX1 + CXX2;
+        CXY = CXY1 + CXY2;
     end
 end
 
+% Set up sparse regularization matrix
+M = sparse(eye(mvar));
+switch arg.method
+    case 'ridge'
+        M(1,1) = 0;
+    case 'Tikhonov'
+        M = M - 0.5*(diag(ones(mvar-1,1),1)+diag(ones(mvar-1,1),-1));
+        M([mvar+2,end]) = 0.5;
+        M([1,2,mvar+1]) = 0;
+    case 'ols'
+        lambda(:) = 0;
+end
+M = M/delta;
+
+% Initialize performance variables
+r = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+p = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+rmse = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+
+% Leave-one-out cross-validation
+n = 0;
+for i = 1:ntrial
+    
+    % Max segment size
+    nseg = ceil(xobs(i)/arg.split);
+    
+    for j = 1:arg.split
+        
+        n = n+1;
+        
+        % Segment indices
+        iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+        
+        % Multisensory validation set
+        [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+        xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
+        
+        if arg.fast % fast method
+            
+            % Unisensory training set
+            idx = 1:nbatch; idx(n) = [];
+            Cxx = 0; Cxy = 0;
+            for k = idx
+                Cxx = Cxx + CXX{k};
+                Cxy = Cxy + CXY{k};
+            end
+            
+        else % memory-efficient method
+            
+            % Unisensory left-out set
+            [z1lag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+            z1lag = [ones(numel(idx),1),z1lag];
+            [z2lag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+            z2lag = [ones(numel(idx),1),z2lag];
+            
+            % Unisensory training set
+            Cxx = CXX - z1lag'*z1lag - z2lag'*z2lag;
+            Cxy = CXY - z1lag'*y{i}(iseg(idx),:) - z2lag'*y{i}(iseg(idx),:);
+            
+        end
+        
+        % Remove zero-padded indices
+        if ~arg.zeropad
+            iseg = iseg(1+max(0,lags(end)):end+min(0,lags(1)));
+        end
+        
+        for k = 1:nlambda
+            
+            switch arg.type
+                
+                case 'multi'
+                    
+                    % Fit additive linear model
+                    w = (Cxx + lambda(k)*M)\Cxy;
+                    
+                    % Account for superposition
+                    w = w*2;
+                    
+                    % Predict multisensory output
+                    pred = xlag*w;
+                    
+                    % Measure performance
+                    [rt,pt] = corr(y{i}(iseg,:),pred);
+                    r(n,k,:) = diag(rt);
+                    p(n,k,:) = diag(pt);
+                    rmse(n,k,:) = sqrt(mean((y{i}(iseg,:) - pred).^2,1))';
+                    
+                case 'single'
+                    
+                    for l = 1:nlag
+                        
+                        % Fit additive linear model
+                        w = (Cxx(:,:,l) + lambda(k)*M)\Cxy(:,:,l);
+                        
+                        % Account for superposition
+                        w = w*2;
+                        
+                        % Predict multisensory output
+                        ilag = [1,xvar*(l-1)+2:xvar*l+1];
+                        pred = xlag(:,ilag)*w;
+                        
+                        % Measure performance
+                        [rt,pt] = corr(y{i}(iseg,:),pred);
+                        r(n,k,:,l) = diag(rt);
+                        p(n,k,:,l) = diag(pt);
+                        rmse(n,k,:,l) = sqrt(mean((y{i}(iseg,:) - ...
+                            pred).^2,1))';
+                        
+                    end
+                    
+            end
+            
+        end
+        
+    end
+    
+end
+
+% Format output arguments
+stats = struct('r',r,'p',p,'rmse',rmse);
+if nargout > 1
+    t = lags/fs*1e3;
 end

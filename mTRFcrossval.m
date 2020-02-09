@@ -1,16 +1,16 @@
 function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %MTRFCROSSVAL  mTRF cross-validation.
-%   STATS = MTRFCROSSVAL(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) cross
-%   validates a forward encoding model (stimulus to neural response) or a
-%   backward decoding model (neural response to stimulus) using time-lagged
-%   input features. Pass in 1 for DIR to validate a forward model, or -1 to
-%   validate a backward model. STIM and RESP are cell arrays containing
-%   corresponding trials of continuous data over which to cross-validate.
-%   FS is a scalar specifying the sample rate in Hertz, and TMIN and TMAX
-%   are scalars specifying the minimum and maximum time lags in
-%   milliseconds. For backward models, MTRFCROSSVAL automatically reverses
-%   the time lags. LAMBDA is a scalar or vector of regularization values
-%   to be validated and controls overfitting.
+%   STATS = MTRFCROSSVAL(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) cross validates
+%   a forward encoding model (stimulus to neural response) or a backward
+%   decoding model (neural response to stimulus) over multiple trials of
+%   data. Pass in 1 for DIR to validate a forward model, or -1 to validate
+%   a backward model. STIM and RESP are cell arrays containing
+%   corresponding trials of continuous data. FS is a scalar specifying the
+%   sample rate in Hertz, and TMIN and TMAX are scalars specifying the
+%   minimum and maximum time lags in milliseconds. For backward models,
+%   MTRFCROSSVAL automatically reverses the time lags. LAMBDA is a scalar
+%   or vector of regularization values to be validated and controls
+%   overfitting.
 %
 %   MTRFCROSSVAL returns the cross-validation statistics in a structure
 %   with the following fields:
@@ -20,13 +20,10 @@ function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %       'rmse'      -- the root-mean-square error between the predicted and
 %                      observed variables (ntrial-by-nlambda-by-yvar)
 %
-%   MTRFCROSSVAL performs a leave-one-out cross-validation over trials.
+%   MTRFCROSSVAL performs a leave-one-out cross-validation over all trials.
 %   To achieve a k-fold cross-validation, arrange STIM and RESP in k-by-1
 %   cell arrays. The number of folds can also be increased by an integer
-%   factor using the 'split' parameter (see below). It is not recommended
-%   to concatenate discontinuous data segments or to use cross-validation
-%   as a way to test model performance. Models should be tested on separate
-%   data after cross-validation using the mTRFpredict function.
+%   factor using the 'split' parameter (see below).
 %
 %   If STIM or RESP contain matrices, it is assumed that the rows
 %   correspond to observations and the columns to variables, unless
@@ -74,6 +71,16 @@ function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %                   the fast method (default) or 0 to use the slower
 %                   method. Note, both methods are numerically equivalent.
 %
+%   Notes:
+%   It is not recommended to use cross-validation as a way of testing model
+%   performance. Models should be tested on separate, held-out data after
+%   cross-validation using the mTRFpredict function.
+%   Discontinuous trials of data should not be concatenated prior to cross-
+%   validation as this will introduce artifacts in places where time lags
+%   cross over trial boundaries. Each trial should be input as an
+%   individual cell of continuous data and MTRFCROSSVAL will zero-pad the
+%   trial boundaries appropriately.
+%
 %   See mTRFdemos for examples of use.
 %
 %   See also MTRFTRAIN, MTRFPREDICT, MTRFAADCROSSVAL, MTRFMULTICROSSVAL.
@@ -92,7 +99,7 @@ function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 05-Feb-2020
+%   Apr 2014; Last revision: 08-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -137,18 +144,18 @@ lags = tmin:tmax;
 delta = 1/fs;
 
 % Get dimensions
-nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
-nvar = xvar*nlag+1;
 switch arg.type
     case 'multi'
+        mvar = xvar*numel(lags)+1;
         nlag = 1;
-        mvar = nvar;
     case 'single'
         mvar = xvar+1;
+        nlag = numel(lags);
 end
 ntrial = numel(x);
+nbatch = ntrial*arg.split;
 nlambda = numel(lambda);
 
 % Compute covariance matrices
@@ -173,23 +180,23 @@ end
 M = M/delta;
 
 % Initialize performance variables
-r = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-p = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-rmse = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+r = zeros(nbatch,nlambda,yvar,nlag);
+p = zeros(nbatch,nlambda,yvar,nlag);
+rmse = zeros(nbatch,nlambda,yvar,nlag);
 
 % Leave-one-out cross-validation
 n = 0;
 for i = 1:ntrial
     
     % Max segment size
-    nseg = ceil(xobs(i)/arg.split);
+    seg = ceil(xobs(i)/arg.split);
     
     for j = 1:arg.split
         
         n = n+1;
         
         % Segment indices
-        iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+        iseg = seg*(j-1)+1:min(seg*j,xobs(i));
         
         if arg.fast % fast CV method
             
@@ -197,10 +204,9 @@ for i = 1:ntrial
             xlag = XLAG{n};
             
             % Training set
-            itrain = 1:ntrial*arg.split;
-            itrain(n) = [];
+            idx = 1:nbatch; idx(n) = [];
             Cxx = 0; Cxy = 0;
-            for k = itrain
+            for k = idx
                 Cxx = Cxx + CXX{k};
                 Cxy = Cxy + CXY{k};
             end

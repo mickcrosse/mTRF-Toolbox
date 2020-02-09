@@ -1,42 +1,33 @@
-function [stats1,stats2,t] = mTRFaadcrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFAADCROSSVAL  mTRF auditory attention decoding (AAD) cross-validation.
-%   STATS1 = MTRFAADCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA) 
-%   cross validates a forward encoding model (stimulus to neural response) 
-%   or a backward decoding model (neural response to stimulus) for 2-signal
-%   auditory attention decoding (AAD). Pass in 1 for DIR to validate a
-%   forward model, or -1 to validate a backward model. STIM1, STIM2 and
-%   RESP are cell arrays containing corresponding trials of continuous data
-%   over which to cross-validate. STIM1 is the attended stimulus, and STIM2
-%   is the unattended stimulus. FS is a scalar specifying the sample rate
-%   in Hertz, and TMIN and TMAX are scalars specifying the minimum and
-%   maximum time lags in milliseconds. For backward models, MTRFAADCROSSVAL
+function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
+%MTRFATTNCROSSVAL  mTRF cross-validation for attention decoding.
+%   STATS1 = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
+%   cross validates a forward encoding model (stimulus to neural response)
+%   or a backward decoding model (neural response to stimulus) over
+%   multiple trials of data for an attention decoding experiment. Models
+%   are trained on the attended stimuli, and validated on both the attended
+%   and unattended stimuli as per O'Sullivan et al. (2015). Pass in 1 for
+%   DIR to validate a forward model, or -1 to validate a backward model.
+%   STIM1, STIM2 and RESP are cell arrays containing corresponding trials
+%   of continuous data. STIM1 are the attended stimuli, and STIM2 are the
+%   unattended stimuli. FS is a scalar specifying the sample rate in Hertz,
+%   and TMIN and TMAX are scalars specifying the minimum and maximum time
+%   lags in milliseconds. For backward models, MTRFATTNCROSSVAL
 %   automatically reverses the time lags. LAMBDA is a scalar or vector of
 %   regularization values to be validated and controls overfitting.
 %
-%   STATS1 = MTRFAADCROSSVAL(...) returns the cross-validation statistics
-%   for the attended stimulus in a structure with the following fields:
+%   [STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-validation
+%   statistics for the attended and unattended stimuli, respectively, in
+%   structures with the following fields:
 %       'r'         -- the correlation coefficients between the predicted
 %                      and observed variables (ntrial-by-nlambda-by-yvar)
 %       'p'         -- the probabilities of the correlation coefficients
 %       'rmse'      -- the root-mean-square error between the predicted and
 %                      observed variables (ntrial-by-nlambda-by-yvar)
 %
-%   [STATS1,STATS2] = MTRFAADCROSSVAL(...) returns the cross-validation
-%   statistics for the unattended stimulus in a structure with the
-%   following fields:
-%       'r'         -- the correlation coefficients between the predicted
-%                      and observed variables (ntrial-by-nlambda-by-yvar)
-%       'p'         -- the probabilities of the correlation coefficients
-%       'rmse'      -- the root-mean-square error between the predicted and
-%                      observed variables (ntrial-by-nlambda-by-yvar)
-%
-%   MTRFAADCROSSVAL performs a leave-one-out cross-validation over trials.
-%   To achieve a k-fold cross-validation, arrange STIM1, STIM2 and RESP in
-%   k-by-1 cell arrays. The number of folds can also be increased by an
-%   integer factor using the 'split' parameter (see below). It is not
-%   recommended to concatenate discontinuous data segments or to use cross-
-%   validation as a way to test model performance. Models should be tested
-%   on separate data after cross-validation using the mTRFpredict function.
+%   MTRFATTNCROSSVAL performs a leave-one-out cross-validation over all
+%   trials. To achieve a k-fold cross-validation, arrange STIM1, STIM2 and
+%   RESP in k-by-1 cell arrays. The number of folds can also be increased
+%   by an integer factor using the 'split' parameter (see below).
 %
 %   If STIM1, STIM2 or RESP contain matrices, it is assumed that the rows
 %   correspond to observations and the columns to variables, unless
@@ -45,11 +36,11 @@ function [stats1,stats2,t] = mTRFaadcrossval(stim1,stim2,resp,fs,dir,tmin,tmax,l
 %   corresponds to observations. Each trial of STIM1, STIM2 and RESP must
 %   have the same number of observations.
 %
-%   [STATS1,STATS2,T] = MTRFAADCROSSVAL(...) returns a vector containing
+%   [STATS1,STATS2,T] = MTRFATTNCROSSVAL(...) returns a vector containing
 %   the time lags used in milliseconds. These data are useful for
 %   interpreting the results of single-lag models.
 %
-%   [...] = MTRFAADCROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
+%   [...] = MTRFATTNCROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
 %   following:
 %
@@ -84,6 +75,16 @@ function [stats1,stats2,t] = mTRFaadcrossval(stim1,stim2,resp,fs,dir,tmin,tmax,l
 %                   the fast method (default) or 0 to use the slower
 %                   method. Note, both methods are numerically equivalent.
 %
+%   Notes:
+%   It is not recommended to use cross-validation as a way of testing model
+%   performance. Models should be tested on separate, held-out data after
+%   cross-validation using the mTRFpredict function.
+%   Discontinuous trials of data should not be concatenated prior to cross-
+%   validation as this will introduce artifacts in places where time lags
+%   cross over trial boundaries. Each trial should be input as an
+%   individual cell of continuous data and MTRFATTNCROSSVAL will zero-pad
+%   the trial boundaries appropriately.
+%
 %   See mTRFdemos for examples of use.
 %
 %   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
@@ -95,14 +96,15 @@ function [stats1,stats2,t] = mTRFaadcrossval(stim1,stim2,resp,fs,dir,tmin,tmax,l
 %          multivariate temporal response function (mTRF) toolbox: a MATLAB
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
-%      [2] Alickovic E, Lunner T, Gustafsson F, Ljung L (2019) A Tutorial
-%          on Auditory Attention Identification Methods. Front Neurosci
-%          13:153.
+%      [2] O'Sullivan JA, Power AJ, Mesgarani N, Rajaram S, Foxe JJ, Shinn-
+%          Cunningham BG, Slaney M, Shamma SA, Lalor EC (2015) Attentional
+%          Selection in a Cocktail Party Environment Can Be Decoded from
+%          Single-Trial EEG. Cereb Cortex 25(7):1697-1706.
 
 %   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 06-Feb-2020
+%   Jan 2020; Last revision: 08-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -148,18 +150,18 @@ lags = tmin:tmax;
 delta = 1/fs;
 
 % Get dimensions
-nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
-nvar = xvar*nlag+1;
 switch arg.type
     case 'multi'
+        mvar = xvar*numel(lags)+1;
         nlag = 1;
-        mvar = nvar;
     case 'single'
         mvar = xvar+1;
+        nlag = numel(lags);
 end
 ntrial = numel(x);
+nbatch = ntrial*arg.split;
 nlambda = numel(lambda);
 
 % Compute covariance matrices
@@ -196,14 +198,14 @@ n = 0;
 for i = 1:ntrial
     
     % Max segment size
-    nseg = ceil(xobs(i)/arg.split);
+    seg = ceil(xobs(i)/arg.split);
     
     for j = 1:arg.split
         
         n = n+1;
         
         % Segment indices
-        iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+        iseg = seg*(j-1)+1:min(seg*j,xobs(i));
         
         if arg.fast % fast method
             
@@ -211,10 +213,9 @@ for i = 1:ntrial
             xlag = XLAG{n};
             
             % Training set
+            idx = 1:nbatch; idx(n) = [];
             Cxx = 0; Cxy = 0;
-            itrain = 1:ntrial*arg.split;
-            itrain(n) = [];
-            for k = itrain
+            for k = idx
                 Cxx = Cxx + CXX{k};
                 Cxy = Cxy + CXY{k};
             end
@@ -231,6 +232,12 @@ for i = 1:ntrial
             
         end
         
+        % Unattended validation set
+        if dir == 1
+            [zlag,idx] = lagGen(z{i}(iseg,:),lags,arg.zeropad);
+            zlag = [ones(numel(idx),1),zlag];
+        end
+        
         % Remove zero-padded indices
         if ~arg.zeropad
             iseg = iseg(1+max(0,lags(end)):end+min(0,lags(1)));
@@ -241,6 +248,8 @@ for i = 1:ntrial
             switch arg.type
                 
                 case 'multi'
+                    
+                    % ---Attended Stimulus---
                     
                     % Fit linear model
                     w = (Cxx + lambda(k)*M)\Cxy;
@@ -254,14 +263,14 @@ for i = 1:ntrial
                     p1(n,k,:) = diag(pt);
                     rmse1(n,k,:) = sqrt(mean((y{i}(iseg,:) - pred).^2,1))';
                     
+                    % ---Unattended Stimulus---
+                    
                     if dir == 1
                         
-                        % Unattended stimulus prediction
-                        [zlag,idx] = lagGen(z{i}(iseg,:),lags,arg.zeropad);
-                        zlag = [ones(numel(idx),1),zlag];
+                        % Predict output
                         pred = zlag*w;
                         
-                        % Unattended stimulus performance
+                        % Measure performance
                         [rt,pt] = corr(y{i}(iseg,:),pred);
                         r2(n,k,:) = diag(rt);
                         p2(n,k,:) = diag(pt);
@@ -270,7 +279,7 @@ for i = 1:ntrial
                         
                     elseif dir == -1
                         
-                        % Unattended stimulus performance
+                        % Measure performance
                         [rt,pt] = corr(z{i}(iseg,:),pred);
                         r2(n,k,:) = diag(rt);
                         p2(n,k,:) = diag(pt);
@@ -282,6 +291,8 @@ for i = 1:ntrial
                 case 'single'
                     
                     for l = 1:nlag
+                        
+                        % ---Attended Stimulus---
                         
                         % Fit linear model
                         w = (Cxx(:,:,l) + lambda(k)*M)\Cxy(:,:,l);
@@ -296,6 +307,32 @@ for i = 1:ntrial
                         p1(n,k,:,l) = diag(pt);
                         rmse1(n,k,:,l) = sqrt(mean((y{i}(iseg,:) - ...
                             pred).^2,1))';
+                        
+                        % ---Unattended Stimulus---
+                        
+                        if dir == 1
+                            
+                            % Predict output
+                            ilag = [1,xvar*(l-1)+2:xvar*l+1];
+                            pred = zlag(:,ilag)*w;
+                            
+                            % Measure performance
+                            [rt,pt] = corr(y{i}(iseg,:),pred);
+                            r2(n,k,:) = diag(rt);
+                            p2(n,k,:) = diag(pt);
+                            rmse2(n,k,:) = sqrt(mean((y{i}(iseg,:) - ...
+                                pred).^2,1))';
+                            
+                        elseif dir == -1
+                            
+                            % Measure performance
+                            [rt,pt] = corr(z{i}(iseg,:),pred);
+                            r2(n,k,:) = diag(rt);
+                            p2(n,k,:) = diag(pt);
+                            rmse2(n,k,:) = sqrt(mean((z{i}(iseg,:) - ...
+                                pred).^2,1))';
+                            
+                        end
                         
                     end
                     
