@@ -1,26 +1,26 @@
 # mTRF-Toolbox
-mTRF-Toolbox is a MATLAB package for fast computation of forward encoding
+mTRF-Toolbox is a MATLAB package for rapid estimation of forward encoding
 models (stimulus to neural response) or backward decoding models (neural
-response to stimulus), suitable for analysing MEG, EEG, iEEG, sEEG, ECoG and 
-EMG data. 
+response to stimulus), suitable for modelling neurophysiological data such 
+as MEG, EEG, iEEG, sEEG, ECoG and EMG data. 
 
 Forward encoding models, also known as response functions or 
 receptive fields, can be used to investigate information processing in 
-neuronal populations with respect to some temporal dimension (TRFs), or 
-spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to 
+neuronal populations with respect to temporal features (TRFs), or 
+spectro- or spatio-temporal features (STRFs). STRFs can be subjected to 
 conventional time-frequency and source analysis techniques used to analyse
 event related potentials. In addition, TRFs can be used to predict
-the dynamics of neural responses to unseen stimuli as a way to 
-objectively measure stimulus encoding. 
+the dynamics of neural responses to unseen stimuli as a way to objectively 
+measure stimulus encoding. Stimulus reconstruction can be performed using 
+backward decoding models that project the multi-channel neural responses 
+back to the dynamics of the stimulus. This is useful for decoding stimulus 
+features from neural responses and can be used to build brain-computer 
+interfaces and other real-time neural interface applications.
 
-Stimulus reconstruction can be performed using backward decoding models 
-that project the multi-channel neural responses back to the dynamics of 
-the stimulus. mTRF-Toolbox facilitates the use of natural continuous 
-stimuli in electrophysiological studies compared to conventional 
-time-locked averaging approaches which require the use of discrete stimulus 
-events. This allows researchers to investigate how neural systems process 
-dynamic environmental signals such as speech, music and motion, and to decode 
-dynamic cognitive processes such as attention and multisensory integration.
+mTRF-Toolbox facilitates the use of natural continuous stimuli, allowing 
+researchers to investigate how neural systems process dynamic environmental 
+signals such as speech, music and motion, and to decode dynamic cognitive 
+processes such as auditory attention and multisensory integration.
 
 ### Documentation
 Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
