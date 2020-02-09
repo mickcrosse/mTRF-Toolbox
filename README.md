@@ -11,17 +11,16 @@ spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to
 conventional time-frequency and source analysis techniques used to analyse
 event related potentials. In addition, TRFs can be used to predict
 the dynamics of neural responses to unseen stimuli as a way to 
-objectively measure information encoding. 
+objectively measure stimulus encoding. 
 
-Stimulus reconstruction can be 
-performed using backward decoding models that project the multi-channel 
-neural responses back to the dynamics of the stimulus. mTRF-Toolbox 
-facilitates the use of natural continuous stimuli in electrophysiological 
-studies compared to conventional time-locked averaging approaches which 
-require the use of discrete stimulus events. This allows researchers to 
-investigate how neural systems process dynamic environmental signals such 
-as speech, music and motion, and to decode dynamic cognitive processes such
-as attention and multisensory integration.
+Stimulus reconstruction can be performed using backward decoding models 
+that project the multi-channel neural responses back to the dynamics of 
+the stimulus. mTRF-Toolbox facilitates the use of natural continuous 
+stimuli in electrophysiological studies compared to conventional 
+time-locked averaging approaches which require the use of discrete stimulus 
+events. This allows researchers to investigate how neural systems process 
+dynamic environmental signals such as speech, music and motion, and to decode 
+dynamic cognitive processes such as attention and multisensory integration.
 
 ### Documentation
 Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
