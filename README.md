@@ -9,8 +9,8 @@ receptive fields, can be used to investigate information processing in
 neuronal populations with respect to some temporal dimension (TRFs), or 
 spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to 
 conventional time-frequency and source analysis techniques used to analyse
-event related potentials (ERPs). In addition, TRFs can be used to predict
-the dynamics of neural responses to unseen stimulus sequences as a way to 
+event related potentials. In addition, TRFs can be used to predict
+the dynamics of neural responses to unseen stimuli as a way to 
 objectively measure information encoding. 
 
 Stimulus reconstruction can be 
