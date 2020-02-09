@@ -1,16 +1,19 @@
 # mTRF-Toolbox
 mTRF-Toolbox is a MATLAB package for fast computation of forward encoding
 models (stimulus to neural response) or backward decoding models (neural
-response to stimulus). It is suitable for analysing various types of multi-
-channel neurophysiological data including MEG, EEG, iEEG, sEEG, ECoG and 
-EMG data. Forward encoding models, also known as response functions or 
+response to stimulus), suitable for analysing MEG, EEG, iEEG, sEEG, ECoG and 
+EMG data. 
+
+Forward encoding models, also known as response functions or 
 receptive fields, can be used to investigate information processing in 
 neuronal populations with respect to some temporal dimension (TRFs), or 
 spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to 
 conventional time-frequency and source analysis techniques used to analyse
 event related potentials (ERPs). In addition, TRFs can be used to predict
 the dynamics of neural responses to unseen stimulus sequences as a way to 
-objectively measure information encoding. Stimulus reconstruction can be 
+objectively measure information encoding. 
+
+Stimulus reconstruction can be 
 performed using backward decoding models that project the multi-channel 
 neural responses back to the dynamics of the stimulus. mTRF-Toolbox 
 facilitates the use of natural continuous stimuli in electrophysiological 
