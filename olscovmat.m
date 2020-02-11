@@ -67,8 +67,8 @@ if sumcov
             Cxx = zeros(nvar+1,nvar+1);
             Cxy = zeros(nvar+1,yvar);
         case 'single'
-            Cxx = zeros(nvar+1,nvar+1,nlag);
-            Cxy = zeros(nvar+1,yvar,nlag);
+            Cxx = zeros(xvar+1,xvar+1,nlag);
+            Cxy = zeros(xvar+1,yvar,nlag);
     end
 else
     xlag = cell(nbatch,1);
@@ -136,8 +136,8 @@ else % keep trials separate
                     Cxx{n} = xlag{n}'*xlag{n}; %#ok<*AGROW>
                     Cxy{n} = xlag{n}'*y{i}(iseg(idx),:);
                 case 'single'
-                    Cxx{n} = zeros(nvar+1,nvar+1,nlag);
-                    Cxy{n} = zeros(nvar+1,yvar,nlag);
+                    Cxx{n} = zeros(xvar+1,xvar+1,nlag);
+                    Cxy{n} = zeros(xvar+1,yvar,nlag);
                     for k = 1:nlag
                         ilag = [1,xvar*(k-1)+2:xvar*k+1];
                         Cxx{n}(:,:,k) = xlag{n}(:,ilag)'*xlag{n}(:,ilag);

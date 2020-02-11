@@ -34,7 +34,7 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   covariance matrices of each trial are summed to produce one model. STIM
 %   and RESP must contain the same number of trials.
 %
-%   MODEL = MTRFTRAIN(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
+%   [...] = MTRFTRAIN(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
 %   following:
 %
