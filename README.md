@@ -29,7 +29,7 @@ Documentation on mTRF-Toolbox usage and underlying theory can be found [here](ht
 <img src="doc/mTRF-Toolbox.png" width="600" height="400">
 
 ## Contents
-### Fitting Encoding and Decoding Models
+### Fitting Encoding/Decoding Models
 * `mTRFcrossval()` - cross-validation for tuning model hyperparameters
 * `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
 * `mTRFpredict()` - model prediction and evaluation
