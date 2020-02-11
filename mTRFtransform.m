@@ -2,14 +2,14 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %MTRFTRANSFORM  mTRF model transformation.
 %   FMODEL = MTRFTRANSFORM(BMODEL,RESP) transforms a backward decoding
 %   model (stimulus to neural response) into the corresponding forward
-%   encoding model (neural response to stimulus) as described in  Haufe et
-%   al. (2014), enabling the neurophysiological interpretation of the
-%   weights of the backward model. RESP are the neural responses that were
-%   used to compute the original backward model.
+%   encoding model (neural response to stimulus) as per Haufe et al.
+%   (2014), enabling the neurophysiological interpretation of the backward
+%   model weights. RESP are the neural responses that were used to compute
+%   the original backward model.
 %
 %   MTRFTRANSFORM returns the transformed model in a structure with the
 %   following fields:
-%       'w'         -- transformed model weights (xvar-by-lags-by-yvar)
+%       'w'         -- transformed model weights (xvar-by-nlag-by-yvar)
 %       't'         -- time lags (ms)
 %       'fs'        -- sample rate (Hz)
 %       'dir'       -- direction of causality (forward=1, backward=-1)
@@ -51,7 +51,7 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %   Authors: Adam Bednar, Emily Teoh, Giovanni Di Liberto, Mick Crosse
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 10-Jan-2020
+%   Apr 2014; Last revision: 10-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -62,15 +62,20 @@ resp = formatcells(resp,arg.dim);
 % Predict output
 pred = mTRFpredict([],resp,bmodel,'dim',arg.dim);
 
+% Convert to cell array
+if ~iscell(pred)
+    pred = {pred};
+end
+
 % Compute covariance matrices
-covx = 0; covy = 0;
+Cxx = 0; Cyy = 0;
 for i = 1:numel(resp)
-    covx = covx + resp{i}'*resp{i};
-    covy = covy + pred{i}'*pred{i};
+    Cxx = Cxx + resp{i}'*resp{i};
+    Cyy = Cyy + pred{i}'*pred{i};
 end
 
 % Transform backward model weights
-bmodel.w = covx*bmodel.w/covy;
+bmodel.w = Cxx*bmodel.w/Cyy;
 
 % Format output arguments
 fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
