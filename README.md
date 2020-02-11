@@ -39,10 +39,14 @@ Documentation on mTRF-Toolbox usage and underlying theory can be found [here](ht
 * `mTRFattncrossval()` - cross-validation for attention decoding
 * `mTRFmulticrossval()` - cross-validation for additive models of multisensory processing
 
-### Tools for Rapid Least Squares Estimation
-* `lagGen()` - generates time-lagged input features
+### Rapid Least Squares Estimation
 * `olscovmat()` - ordinary least squares covariance matrix estimation
 * `mlscovmat()` - multisensory least squares covariance matrix estimation
+
+### Feature Extraction
+* `mTRFenvelope()` - computes the acoustic envelope of an audio signal
+* `mTRFresample()` - resamples and smooths temporal features
+* `lagGen()` - generates time-lagged input features
 
 ## Tips on Practical Usage
 * Ensure that the stimulus and response data are temporally aligned and 
