@@ -29,12 +29,14 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %   a separate cell. Pass in 1 to sum them (default), or 0 to return them
 %   separately.
 %
+%   See also MLSCOVMAT.
+%
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   Authors: Mick Crosse, Nate Zuk
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 10-Feb-2020
+%   Jan 2020; Last revision: 11-Feb-2020
 
 % Set default values
 if nargin < 4 || isempty(type)
@@ -58,7 +60,7 @@ xvar = unique(xvar);
 yvar = unique(yvar);
 nvar = xvar*nlag;
 ntrial = numel(x);
-nbatch = ntrial*split;
+nfold = ntrial*split;
 
 % Initialize covariance matrices
 if sumcov
@@ -71,9 +73,9 @@ if sumcov
             Cxy = zeros(xvar+1,yvar,nlag);
     end
 else
-    xlag = cell(nbatch,1);
-    Cxx = cell(nbatch,1);
-    Cxy = cell(nbatch,1);
+    xlag = cell(nfold,1);
+    Cxx = cell(nfold,1);
+    Cxy = cell(nfold,1);
 end
 
 if sumcov % sum over trials
