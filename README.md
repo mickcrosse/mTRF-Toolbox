@@ -1,45 +1,48 @@
 # mTRF-Toolbox
-mTRF-Toolbox is a MATLAB package for fast computation of forward encoding
+mTRF-Toolbox is a MATLAB package for rapid estimation of forward encoding
 models (stimulus to neural response) or backward decoding models (neural
-response to stimulus). It is suitable for analysing various types of multi-
-channel neurophysiological data including MEG, EEG, iEEG, sEEG, ECoG and 
-EMG data. Forward encoding models, also known as response functions or 
+response to stimulus), suitable for modelling neurophysiological data such 
+as MEG, EEG, iEEG, sEEG, ECoG and EMG data. 
+
+Forward encoding models, also known as response functions or 
 receptive fields, can be used to investigate information processing in 
-neuronal populations with respect to some temporal dimension (TRFs), or 
-spectro- or spatio-temporal dimensions (STRFs). TRFs can be subjected to 
+neuronal populations with respect to temporal features (TRFs), or 
+spectro- or spatio-temporal features (STRFs). STRFs can be subjected to 
 conventional time-frequency and source analysis techniques used to analyse
-event related potentials (ERPs). In addition, TRFs can be used to predict
-the dynamics of neural responses to unseen stimulus sequences as a way to 
-objectively measure information encoding. Stimulus reconstruction can be 
-performed using backward decoding models that project the multi-channel 
-neural responses back to the dynamics of the stimulus. mTRF-Toolbox 
-facilitates the use of natural continuous stimuli in electrophysiological 
-studies compared to conventional time-locked averaging approaches which 
-require the use of discrete stimulus events. This allows researchers to 
-investigate how neural systems process dynamic environmental signals such 
-as speech, music and motion, and to decode dynamic cognitive processes such
-as attention and multisensory integration.
+event related potentials. In addition, TRFs can be used to predict
+the dynamics of neural responses to unseen stimuli as a way to objectively 
+measure stimulus encoding. Stimulus reconstruction can be performed using 
+backward decoding models that project the multi-channel neural responses 
+back to the dynamics of the stimulus. This is useful for decoding stimulus 
+features from neural responses and can be used to build brain-computer 
+interfaces and other real-time neural interface applications.
+
+mTRF-Toolbox facilitates the use of natural continuous stimuli, allowing 
+researchers to investigate how neural systems process dynamic environmental 
+signals such as speech, music and motion, and to decode dynamic cognitive 
+processes such as auditory attention and multisensory integration.
 
 ### Documentation
-Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) [The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf). Frontiers in Human Neuroscience 10:604.
+Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
-## mTRF Modeling Framework
+## mTRF Modelling Framework
 <img src="doc/mTRF-Toolbox.png" width="600" height="400">
 
 ## Contents
 ### Fitting Encoding and Decoding Models
-* `mTRFcrossval()` - cross-validation for tuning encoding/decoding model hyperparameters
+* `mTRFcrossval()` - cross-validation for tuning model hyperparameters
 * `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
 * `mTRFpredict()` - model prediction and evaluation
 * `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
  
 ### Decoding Attention and Multisensory Integration
-* `mTRFaadcrossval()` - cross-validation for 2-speaker auditory attention decoding (AAD) 
-* `mTRFmulticrossval()` - cross-validation for additive multisensory models
+* `mTRFattncrossval()` - cross-validation for attention decoding
+* `mTRFmulticrossval()` - cross-validation for additive models of multisensory processing
 
-### Modeling Tools
+### Tools for Rapid Least Squares Estimation
 * `lagGen()` - generates time-lagged input features
 * `olscovmat()` - ordinary least squares covariance matrix estimation
+* `mlscovmat()` - multisensory least squares covariance matrix estimation
 
 ## Tips on Practical Usage
 * Ensure that the stimulus and response data are temporally aligned and 
