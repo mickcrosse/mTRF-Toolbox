@@ -34,7 +34,7 @@ function [Cxx,Cxy1,xlag] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
 %   Authors: Mick Crosse, Nate Zuk
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 08-Feb-2020
+%   Jan 2020; Last revision: 10-Feb-2020
 
 % Set default values
 if nargin < 5 || isempty(type)
@@ -54,24 +54,25 @@ end
 [~,xobs,xvar] = formatcells(x,1,0);
 [~,~,y1var] = formatcells(y1,1,0);
 [~,~,y2var] = formatcells(y1,1,0);
+nlag = numel(lags);
 xvar = unique(xvar);
 y1var = unique(y1var);
 y2var = unique(y2var);
+nvar = xvar*nlag;
 ntrial = numel(x);
 nbatch = ntrial*split;
-nlag = numel(lags);
 
 % Initialize covariance matrices
 if sumcov
     switch type
         case 'multi'
-            Cxx = zeros(xvar+1,xvar+1);
-            Cxy1 = zeros(xvar+1,y1var);
-            Cxy2 = zeros(xvar+1,y2var);
+            Cxx = zeros(nvar+1,nvar+1);
+            Cxy1 = zeros(nvar+1,y1var);
+            Cxy2 = zeros(nvar+1,y2var);
         case 'single'
-            Cxx = zeros(xvar+1,xvar+1,nlag);
-            Cxy1 = zeros(xvar+1,y1var,nlag);
-            Cxy2 = zeros(xvar+1,y2var,nlag);
+            Cxx = zeros(nvar+1,nvar+1,nlag);
+            Cxy1 = zeros(nvar+1,y1var,nlag);
+            Cxy2 = zeros(nvar+1,y2var,nlag);
     end
 else
     xlag = cell(nbatch,1);
@@ -144,9 +145,9 @@ else % keep trials separate
                     Cxy1{n} = xlag{n}'*y1{i}(iseg(idx),:);
                     Cxy2{n} = xlag{n}'*y2{i}(iseg(idx),:);
                 case 'single'
-                    Cxx{n} = zeros(xvar+1,xvar+1,nlag);
-                    Cxy1{n} = zeros(xvar+1,y1var,nlag);
-                    Cxy2{n} = zeros(xvar+1,y2var,nlag);
+                    Cxx{n} = zeros(nvar+1,nvar+1,nlag);
+                    Cxy1{n} = zeros(nvar+1,y1var,nlag);
+                    Cxy2{n} = zeros(nvar+1,y2var,nlag);
                     for k = 1:nlag
                         ilag = [1,xvar*(k-1)+2:xvar*k+1];
                         Cxx{n}(:,:,k) = xlag{n}(:,ilag)'*xlag{n}(:,ilag);

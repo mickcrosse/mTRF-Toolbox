@@ -1,13 +1,13 @@
 function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %OLSCOVMAT  Ordinary least squares covariance matrix estimation.
 %   [CXX,CXY] = OLSCOVMAT(X,Y,LAGS) returns the covariance matrices for
-%   ordinary least squares (OLS) regression using a time-lagged version of
+%   ordinary least squares (OLS) estimation using time-lagged features of
 %   X. X and Y are matrices or cell arrays containing corresponding trials
-%   of continuous training data, with columns corresponding to observations
-%   and rows corresponding to variables. LAGS is a scalar or vector of time
-%   lags in samples.
+%   of continuous data, with columns corresponding to observations and rows
+%   corresponding to variables. LAGS is a scalar or vector of time lags in
+%   samples.
 %
-%   [CXX,CXY,XLAG] = OLSCOVMAT(...) returns the time-lagged version of X
+%   [CXX,CXY,XLAG] = OLSCOVMAT(...) returns the time-lagged features of X
 %   used to compute the covariance matrices.
 %
 %   [...] = OLSCOVMAT(X,Y,LAGS,TYPE) specifies the type of model that the
@@ -34,7 +34,7 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %   Authors: Mick Crosse, Nate Zuk
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 08-Feb-2020
+%   Jan 2020; Last revision: 10-Feb-2020
 
 % Set default values
 if nargin < 4 || isempty(type)
@@ -53,21 +53,22 @@ end
 % Get dimensions
 [~,xobs,xvar] = formatcells(x,1,0);
 [~,~,yvar] = formatcells(y,1,0);
+nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
+nvar = xvar*nlag;
 ntrial = numel(x);
 nbatch = ntrial*split;
-nlag = numel(lags);
 
 % Initialize covariance matrices
 if sumcov
     switch type
         case 'multi'
-            Cxx = zeros(xvar+1,xvar+1);
-            Cxy = zeros(xvar+1,yvar);
+            Cxx = zeros(nvar+1,nvar+1);
+            Cxy = zeros(nvar+1,yvar);
         case 'single'
-            Cxx = zeros(xvar+1,xvar+1,nlag);
-            Cxy = zeros(xvar+1,yvar,nlag);
+            Cxx = zeros(nvar+1,nvar+1,nlag);
+            Cxy = zeros(nvar+1,yvar,nlag);
     end
 else
     xlag = cell(nbatch,1);
@@ -135,8 +136,8 @@ else % keep trials separate
                     Cxx{n} = xlag{n}'*xlag{n}; %#ok<*AGROW>
                     Cxy{n} = xlag{n}'*y{i}(iseg(idx),:);
                 case 'single'
-                    Cxx{n} = zeros(xvar+1,xvar+1,nlag);
-                    Cxy{n} = zeros(xvar+1,yvar,nlag);
+                    Cxx{n} = zeros(nvar+1,nvar+1,nlag);
+                    Cxy{n} = zeros(nvar+1,yvar,nlag);
                     for k = 1:nlag
                         ilag = [1,xvar*(k-1)+2:xvar*k+1];
                         Cxx{n}(:,:,k) = xlag{n}(:,ilag)'*xlag{n}(:,ilag);
