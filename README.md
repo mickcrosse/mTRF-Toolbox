@@ -35,7 +35,7 @@ Documentation on mTRF-Toolbox usage and underlying theory can be found [here](ht
 * `mTRFpredict()` - model prediction and evaluation
 * `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
  
-### Decoding Attention and Multisensory Integration
+### Decoding Attention and Multisensory Processing
 * `mTRFattncrossval()` - cross-validation for attention decoding
 * `mTRFmulticrossval()` - cross-validation for additive models of multisensory processing
 
