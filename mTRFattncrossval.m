@@ -3,17 +3,17 @@ function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,
 %   STATS1 = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
-%   multiple trials of data for an attention decoding experiment. Models
-%   are trained on the attended stimuli, and validated on both the attended
-%   and unattended stimuli as per O'Sullivan et al. (2015). Pass in 1 for
-%   DIR to validate a forward model, or -1 to validate a backward model.
-%   STIM1, STIM2 and RESP are cell arrays containing corresponding trials
-%   of continuous data. STIM1 are the attended stimuli, and STIM2 are the
-%   unattended stimuli. FS is a scalar specifying the sample rate in Hertz,
-%   and TMIN and TMAX are scalars specifying the minimum and maximum time
-%   lags in milliseconds. For backward models, MTRFATTNCROSSVAL
-%   automatically reverses the time lags. LAMBDA is a scalar or vector of
-%   regularization values to be validated and controls overfitting.
+%   multiple trials of data for building an attention decoder. Models are
+%   trained on the attended stimuli STIM1, and validated on both the
+%   attended stimuli and unattended stimuli STIM2 as per O'Sullivan et al.
+%   (2015). Pass in 1 for DIR to validate a forward model, or -1 to
+%   validate a backward model. STIM1, STIM2 and RESP are cell arrays
+%   containing corresponding trials of continuous data. FS is a scalar
+%   specifying the sample rate in Hertz, and TMIN and TMAX are scalars
+%   specifying the minimum and maximum time lags in milliseconds. For
+%   backward models, MTRFATTNCROSSVAL automatically reverses the time lags.
+%   LAMBDA is a scalar or vector of regularization values to be validated
+%   and controls overfitting.
 %
 %   [STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-validation
 %   statistics for the attended and unattended stimuli, respectively, in

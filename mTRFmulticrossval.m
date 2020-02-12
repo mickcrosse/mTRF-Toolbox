@@ -3,19 +3,18 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %   STATS = MTRFMULTICROSSVAL(STIM,RESP,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
-%   multiple trials of data for a multisensory experiment. Models are
-%   trained on the sum of the unisensory responses (additive model), and
-%   validated on the multisensory responses as per Crosse et al. (2015).
-%   Pass in 1 for DIR to validate a forward model, or -1 to validate a
-%   backward model. STIM, RESP, RESP1 and RESP2 are cell arrays containing
-%   corresponding trials of continuous data. RESP are the responses to the
-%   multisensory condition, RESP1 are the responses to the first unisensory
-%   condition and RESP2 the responses to the second unisensory condition.
-%   FS is a scalar specifying the sample rate in Hertz, and TMIN  and TMAX
-%   are scalars specifying the minimum and maximum time lags in
-%   milliseconds. For backward models, MTRFMULTICROSSVAL automatically
-%   reverses the time lags. LAMBDA is a scalar or vector of regularization
-%   values to be validated and controls overfitting.
+%   multiple trials of data for building a model of multisensory
+%   processing. Models are trained on the sum of the unisensory responses
+%   RESP1 and RESP2 (i.e., the additive model of multisensory processing),
+%   and validated on the actual multisensory responses RESP as per Crosse
+%   et al. (2015). Pass in 1 for DIR to validate a forward model, or -1 to
+%   validate a backward model. STIM, RESP, RESP1 and RESP2 are cell arrays
+%   containing corresponding trials of continuous data. FS is a scalar
+%   specifying the sample rate in Hertz, and TMIN  and TMAX are scalars
+%   specifying the minimum and maximum time lags in milliseconds. For
+%   backward models, MTRFMULTICROSSVAL automatically reverses the time
+%   lags. LAMBDA is a scalar or vector of regularization values to be
+%   validated and controls overfitting.
 %
 %   STATS = MTRFMULTICROSSVAL(...) returns the cross-validation statistics
 %   in a structure with the following fields:
@@ -182,7 +181,7 @@ elseif dir == -1
     end
 end
 
-% Compute additive covariance matrices
+% Compute covariances for additive model
 if dir == 1
     if arg.fast
         for i = 1:nbatch

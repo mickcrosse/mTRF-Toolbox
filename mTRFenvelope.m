@@ -1,4 +1,4 @@
-function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,exponent,buff,varargin)
+function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %MTRFENVELOPE  mTRF acoustic envelope estimation.
 %   Y = MTRFENVELOPE(X) returns the acoustic envelope of audio signal X. X
 %   is a vector or matrix of audio channels.
@@ -9,22 +9,22 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,exponent,buff,varargin)
 %   the first non-singleton dimension corresponds to observations.
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT) resamples the envelope of X from a
-%   sample rate of FSIN to FSOUT by averaging data every FSIN/FSOUT
-%   samples.
+%   sample rate of FSIN to FSOUT by averaging the signal power every 
+%   FSIN/FSOUT samples and taking the square root (i.e., RMS intensity).
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW) specifies the window size used to
 %   average data. Values greater than 1 result in overlap between the data
 %   used to estimate adjacent output frames resulting in increased envelope
 %   smoothing. By default, a window size of 1 is used.
 %
-%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,EXPONENT) specifies the amount of
-%   dynamic range compression to apply by raising the magnitude of X to the
-%   power of the value EXPONENT. By default, a value of log10(2) is used to
-%   model auditory perception (Stevens, 1955).
+%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC) specifies the amount of
+%   dynamic range compression (DRC) to apply by raising the RMS value of X 
+%   to the power of DRC. By default, a value of log10(2) is used to model
+%   human auditory perception (Stevens, 1955).
 %
-%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,EXPONENT,BUFF) concatenates a
-%   buffer of intital data to the beginning of X to enable centering of the
-%   first window at time t=0. The buffer should be passed from the final
+%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC,BUFF) prepends a buffer
+%   of intital data to the beginning of X to enable centering of the first
+%   window at time t=0. The buffer should be passed from the final
 %   state of previous data sampled at the input sample rate FSIN..
 %
 %   [...] = MTRFENVELOPE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
@@ -38,7 +38,7 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,exponent,buff,varargin)
 %
 %   See mTRFdemos for examples of use.
 %
-%   See also MTRFPREDICT, MTRFTRANSFORM, MTRFCROSSVAL.
+%   See also ENVELOPE, HILBERT, RMS.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -53,7 +53,7 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,exponent,buff,varargin)
 %   Authors: Mick Crosse
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 10-Feb-2020
+%   Jan 2020; Last revision: 11-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -68,8 +68,8 @@ end
 if nargin < 4 || isempty(window)
     window = 1;
 end
-if nargin < 5 || isempty(exponent)
-    exponent = log10(2);
+if nargin < 5 || isempty(drc)
+    drc = log10(2);
 end
 if nargin < 6
     buff = [];
@@ -82,4 +82,4 @@ x = x.^2;
 [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,'dim',arg.dim);
 
 % Apply dynamic range compression
-y = sqrt(y).^exponent;
+y = sqrt(y).^drc;

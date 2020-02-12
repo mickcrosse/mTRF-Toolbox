@@ -1,4 +1,4 @@
-function [Cxx,Cxy1,xlag] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
+function [Cxx,Cxy1,Cxy2,xlag] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
 %MLSCOVMAT  Multisensory least squares covariance matrix estimation.
 %   [CXX,CXY1,CXY2] = MLSCOVMAT(X,Y1,Y2,LAGS) returns the covariance
 %   matrices for multisensory least squares (MLS) estimation using time-
