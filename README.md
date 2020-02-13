@@ -36,8 +36,9 @@ Documentation on mTRF-Toolbox usage and underlying theory can be found [here](ht
 * `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
  
 ### Decoding Attention and Multisensory Processing
-* `mTRFattncrossval()` - cross-validation for attention decoding
-* `mTRFmulticrossval()` - cross-validation for additive models of multisensory processing
+* `mTRFattncrossval()` - cross-validation for bulding an attention decoder
+* `mTRFmulticrossval()` - cross-validation for bulding an additive model of multisensory processing
+* `mTRFmultitrain()` - additive multisensory model fitting (TRF/STRF estimation)
 
 ### Rapid Least Squares Estimation
 * `olscovmat()` - ordinary least squares covariance matrix estimation
