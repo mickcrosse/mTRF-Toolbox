@@ -126,7 +126,7 @@ if dir == 1
         error(['RESP1 and RESP2 arguments must have the same number of '...
             'variables.'])
     else
-        yvar = zvar1;
+        yvar = unique(zvar1);
     end
 elseif dir == -1
     [y,yobs,yvar] = formatcells(y,arg.dim);
@@ -134,7 +134,7 @@ elseif dir == -1
         error(['RESP1 and RESP2 arguments must have the same number of '...
             'variables.'])
     else
-        xvar = zvar1;
+        xvar = unique(zvar1);
     end
 end
 
