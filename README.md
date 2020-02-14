@@ -1,3 +1,5 @@
+[![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
+
 # mTRF-Toolbox
 mTRF-Toolbox is a MATLAB package for rapid estimation of forward encoding
 models (stimulus to neural response) or backward decoding models (neural
