@@ -1,4 +1,4 @@
-function [Cxx,Cxy1,Cxy2,xlag] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
+function [Cxx,Cxy1,Cxy2,X] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
 %MLSCOVMAT  Multisensory least squares covariance matrix estimation.
 %   [CXX,CXY1,CXY2] = MLSCOVMAT(X,Y1,Y2,LAGS) returns the covariance
 %   matrices for multisensory least squares (MLS) estimation using time-
@@ -36,7 +36,7 @@ function [Cxx,Cxy1,Cxy2,xlag] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov
 %   Authors: Mick Crosse, Nate Zuk
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 11-Feb-2020
+%   Jan 2020; Last revision: 18-Feb-2020
 
 % Set default values
 if nargin < 5 || isempty(type)
@@ -77,7 +77,7 @@ if sumcov
             Cxy2 = zeros(xvar+1,y2var,nlag);
     end
 else
-    xlag = cell(nfold,1);
+    X = cell(nfold,1);
     Cxx = cell(nfold,1);
     Cxy1 = cell(nfold,1);
     Cxy2 = cell(nfold,1);
@@ -95,25 +95,25 @@ if sumcov % sum over trials
             % Segment indices
             iseg = seg*(j-1)+1:min(seg*j,xobs(i));
             
-            % Generate time-lagged features
-            [xlag,idx] = lagGen(x{i}(iseg,:),lags,zeropad);
-            xlag = [ones(numel(idx),1),xlag];
+            % Generate design matrix
+            [X,idx] = lagGen(x{i}(iseg,:),lags,zeropad);
+            X = [ones(numel(idx),1),X]; %#ok<*AGROW>
             
             % Compute covariance matrices
             switch type
                 case 'multi'
-                    Cxx = Cxx + xlag'*xlag;
-                    Cxy1 = Cxy1 + xlag'*y1{i}(iseg(idx),:);
-                    Cxy2 = Cxy2 + xlag'*y2{i}(iseg(idx),:);
+                    Cxx = Cxx + X'*X;
+                    Cxy1 = Cxy1 + X'*y1{i}(iseg(idx),:);
+                    Cxy2 = Cxy2 + X'*y2{i}(iseg(idx),:);
                 case 'single'
                     for k = 1:nlag
                         ilag = [1,xvar*(k-1)+2:xvar*k+1];
                         Cxx(:,:,k) = Cxx(:,:,k) + ...
-                            xlag(:,ilag)'*xlag(:,ilag);
+                            X(:,ilag)'*X(:,ilag);
                         Cxy1(:,:,k) = Cxy1(:,:,k) + ...
-                            xlag(:,ilag)'*y1{i}(iseg(idx),:);
+                            X(:,ilag)'*y1{i}(iseg(idx),:);
                         Cxy2(:,:,k) = Cxy2(:,:,k) + ...
-                            xlag(:,ilag)'*y2{i}(iseg(idx),:);
+                            X(:,ilag)'*y2{i}(iseg(idx),:);
                     end
             end
             
@@ -136,25 +136,25 @@ else % keep trials separate
             % Segment indices
             iseg = seg*(j-1)+1:min(seg*j,xobs(i));
             
-            % Generate time-lagged features
-            [xlag{n},idx] = lagGen(x{i}(iseg,:),lags,zeropad);
-            xlag{n} = [ones(numel(idx),1),xlag{n}];
+            % Generate design matrix
+            [X{n},idx] = lagGen(x{i}(iseg,:),lags,zeropad);
+            X{n} = [ones(numel(idx),1),X{n}];
             
             % Compute covariance matrices
             switch type
                 case 'multi'
-                    Cxx{n} = xlag{n}'*xlag{n}; %#ok<*AGROW>
-                    Cxy1{n} = xlag{n}'*y1{i}(iseg(idx),:);
-                    Cxy2{n} = xlag{n}'*y2{i}(iseg(idx),:);
+                    Cxx{n} = X{n}'*X{n}; 
+                    Cxy1{n} = X{n}'*y1{i}(iseg(idx),:);
+                    Cxy2{n} = X{n}'*y2{i}(iseg(idx),:);
                 case 'single'
                     Cxx{n} = zeros(nvar+1,nvar+1,nlag);
                     Cxy1{n} = zeros(nvar+1,y1var,nlag);
                     Cxy2{n} = zeros(nvar+1,y2var,nlag);
                     for k = 1:nlag
                         ilag = [1,xvar*(k-1)+2:xvar*k+1];
-                        Cxx{n}(:,:,k) = xlag{n}(:,ilag)'*xlag{n}(:,ilag);
-                        Cxy1{n}(:,:,k) = xlag{n}(:,ilag)'*y1{i}(iseg(idx),:);
-                        Cxy2{n}(:,:,k) = xlag{n}(:,ilag)'*y2{i}(iseg(idx),:);
+                        Cxx{n}(:,:,k) = X{n}(:,ilag)'*X{n}(:,ilag);
+                        Cxy1{n}(:,:,k) = X{n}(:,ilag)'*y1{i}(iseg(idx),:);
+                        Cxy2{n}(:,:,k) = X{n}(:,ilag)'*y2{i}(iseg(idx),:);
                     end
             end
             

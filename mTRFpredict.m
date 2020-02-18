@@ -1,5 +1,5 @@
 function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
-%MTRFPREDICT  mTRF model prediction.
+%MTRFPREDICT  Predict model output.
 %   PRED = MTRFPREDICT(STIM,RESP,MODEL) predicts the output of a forward
 %   encoding model (stimulus to neural response) or a backward decoding
 %   model (neural response to stimulus) using time-lagged input features.
@@ -63,10 +63,10 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %          white-noise approach. 2009 4th International IEEE/EMBS
 %          Conference on Neural Engineering, Antalya 589-592.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Edmund Lalor
+%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 05-Feb-2020
+%   Apr 2014; Last revision: 18-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -186,3 +186,31 @@ end
 if nargout > 1
     stats = struct('r',r,'p',p,'rmse',rmse);
 end
+
+function arg = parsevarargin(varargin)
+%PARSEVARARGIN  Parse input arguments.
+%   [PARAM1,PARAM2,...] = PARSEVARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
+%   parses the input arguments of the main function.
+
+% Create parser object
+p = inputParser;
+
+% Dimension to work along
+errorMsg = 'It must be a positive integer scalar within indexing range.';
+validFcn = @(x) assert(x==1||x==2,errorMsg);
+addParameter(p,'dim',1,validFcn);
+
+% Split data
+errorMsg = 'It must be a positive integer scalar.';
+validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
+addParameter(p,'split',1,validFcn);
+
+% Boolean arguments
+errorMsg = 'It must be a numeric scalar (0,1) or logical.';
+validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
+addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
+addParameter(p,'gpu',false,validFcn); % run on GPU
+
+% Parse input arguments
+parse(p,varargin{1,1}{:});
+arg = p.Results;

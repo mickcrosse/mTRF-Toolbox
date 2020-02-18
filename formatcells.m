@@ -12,7 +12,7 @@ function [x,rows,cols] = formatcells(x,dim,nanflag)
 %
 %   [...] = FORMATCELLS(X,DIM,NANFLAG) specifies whether to check the data
 %   for NaN (Not-A-Number) values. Pass in 1 for NANFLAG to check for NaNs
-%   (default), or 0 to not check.
+%   (default), or 0 to skip check.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

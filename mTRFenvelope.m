@@ -1,6 +1,6 @@
 function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
-%MTRFENVELOPE  mTRF acoustic envelope estimation.
-%   Y = MTRFENVELOPE(X) returns the acoustic envelope of audio signal X. X
+%MTRFENVELOPE  Temporal envelope estimation.
+%   Y = MTRFENVELOPE(X) returns the temporal envelope of audio signal X. X
 %   is a vector or matrix of audio channels.
 %
 %   If X is a matrix, it is assumed that the rows correspond to
@@ -53,7 +53,7 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %   Authors: Mick Crosse
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 11-Feb-2020
+%   Jan 2020; Last revision: 18-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -83,3 +83,25 @@ x = x.^2;
 
 % Apply dynamic range compression
 y = sqrt(y).^drc;
+
+function arg = parsevarargin(varargin)
+%PARSEVARARGIN  Parse input arguments.
+%   [PARAM1,PARAM2,...] = PARSEVARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
+%   parses the input arguments of the main function.
+
+% Create parser object
+p = inputParser;
+
+% Dimension to work along
+errorMsg = 'It must be a positive integer scalar within indexing range.';
+validFcn = @(x) assert(x==1||x==2,errorMsg);
+addParameter(p,'dim',1,validFcn);
+
+% Boolean arguments
+errorMsg = 'It must be a numeric scalar (0,1) or logical.';
+validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
+addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
+
+% Parse input arguments
+parse(p,varargin{1,1}{:});
+arg = p.Results;

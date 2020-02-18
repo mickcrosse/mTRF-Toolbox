@@ -36,7 +36,7 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %   Authors: Mick Crosse, Nate Zuk
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 11-Feb-2020
+%   Jan 2020; Last revision: 18-Feb-2020
 
 % Set default values
 if nargin < 4 || isempty(type)
@@ -90,7 +90,7 @@ if sumcov % sum over trials
             % Segment indices
             iseg = seg*(j-1)+1:min(seg*j,xobs(i));
             
-            % Generate time-lagged features
+            % Generate design matrix
             [xlag,idx] = lagGen(x{i}(iseg,:),lags,zeropad);
             xlag = [ones(numel(idx),1),xlag];
             
@@ -128,7 +128,7 @@ else % keep trials separate
             % Segment indices
             iseg = seg*(j-1)+1:min(seg*j,xobs(i));
             
-            % Generate time-lagged features
+            % Generate design matrix
             [xlag{n},idx] = lagGen(x{i}(iseg,:),lags,zeropad);
             xlag{n} = [ones(numel(idx),1),xlag{n}];
             

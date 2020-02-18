@@ -1,5 +1,5 @@
 function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFATTNCROSSVAL  mTRF cross-validation for attention decoding.
+%MTRFATTNCROSSVAL  Cross-validation for attention decoding.
 %   STATS1 = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
@@ -104,7 +104,7 @@ function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,
 %   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
 %   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
 %   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 08-Feb-2020
+%   Jan 2020; Last revision: 18-Feb-2020
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -350,3 +350,46 @@ stats2 = struct('r',r2,'p',p2,'rmse',rmse2);
 if nargout > 2
     t = lags/fs*1e3;
 end
+
+function arg = parsevarargin(varargin)
+%PARSEVARARGIN  Parse input arguments.
+%   [PARAM1,PARAM2,...] = PARSEVARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
+%   parses the input arguments of the main function.
+
+% Create parser object
+p = inputParser;
+
+% Dimension to work along
+errorMsg = 'It must be a positive integer scalar within indexing range.';
+validFcn = @(x) assert(x==1||x==2,errorMsg);
+addParameter(p,'dim',1,validFcn);
+
+% Regularization method
+regOptions = {'ridge','Tikhonov','ols'};
+validFcn = @(x) any(validatestring(x,regOptions));
+addParameter(p,'method','ridge',validFcn);
+
+% Model type
+lagOptions = {'multi','single'};
+validFcn = @(x) any(validatestring(x,lagOptions));
+addParameter(p,'type','multi',validFcn);
+
+% Split data
+errorMsg = 'It must be a positive integer scalar.';
+validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
+addParameter(p,'split',1,validFcn);
+
+% Boolean arguments
+errorMsg = 'It must be a numeric scalar (0,1) or logical.';
+validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
+addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
+addParameter(p,'fast',true,validFcn); % fast CV method
+addParameter(p,'gpu',false,validFcn); % run on GPU
+
+% Parse input arguments
+parse(p,varargin{1,1}{:});
+arg = p.Results;
+
+% Redefine partially-matched strings
+arg.method = validatestring(arg.method,regOptions);
+arg.type = validatestring(arg.type,lagOptions);
