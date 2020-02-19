@@ -107,7 +107,7 @@ yvar = unique(yvar);
 ntrial = numel(x);
 
 % Format model weights
-switch arg.type
+switch model.type
     case 'multi'
         model.w = [model.b;reshape(model.w,[xvar*nlag,yvar])]*delta;
         nlag = 1;
@@ -137,7 +137,7 @@ for i = 1:ntrial
         [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
         xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
         
-        switch arg.type
+        switch model.type
             
             case 'multi'
                 
