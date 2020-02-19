@@ -1,5 +1,5 @@
 function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFMULTITRAIN  mTRF model training for multisensory additive models.
+%MTRFMULTITRAIN  Train multisensory additive model.
 %   MODEL = MTRFMULTITRAIN(STIM,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA) trains
 %   a forward encoding model (stimulus to neural response) or a backward
 %   decoding model (neural response to stimulus) using time-lagged input
@@ -221,3 +221,45 @@ w = w*2;
 % Format output arguments
 model = struct('w',reshape(w(2:end,:,:),[xvar,nlag,yvar]),'b',w(1,:,:),...
     't',lags/fs*1e3,'fs',fs,'dir',dir,'type',arg.type);
+
+function arg = parsevarargin(varargin)
+%PARSEVARARGIN  Parse input arguments.
+%   [PARAM1,PARAM2,...] = PARSEVARARGIN('PARAM1',VAL1,'PARAM2',VAL2,...)
+%   parses the input arguments of the main function.
+
+% Create parser object
+p = inputParser;
+
+% Dimension to work along
+errorMsg = 'It must be a positive integer scalar within indexing range.';
+validFcn = @(x) assert(x==1||x==2,errorMsg);
+addParameter(p,'dim',1,validFcn);
+
+% Regularization method
+regOptions = {'ridge','Tikhonov','ols'};
+validFcn = @(x) any(validatestring(x,regOptions));
+addParameter(p,'method','ridge',validFcn);
+
+% Model type
+lagOptions = {'multi','single'};
+validFcn = @(x) any(validatestring(x,lagOptions));
+addParameter(p,'type','multi',validFcn);
+
+% Split data
+errorMsg = 'It must be a positive integer scalar.';
+validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
+addParameter(p,'split',1,validFcn);
+
+% Boolean arguments
+errorMsg = 'It must be a numeric scalar (0,1) or logical.';
+validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
+addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
+addParameter(p,'gpu',false,validFcn); % run on GPU
+
+% Parse input arguments
+parse(p,varargin{1,1}{:});
+arg = p.Results;
+
+% Redefine partially-matched strings
+arg.method = validatestring(arg.method,regOptions);
+arg.type = validatestring(arg.type,lagOptions);
