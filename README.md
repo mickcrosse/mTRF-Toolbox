@@ -1,7 +1,8 @@
+# <img src="doc/mTRF-Toolbox_logo.png" height="160">
+
 [![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-# mTRF-Toolbox
 mTRF-Toolbox is a MATLAB package for rapid estimation of forward encoding
 models (stimulus to neural response) or backward decoding models (neural
 response to stimulus), suitable for modelling neurophysiological data such 
@@ -29,7 +30,7 @@ processes such as auditory attention and multisensory integration.
 Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 ## mTRF Modelling Framework
-<img src="doc/mTRF-Toolbox.png" width="600" height="400">
+<img src="doc/mTRF-Toolbox.png" height="400">
 
 ## Contents
 ### Fitting Encoding/Decoding Models
