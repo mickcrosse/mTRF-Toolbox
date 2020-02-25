@@ -13,7 +13,9 @@ With mTRF-Toolbox, it is possible to study how neuronal populations encode natur
 Documentation on toolbox usage and theory is available in the [mTRF-Toolbox paper](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 ## mTRF Modelling Framework
-<img src="doc/mTRF-Toolbox.png" height="400">
+<div align="center">
+  <img src="doc/mTRF-Toolbox.png" height="400">
+</div>
 
 ## Contents
 ### Fitting Encoding/Decoding Models
