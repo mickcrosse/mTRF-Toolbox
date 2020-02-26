@@ -9,14 +9,14 @@ Neural encoding of dynamic stimulus features can be quantified by computing forw
 
 With mTRF-Toolbox, it is possible to study how neuronal populations encode natural scenes and sounds such as motion, music and speech. It can also be used to study neural processes such as auditory/visual attention and multisensory integration, as well as various neural disorders where sensory processing is impaired. mTRF-Toolbox also provides a basic framework for real-time BCI applications such as neural stimulus reconstruction/synthesis and auditory attention decoding (AAD).
 
-### Installation
+## Installation
 Download and unzip mTRF-Toolbox to a local directory and in the MATLAB/GNU Octave command prompt enter:
 ```
 addpath 'directory/mTRF-Toolbox-master'
 savepath
 ```
 
-### Documentation
+## Documentation
 Documentation on toolbox usage and theory is available in the [mTRF-Toolbox paper](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 ## mTRF Modelling Framework
