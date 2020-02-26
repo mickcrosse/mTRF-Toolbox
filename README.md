@@ -1,35 +1,28 @@
+# <img src="doc/mTRF-Toolbox_logo.png">
+
 [![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-# mTRF-Toolbox
-mTRF-Toolbox is a MATLAB package for rapid estimation of forward encoding
-models (stimulus to neural response) or backward decoding models (neural
-response to stimulus), suitable for modelling neurophysiological data such 
-as MEG, EEG, iEEG, sEEG, ECoG and EMG data. 
+mTRF-Toolbox is a MATLAB package for estimating neural encoding/decoding models, suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG.
 
-Forward encoding models, also known as response functions or 
-receptive fields, can be used to investigate information processing in 
-neuronal populations with respect to temporal features (TRFs), or 
-spectro- or spatio-temporal features (STRFs). STRFs can be subjected to 
-conventional time-frequency and source analysis techniques used to analyse
-event related potentials. In addition, TRFs can be used to predict
-the dynamics of neural responses to unseen stimuli as a way to objectively 
-measure stimulus encoding. Stimulus reconstruction can be performed using 
-backward decoding models that project the multi-channel neural responses 
-back to the dynamics of the stimulus. This is useful for decoding stimulus 
-features from neural responses and can be used to build brain-computer 
-interfaces and other real-time neural interface applications.
+Neural encoding of dynamic stimulus features can be quantified by computing forward encoding models, also known as temporal response functions or temporal receptive fields (TRFs). mTRF-Toolbox can process multivariate input features such as spatio- or spectro-temporal representations (STRFs), as well as categorical features such as phonetic or semantic embeddings. TRFs can be subjected to conventional time-frequency/source analysis techniques or used to predict the neural responses to new stimuli. Stimulus features can be reconstructed from neural responses by computing backward decoding models, whereby the direction of causality is reversed.
 
-mTRF-Toolbox facilitates the use of natural continuous stimuli, allowing 
-researchers to investigate how neural systems process dynamic environmental 
-signals such as speech, music and motion, and to decode dynamic cognitive 
-processes such as auditory attention and multisensory integration.
+With mTRF-Toolbox, it is possible to study how neuronal populations encode natural scenes and sounds such as motion, music and speech. It can also be used to study neural processes such as auditory/visual attention and multisensory integration, as well as various neural disorders where sensory processing is impaired. mTRF-Toolbox also provides a basic framework for real-time BCI applications such as neural stimulus reconstruction/synthesis and auditory attention decoding (AAD).
 
-### Documentation
-Documentation on mTRF-Toolbox usage and underlying theory can be found [here](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
+## Installation
+Download and unzip mTRF-Toolbox to a local directory and in the MATLAB/GNU Octave command prompt enter:
+```
+addpath 'directory/mTRF-Toolbox-master'
+savepath
+```
+
+## Documentation
+Documentation on toolbox usage and theory is available in the [mTRF-Toolbox paper](http://mickcrosse.com/assets/pubs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 ## mTRF Modelling Framework
-<img src="doc/mTRF-Toolbox.png" width="600" height="400">
+<div align="center">
+  <img src="doc/mTRF-Toolbox.png" height="400">
+</div>
 
 ## Contents
 ### Fitting Encoding/Decoding Models
@@ -39,11 +32,11 @@ Documentation on mTRF-Toolbox usage and underlying theory can be found [here](ht
 * `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
  
 ### Decoding Attention and Multisensory Processing
-* `mTRFattncrossval()` - cross-validation for bulding an attention decoder
-* `mTRFmulticrossval()` - cross-validation for bulding an additive model of multisensory processing
+* `mTRFattncrossval()` - cross-validation for building an attention decoder
+* `mTRFmulticrossval()` - cross-validation for building an additive model of multisensory processing
 * `mTRFmultitrain()` - additive multisensory model fitting (TRF/STRF estimation)
 
-### Rapid Least Squares Estimation
+### Least Squares Estimation
 * `olscovmat()` - ordinary least squares covariance matrix estimation
 * `mlscovmat()` - multisensory least squares covariance matrix estimation
 
