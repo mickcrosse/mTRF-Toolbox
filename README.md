@@ -5,6 +5,16 @@
 
 mTRF-Toolbox is a MATLAB package for estimating neural encoding/decoding models and is suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG. System identification is used to model how neuronal populations encode dynamic stimuli such as natural scenes and sounds. It can also be used to study other neural processes such as auditory/visual attention and multisensory integration, as well as various neural disorders where sensory processing is impaired. mTRF-Toolbox provides a basic machine learning framework for real-time BCI applications such as neural stimulus reconstruction and auditory attention decoding (AAD).
 
+- [Installation](#installation)
+- [Documentation](#documentation)
+- [mTRF Modelling Framework](#mtrf-modelling-framework)
+- [Contents](#contents)
+  - [Fitting Encoding and Decoding Models](#fitting-encoding-and-decoding-models)
+  - [Decoding Attention and Multisensory Processing](#decoding-attention-and-multisensory-processing)
+  - [Least Squares Estimation](#least-squares-estimation)
+  - [Feature Extraction](#feature-extraction)
+- [License](#license)
+
 ## Installation
 Download and unzip mTRF-Toolbox to a local directory and in the MATLAB/GNU Octave command prompt enter:
 ```
@@ -24,7 +34,7 @@ Neural encoding of dynamic stimulus features can be quantified by computing forw
 </div>
 
 ## Contents
-### Fitting Encoding/Decoding Models
+### Fitting Encoding and Decoding Models
 * `mTRFcrossval()` - cross-validation for tuning model hyperparameters
 * `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
 * `mTRFpredict()` - model prediction and evaluation
