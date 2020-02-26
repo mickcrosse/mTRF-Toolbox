@@ -16,7 +16,7 @@ mTRF-Toolbox is a MATLAB package for estimating neural encoding/decoding models 
 - [License](#license)
 
 ## Installation
-Download and unzip mTRF-Toolbox to a local directory and in the MATLAB/GNU Octave command prompt enter:
+Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command prompt enter:
 ```
 addpath 'directory/mTRF-Toolbox-master'
 savepath
