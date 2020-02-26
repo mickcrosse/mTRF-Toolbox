@@ -7,10 +7,10 @@ mTRF-Toolbox is a MATLAB package for estimating neural encoding/decoding models,
 
 Neural encoding of dynamic stimulus features can be quantified by computing forward encoding models, also known as temporal response functions or temporal receptive fields (TRFs). mTRF-Toolbox can process multivariate input features such as spatio- or spectro-temporal representations (STRFs), as well as categorical features such as phonetic or semantic embeddings. TRFs can be subjected to conventional time-frequency/source analysis techniques or used to predict the neural responses to new stimuli. Stimulus features can be reconstructed from neural responses by computing backward decoding models, whereby the direction of causality is reversed.
 
-With mTRF-Toolbox, it is possible to study how neuronal populations encode natural scenes and sounds such as motion, music and speech. It can also be used to study neural processes such as auditory/visual attention and multisensory integration, as well as various neural disorders that impair sensory processing. mTRF-Toolbox also provides a basic framework for real-time BCI applications such as neural stimulus reconstruction and auditory attention decoding (AAD).
+With mTRF-Toolbox, it is possible to study how neuronal populations encode natural scenes and sounds such as motion, music and speech. It can also be used to study neural processes such as auditory/visual attention and multisensory integration, as well as various neural disorders where sensory processing is impaired. mTRF-Toolbox also provides a basic framework for real-time BCI applications such as neural stimulus reconstruction/synthesis and auditory attention decoding (AAD).
 
 ### Installation
-Download mTRF-Toolbox and unzip its contents to a local directory, then at the MATLAB/GNU Octave command prompt enter
+Download and unzip mTRF-Toolbox to a local directory and in the MATLAB/GNU Octave command prompt enter:
 ```
 addpath 'directory/mTRF-Toolbox-master'
 savepath
