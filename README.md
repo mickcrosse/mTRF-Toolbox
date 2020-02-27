@@ -3,7 +3,7 @@
 [![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-mTRF-Toolbox is a MATLAB package for estimating linear neural encoding/decoding models, suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG. System identification is used to model how neuronal populations encode dynamic stimuli such as natural scenes and sounds. It can also be used to study other neural processes such as auditory/visual attention and multisensory integration, as well as various neural disorders where sensory processing is impaired. mTRF-Toolbox provides a basic machine learning framework for real-time BCI applications such as neural stimulus reconstruction and auditory attention decoding (AAD).
+mTRF-Toolbox is a MATLAB package for estimating multivariate neural encoding/decoding models, suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG. It uses system identification to model the functional relationship between neuronal populations and dynamic sensory inputs such as natural scenes and sounds.
 
 - [Installation](#installation)
 - [Documentation](#documentation)
@@ -28,7 +28,9 @@ For documentation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_Fro
 For code demonstrating usage, please see [mTRFdemos](mTRFdemos.m).
 
 ## mTRF Modelling Framework
-mTRF-Toolbox provides a complementary forward (encoding) and backward (decoding) modelling framework. Known as a temporal response function or temporal receptive field (TRF), a forward model describes the process by which sensory information is encoded in the neural activity. Multivariate stimulus features such as spatio- or spectro-temporal representations, as well as categorical features such as phonetic or semantic embeddings can be used as inputs to the model. TRFs can be subjected to conventional time-frequency/source analysis techniques or used to predict the neural responses to an independent set of stimuli. Known as a decoder or reconstruction filter, a backward model reverses the direction of causality between stimulus and response. mTRF-Toolbox provides an efficient cross-validation framework for optimizing hyperparameter configuration. Backward models can be used to reconstruct stimulus features from an independent set of neural responses, or decode higher-order cognitive processes such as top-down attention. 
+mTRF-Toolbox provides a complementary forward/backward modelling framework. Known as a temporal response function or temporal receptive field (TRF), a forward model describes how sensory information is encoded in the neural activity. Multivariate stimulus features such as spatio- or spectro-temporal representations, as well as categorical features such as phonetic or semantic embeddings can be used as inputs to the model. TRFs can be subjected to conventional time-frequency/source analysis techniques or used to predict the neural responses to an independent set of stimuli. mTRF-Toolbox provides an efficient cross-validation procedure for hyperparameter optimization.
+
+Known as a neural decoder, a backward model reverses the direction of causality between the sensory input and the neural response. Neural decoders can be used to reconstruct stimulus features from information encoded explicitly or implicitly in neural activity, or even decode higher-order cognitive processes such as top-down attention. The mTRF modelling framework provides a basic machine learning platform for real-time BCI applications such as stimulus reconstruction/synthesis and auditory attention decoding (AAD).
 
 <div align="center">
   <img src="docs/mTRF-Toolbox.png" height="400">
