@@ -23,7 +23,7 @@ savepath
 ```
 
 ## Documentation
-For background and documentation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
+For documentation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 For code demonstrating usage, please see [mTRFdemos](mTRFdemos.m).
 
