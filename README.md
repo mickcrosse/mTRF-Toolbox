@@ -76,7 +76,7 @@ Here, we compute a 16-channel STRF and then sum across frequency bands.
         xlabel('Time lag (ms)')
 ```
 
-<img src="docs/STRF_example.png">
+<img src="docs/STRF_example.PNG">
 
 ## Contents
 ### Fitting Encoding and Decoding Models
