@@ -18,11 +18,10 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %
 %   STATS = MTRFMULTICROSSVAL(...) returns the cross-validation statistics
 %   in a structure with the following fields:
-%       'r'         -- the correlation coefficients between the predicted
-%                      and observed variables (ntrial-by-nlambda-by-yvar)
-%       'p'         -- the probabilities of the correlation coefficients
-%       'rmse'      -- the root-mean-square error between the predicted and
-%                      observed variables (ntrial-by-nlambda-by-yvar)
+%       'acc'       -- prediction accuracy based on Pearson's correlation
+%                      coefficient (ntrial-by-nlambda-by-yvar)
+%       'err'       -- prediction error based on the mean squared error
+%                      (ntrial-by-nlambda-by-yvar)
 %
 %   MTRFMULTICROSSVAL performs a leave-one-out cross-validation over all
 %   trials. To achieve a k-fold cross-validation, arrange STIM, RESP, RESP1
@@ -62,6 +61,19 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %                                   multi-lag model (default)
 %                       'single'    use each lag individually to fit
 %                                   separate single-lag models
+%       'acc'       A string specifying the accuracy metric to use:
+%                       'Pearson'   Pearson's linear correlation
+%                                   coefficient (default): suitable for
+%                                   data with a linear relationship
+%                       'Spearman'  Spearman's rank correlation
+%                                   coefficient: suitable for data with
+%                                   non-linear relationship
+%       'err'       A string specifying the error metric to use:
+%                       'msc'       Mean square error (default): take the
+%                                   square root to convert it to the
+%                                   original units of the data (i.e., RMSE)
+%                       'mae'       Mean absolute error: more robust to
+%                                   outliers than MSE
 %       'split'     A scalar specifying the number of segments in which to
 %                   split each trial of data when computing the covariance
 %                   matrices. This is useful for reducing memory usage on
@@ -76,9 +88,13 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %                   method. Note, both methods are numerically equivalent.
 %
 %   Notes:
-%   It is not recommended to use cross-validation as a way of testing model
-%   performance. Models should be tested on separate, held-out data after
-%   cross-validation using the mTRFpredict function.
+%   Each iteration of MTRFMULTICROSSVAL partitions the N trials of data
+%   into two subsets, fitting a model to N-1 trials (training set) and
+%   testing on the left-out trial (validation set). Performance on the
+%   validation set can be used to optimize hyperparameters (e.g., LAMBDA).
+%   Once completed, it is recommended to test the model performance on
+%   separate held-out data using the mTRFpredict function.
+%
 %   Discontinuous trials of data should not be concatenated prior to cross-
 %   validation as this will introduce artifacts in places where time lags
 %   cross over trial boundaries. Each trial should be input as an
@@ -100,10 +116,11 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %          Enhances Cortical Entrainment to Continuous Auditory Speech in
 %          Noise-Free Conditions. J Neurosci 35(42):14195-14204.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Giovanni Di Liberto <diliberg@tcd.ie>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%            Nate Zuk <zukn@tcd.ie>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -137,8 +154,7 @@ end
 
 % Check equal number of observations
 if ~isequal(xobs,yobs,zobs1,zobs2)
-    error(['STIM and RESP arguments must have the same number of '...
-        'observations.'])
+    error('STIM and RESP arguments must have the same number of observations.')
 end
 
 % Convert time lags to samples
@@ -219,9 +235,8 @@ end
 M = M/delta;
 
 % Initialize performance variables
-r = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-p = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-rmse = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+acc = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+err = zeros(ntrial*arg.split,nlambda,yvar,nlag);
 
 % Leave-one-out cross-validation
 n = 0;
@@ -285,11 +300,9 @@ for i = 1:ntrial
                     % Predict multisensory output
                     pred = xlag*w;
                     
-                    % Measure performance
-                    [rt,pt] = corr(y{i}(iseg,:),pred);
-                    r(n,k,:) = diag(rt);
-                    p(n,k,:) = diag(pt);
-                    rmse(n,k,:) = sqrt(mean((y{i}(iseg,:) - pred).^2,1))';
+                    % Evaluate performance
+                    [acc(n,k,:),err(n,k,:)] = mTRFevaluate(y{i}(iseg,:),...
+                        pred,'acc',arg.acc,'err',arg.err);
                     
                 case 'single'
                     
@@ -305,12 +318,10 @@ for i = 1:ntrial
                         ilag = [1,xvar*(l-1)+2:xvar*l+1];
                         pred = xlag(:,ilag)*w;
                         
-                        % Measure performance
-                        [rt,pt] = corr(y{i}(iseg,:),pred);
-                        r(n,k,:,l) = diag(rt);
-                        p(n,k,:,l) = diag(pt);
-                        rmse(n,k,:,l) = sqrt(mean((y{i}(iseg,:) - ...
-                            pred).^2,1))';
+                        % Evaluate performance
+                        [acc(n,k,:,l),err(n,k,:,l)] = ...
+                            mTRFevaluate(y{i}(iseg,:),pred,...
+                            'acc',arg.acc,'err',arg.err);
                         
                     end
                     
@@ -323,7 +334,7 @@ for i = 1:ntrial
 end
 
 % Format output arguments
-stats = struct('r',r,'p',p,'rmse',rmse);
+stats = struct('acc',acc,'err',err);
 if nargout > 1
     t = lags/fs*1e3;
 end
@@ -351,6 +362,16 @@ lagOptions = {'multi','single'};
 validFcn = @(x) any(validatestring(x,lagOptions));
 addParameter(p,'type','multi',validFcn);
 
+% Accuracy metric
+accOptions = {'Pearson','Spearman'};
+validFcn = @(x) any(validatestring(x,accOptions));
+addParameter(p,'acc','Pearson',validFcn);
+
+% Error metric
+errOptions = {'mse','mae'};
+validFcn = @(x) any(validatestring(x,errOptions));
+addParameter(p,'err','mse',validFcn);
+
 % Split data
 errorMsg = 'It must be a positive integer scalar.';
 validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
@@ -370,3 +391,5 @@ arg = p.Results;
 % Redefine partially-matched strings
 arg.method = validatestring(arg.method,regOptions);
 arg.type = validatestring(arg.type,lagOptions);
+arg.acc = validatestring(arg.acc,accOptions);
+arg.err = validatestring(arg.err,errOptions);

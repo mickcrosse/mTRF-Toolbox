@@ -26,11 +26,10 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %
 %   [PRED,STATS] = MTRFPREDICT(...) returns the statistics in a structure
 %   with the following fields:
-%       'r'         -- the correlation coefficients between the predicted
-%                      and observed variables (ntrial-by-yvar)
-%       'p'         -- the probabilities of the correlation coefficients
-%       'rmse'      -- the root-mean-square error between the predicted and
-%                      observed variables (ntrial-by-yvar)
+%       'acc'       -- prediction accuracy based on Pearson's correlation
+%                      coefficient (ntrial-by-yvar)
+%       'err'       -- prediction error based on the mean squared error
+%                      (ntrial-by-yvar)
 %
 %   [...] = MTRFPREDICT(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -40,6 +39,19 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %       'dim'       A scalar specifying the dimension to work along: pass
 %                   in 1 to work along the columns (default), or 2 to work
 %                   along the rows. Applies to both STIM and RESP.
+%       'acc'       A string specifying the accuracy metric to use:
+%                       'Pearson'   Pearson's linear correlation
+%                                   coefficient (default): suitable for
+%                                   data with a linear relationship
+%                       'Spearman'  Spearman's rank correlation
+%                                   coefficient: suitable for data with
+%                                   non-linear relationship
+%       'err'       A string specifying the error metric to use:
+%                       'msc'       Mean square error (default): take the
+%                                   square root to convert it to the
+%                                   original units of the data (i.e., RMSE)
+%                       'mae'       Mean absolute error: more robust to
+%                                   outliers than MSE
 %       'split'     A scalar specifying the number of segments in which to
 %                   split each trial of data when computing the covariance
 %                   matrices. This is useful for reducing memory usage on
@@ -63,10 +75,11 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %          white-noise approach. 2009 4th International IEEE/EMBS
 %          Conference on Neural Engineering, Antalya 589-592.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Giovanni Di Liberto <diliberg@tcd.ie>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%            Nate Zuk <zukn@tcd.ie>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -81,15 +94,14 @@ end
 % Format data in cell arrays
 [x,xobs,xvar] = formatcells(x,arg.dim);
 [y,yobs,yvar] = formatcells(y,arg.dim);
-if yobs == 0 || yvar == 0
+if isempty(y)
     yobs = xobs;
     yvar = size(model.w,3);
 end
 
 % Check equal number of observations
 if ~isequal(xobs,yobs)
-    error(['STIM and RESP arguments must have the same number of '...
-        'observations.'])
+    error('STIM and RESP arguments must have the same number of observations.')
 end
 
 % Convert time lags to samples
@@ -117,9 +129,8 @@ end
 
 % Initialize performance variables
 pred = cell(ntrial*arg.split,1);
-r = zeros(ntrial*arg.split,yvar,nlag);
-p = zeros(ntrial*arg.split,yvar,nlag);
-rmse = zeros(ntrial*arg.split,yvar,nlag);
+acc = zeros(ntrial*arg.split,yvar,nlag);
+err = zeros(ntrial*arg.split,yvar,nlag);
 
 % Test model
 n = 0;
@@ -144,12 +155,10 @@ for i = 1:ntrial
                 % Predict output
                 pred{n} = xlag*model.w;
                 
-                % Measure performance
+                % Evaluate performance
                 if nargout > 1
-                    [rt,pt] = corr(y{i}(idx,:),pred{n});
-                    r(n,:) = diag(rt);
-                    p(n,:) = diag(pt);
-                    rmse(n,:) = sqrt(mean((y{i}(idx,:) - pred{n}).^2,1))';
+                    [acc(n,:),err(n,:)] = mTRFevaluate(y{i}(idx,:),...
+                        pred{n},'acc',arg.acc,'err',arg.err);
                 end
                 
             case 'single'
@@ -162,13 +171,11 @@ for i = 1:ntrial
                     ilag = [1,xvar*(k-1)+2:xvar*k+1];
                     pred{n}(:,:,k) = xlag(:,ilag)*squeeze(model.w(:,k,:));
                     
-                    % Measure performance
+                    % Evaluate performance
                     if nargout > 1
-                        [rt,pt] = corr(y{i}(idx,:),pred{n}(:,:,k));
-                        r(n,:,k) = diag(rt);
-                        p(n,:,k) = diag(pt);
-                        rmse(n,:,k) = sqrt(mean((y{i}(idx,:) - ...
-                            pred{n}(:,:,k)).^2,1))';
+                        [acc(n,:,k),err(n,:,k)] = ...
+                            mTRFevaluate(y{i}(idx,:),pred{n}(:,:,k),...
+                            'acc',arg.acc,'err',arg.err);
                     end
                     
                 end
@@ -184,7 +191,7 @@ if ntrial == 1
     pred = pred{:};
 end
 if nargout > 1
-    stats = struct('r',r,'p',p,'rmse',rmse);
+    stats = struct('acc',acc,'err',err);
 end
 
 function arg = parsevarargin(varargin)
@@ -200,6 +207,16 @@ errorMsg = 'It must be a positive integer scalar within indexing range.';
 validFcn = @(x) assert(x==1||x==2,errorMsg);
 addParameter(p,'dim',1,validFcn);
 
+% Accuracy metric
+accOptions = {'Pearson','Spearman'};
+validFcn = @(x) any(validatestring(x,accOptions));
+addParameter(p,'acc','Pearson',validFcn);
+
+% Error metric
+errOptions = {'mse','mae'};
+validFcn = @(x) any(validatestring(x,errOptions));
+addParameter(p,'err','mse',validFcn);
+
 % Split data
 errorMsg = 'It must be a positive integer scalar.';
 validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
@@ -214,3 +231,7 @@ addParameter(p,'gpu',false,validFcn); % run on GPU
 % Parse input arguments
 parse(p,varargin{1,1}{:});
 arg = p.Results;
+
+% Redefine partially-matched strings
+arg.acc = validatestring(arg.acc,accOptions);
+arg.err = validatestring(arg.err,errOptions);
