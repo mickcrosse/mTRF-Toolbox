@@ -1,6 +1,6 @@
-function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
+function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
 %MTRFATTNCROSSVAL  Cross-validation for attention decoding.
-%   STATS1 = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
+%   STATS = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
 %   multiple trials of data for building an attention decoder. Models are
@@ -15,14 +15,24 @@ function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,
 %   LAMBDA is a scalar or vector of regularization values to be validated
 %   and controls overfitting.
 %
-%   [STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-validation
-%   statistics for the attended and unattended stimuli, respectively, in
-%   structures with the following fields:
-%       'r'         -- the correlation coefficients between the predicted
-%                      and observed variables (ntrial-by-nlambda-by-yvar)
-%       'p'         -- the probabilities of the correlation coefficients
-%       'rmse'      -- the root-mean-square error between the predicted and
-%                      observed variables (ntrial-by-nlambda-by-yvar)
+%   MTRFATTNCROSSVAL returns the summary cross-validation statistics in a
+%   structure with the following fields:
+%       'ami'       -- attention modulation index (AMI) based on the
+%                      difference between the Pearson's correlation
+%                      coefficient for the attended and unattended stimuli
+%                      (ntrial-by-nlambda-by-yvar)
+%       'dprime'    -- sensitivity index based on d', where the attended
+%                      stimulus correlation is considered signal and the
+%                      unattended stimulus correlation is considered noise
+%                      (ntrial-by-nlambda-by-yvar)
+%
+%   [STATS,STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-
+%   validation statistics for the attended and unattended stimuli,
+%   respectively, in structures with the following fields:
+%       'acc'       -- prediction accuracy based on Pearson's correlation
+%                      coefficient (ntrial-by-nlambda-by-yvar)
+%       'err'       -- prediction error based on the mean squared error
+%                      (ntrial-by-nlambda-by-yvar)
 %
 %   MTRFATTNCROSSVAL performs a leave-one-out cross-validation over all
 %   trials. To achieve a k-fold cross-validation, arrange STIM1, STIM2 and
@@ -62,6 +72,19 @@ function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,
 %                                   multi-lag model (default)
 %                       'single'    use each lag individually to fit
 %                                   separate single-lag models
+%       'acc'       A string specifying the accuracy metric to use:
+%                       'Pearson'   Pearson's linear correlation
+%                                   coefficient (default): suitable for
+%                                   data with a linear relationship
+%                       'Spearman'  Spearman's rank correlation
+%                                   coefficient: suitable for data with
+%                                   non-linear relationship
+%       'err'       A string specifying the error metric to use:
+%                       'msc'       Mean square error (default): take the
+%                                   square root to convert it to the
+%                                   original units of the data (i.e., RMSE)
+%                       'mae'       Mean absolute error: more robust to
+%                                   outliers than MSE
 %       'split'     A scalar specifying the number of segments in which to
 %                   split each trial of data when computing the covariance
 %                   matrices. This is useful for reducing memory usage on
@@ -76,9 +99,13 @@ function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,
 %                   method. Note, both methods are numerically equivalent.
 %
 %   Notes:
-%   It is not recommended to use cross-validation as a way of testing model
-%   performance. Models should be tested on separate, held-out data after
-%   cross-validation using the mTRFpredict function.
+%   Each iteration of MTRFATTNCROSSVAL partitions the N trials of data into
+%   two subsets, fitting a model to N-1 trials (training set) and testing
+%   on the left-out trial (validation set). Performance on the validation
+%   set can be used to optimize hyperparameters (e.g., LAMBDA). Once
+%   completed, it is recommended to test the model performance on separate
+%   held-out data using the mTRFpredict function.
+%
 %   Discontinuous trials of data should not be concatenated prior to cross-
 %   validation as this will introduce artifacts in places where time lags
 %   cross over trial boundaries. Each trial should be input as an
@@ -101,10 +128,11 @@ function [stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,
 %          Selection in a Cocktail Party Environment Can Be Decoded from
 %          Single-Trial EEG. Cereb Cortex 25(7):1697-1706.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Giovanni Di Liberto <diliberg@tcd.ie>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%            Nate Zuk <zukn@tcd.ie>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -137,8 +165,7 @@ end
 
 % Check equal number of observations
 if ~isequal(xobs,yobs,zobs)
-    error(['STIM and RESP arguments must have the same number of '...
-        'observations.'])
+    error('STIM and RESP arguments must have the same number of observations.')
 end
 
 % Convert time lags to samples
@@ -186,12 +213,10 @@ end
 M = M/delta;
 
 % Initialize performance variables
-r1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-p1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-rmse1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-r2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-p2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-rmse2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+acc1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+err1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+acc2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+err2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
 
 % Leave-one-out cross-validation
 n = 0;
@@ -257,11 +282,10 @@ for i = 1:ntrial
                     % Predict output
                     pred = xlag*w;
                     
-                    % Measure performance
-                    [rt,pt] = corr(y{i}(iseg,:),pred);
-                    r1(n,k,:) = diag(rt);
-                    p1(n,k,:) = diag(pt);
-                    rmse1(n,k,:) = sqrt(mean((y{i}(iseg,:) - pred).^2,1))';
+                    % Evaluate performance
+                    [acc1(n,k,:),err1(n,k,:)] = ...
+                        mTRFevaluate(y{i}(iseg,:),pred,...
+                        'acc',arg.acc,'err',arg.err);
                     
                     % ---Unattended Stimulus---
                     
@@ -270,21 +294,17 @@ for i = 1:ntrial
                         % Predict output
                         pred = zlag*w;
                         
-                        % Measure performance
-                        [rt,pt] = corr(y{i}(iseg,:),pred);
-                        r2(n,k,:) = diag(rt);
-                        p2(n,k,:) = diag(pt);
-                        rmse2(n,k,:) = sqrt(mean((y{i}(iseg,:) - ...
-                            pred).^2,1))';
+                        % Evaluate performance
+                        [acc2(n,k,:),err2(n,k,:)] = ...
+                            mTRFevaluate(y{i}(iseg,:),pred,...
+                            'acc',arg.acc,'err',arg.err);
                         
                     elseif dir == -1
                         
-                        % Measure performance
-                        [rt,pt] = corr(z{i}(iseg,:),pred);
-                        r2(n,k,:) = diag(rt);
-                        p2(n,k,:) = diag(pt);
-                        rmse2(n,k,:) = sqrt(mean((z{i}(iseg,:) - ...
-                            pred).^2,1))';
+                        % Evaluate performance
+                        [acc2(n,k,:),err2(n,k,:)] = ...
+                            mTRFevaluate(z{i}(iseg,:),pred,...
+                            'acc',arg.acc,'err',arg.err);
                         
                     end
                     
@@ -301,12 +321,10 @@ for i = 1:ntrial
                         ilag = [1,xvar*(l-1)+2:xvar*l+1];
                         pred = xlag(:,ilag)*w;
                         
-                        % Measure performance
-                        [rt,pt] = corr(y{i}(iseg,:),pred);
-                        r1(n,k,:,l) = diag(rt);
-                        p1(n,k,:,l) = diag(pt);
-                        rmse1(n,k,:,l) = sqrt(mean((y{i}(iseg,:) - ...
-                            pred).^2,1))';
+                        % Evaluate performance
+                        [acc1(n,k,:,l),err1(n,k,:,l)] = ...
+                            mTRFevaluate(y{i}(iseg,:),pred,...
+                            'acc',arg.acc,'err',arg.err);
                         
                         % ---Unattended Stimulus---
                         
@@ -316,21 +334,17 @@ for i = 1:ntrial
                             ilag = [1,xvar*(l-1)+2:xvar*l+1];
                             pred = zlag(:,ilag)*w;
                             
-                            % Measure performance
-                            [rt,pt] = corr(y{i}(iseg,:),pred);
-                            r2(n,k,:) = diag(rt);
-                            p2(n,k,:) = diag(pt);
-                            rmse2(n,k,:) = sqrt(mean((y{i}(iseg,:) - ...
-                                pred).^2,1))';
+                            % Evaluate performance
+                            [acc2(n,k,:,l),err2(n,k,:,l)] = ...
+                                mTRFevaluate(y{i}(iseg,:),pred,...
+                                'acc',arg.acc,'err',arg.err);
                             
                         elseif dir == -1
                             
-                            % Measure performance
-                            [rt,pt] = corr(z{i}(iseg,:),pred);
-                            r2(n,k,:) = diag(rt);
-                            p2(n,k,:) = diag(pt);
-                            rmse2(n,k,:) = sqrt(mean((z{i}(iseg,:) - ...
-                                pred).^2,1))';
+                            % Evaluate performance
+                            [acc2(n,k,:,l),err2(n,k,:,l)] = ...
+                                mTRFevaluate(z{i}(iseg,:),pred,...
+                                'acc',arg.acc,'err',arg.err);
                             
                         end
                         
@@ -344,9 +358,15 @@ for i = 1:ntrial
     
 end
 
+% Compute AMI and d'
+ami = acc1-acc2;
+d = (mean(acc1,1) - mean(acc2,1)) ./ ...
+    sqrt(0.5*(var(acc1,[],1) + var(acc2,[],1)));
+
 % Format output arguments
-stats1 = struct('r',r1,'p',p1,'rmse',rmse1);
-stats2 = struct('r',r2,'p',p2,'rmse',rmse2);
+stats = struct('ami',ami,'dprime',d);
+stats1 = struct('acc',acc1,'err',err1);
+stats2 = struct('acc',acc2,'err',err2);
 if nargout > 2
     t = lags/fs*1e3;
 end
@@ -374,6 +394,16 @@ lagOptions = {'multi','single'};
 validFcn = @(x) any(validatestring(x,lagOptions));
 addParameter(p,'type','multi',validFcn);
 
+% Accuracy metric
+accOptions = {'Pearson','Spearman'};
+validFcn = @(x) any(validatestring(x,accOptions));
+addParameter(p,'acc','Pearson',validFcn);
+
+% Error metric
+errOptions = {'mse','mae'};
+validFcn = @(x) any(validatestring(x,errOptions));
+addParameter(p,'err','mse',validFcn);
+
 % Split data
 errorMsg = 'It must be a positive integer scalar.';
 validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
@@ -393,3 +423,5 @@ arg = p.Results;
 % Redefine partially-matched strings
 arg.method = validatestring(arg.method,regOptions);
 arg.type = validatestring(arg.type,lagOptions);
+arg.acc = validatestring(arg.acc,accOptions);
+arg.err = validatestring(arg.err,errOptions);
