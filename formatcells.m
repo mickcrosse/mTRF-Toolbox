@@ -16,17 +16,18 @@ function [x,rows,cols] = formatcells(x,dim,nanflag)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 05-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Set default values
+if nargin < 2
+    dim = 1;
+end
 if nargin < 3
     nanflag = true;
 end
 
-if ~iscell(x)
+if ~iscell(x) && ~isempty(x)
     x = {x};
 end
 

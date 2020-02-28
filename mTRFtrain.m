@@ -21,8 +21,8 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %       'type'      -- type of model (multi-lag, single-lag)
 %
 %   MTRFTRAIN normalizes the model weights and regularization matrix by the
-%   sampling interval (1/FS) to produce consistent scaling and smoothing of
-%   the weights across different sample rates (Lalor et al., 2006).
+%   sampling interval (1/FS) such that their magnitude and smoothness is
+%   invariant to sample rate FS (Lalor et al., 2006).
 %
 %   If STIM or RESP are matrices, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
@@ -66,7 +66,7 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %
 %   See mTRFdemos for examples of use.
 %
-%   See also MTRFPREDICT, MTRFTRANSFORM, MTRFCROSSVAL.
+%   See also RIDGE, REGRESS, MTRFPREDICT, MTRFTRANSFORM, MTRFCROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -79,10 +79,11 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %          The VESPA: a method for the rapid estimation of a visual evoked
 %          potential. NeuroImage 32:1549-1561.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Giovanni Di Liberto <diliberg@tcd.ie>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%            Nate Zuk <zukn@tcd.ie>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -114,8 +115,7 @@ end
 
 % Check equal number of observations
 if ~isequal(xobs,yobs)
-    error(['STIM and RESP arguments must have the same number of '...
-        'observations.'])
+    error('STIM and RESP arguments must have the same number of observations.')
 end
 
 % Convert time lags to samples

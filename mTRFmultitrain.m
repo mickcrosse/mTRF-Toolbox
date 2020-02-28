@@ -72,7 +72,7 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %
 %   See mTRFdemos for examples of use.
 %
-%   See also MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
+%   See also RIDGE, REGRESS, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -88,10 +88,11 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %          The VESPA: a method for the rapid estimation of a visual evoked
 %          potential. NeuroImage 32:1549-1561.
 
-%   Authors: Mick Crosse, Giovanni Di Liberto, Nate Zuk, Edmund Lalor
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 05-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Giovanni Di Liberto <diliberg@tcd.ie>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%            Nate Zuk <zukn@tcd.ie>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);

@@ -4,21 +4,22 @@ function [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,varargin)
 %   from a sample rate of FSIN to FSOUT by averaging data every FSIN/FSOUT
 %   samples. To avoid phase distortion, the inital window is centered on
 %   the first sample. MTRFRESAMPLE does not apply an anti-aliasing filter,
-%   but the data are low-pass filtered by convolution with a square window.
+%   but the data are in effect low-pass filtered by convolution with a
+%   square window.
 %
 %   If X is a matrix, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
-%   the 'dim' parameter. If X is a vector, it is assumed that the first
-%   non-singleton dimension corresponds to observations.
+%   the 'dim' parameter (see below). If X is a vector, it is assumed that
+%   the first non-singleton dimension corresponds to observations.
 %
 %   Y = MTRFRESAMPLE(X,FSIN,FSOUT,WINDOW) specifies the window size used to
 %   average data. Values greater than 1 result in overlap between the data
-%   used to estimate adjacent output frames resulting in increased
+%   used to estimate adjacent output frames, resulting in increased
 %   smoothing. The default value is 1. Note, changing the value of WINDOW
-%   does not effect the output sample rate, only the degree of smoothing.
+%   does not affect the output sample rate, only the degree of smoothing.
 %
 %   Y = MTRFRESAMPLE(X,FSIN,FSOUT,WINDOW,BUFF) concatenates a buffer of
-%   intital data to the beginning of X to enable centering of the first
+%   initial data to the beginning of X to enable centering of the first
 %   window at time t=0. The buffer should be passed from the final state of
 %   previous data sampled at the input sample rate FSIN.
 %
@@ -39,14 +40,13 @@ function [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,varargin)
 %                   in 1 to work along the columns (default) or 2 to work
 %                   along the rows.
 %
-%   See also MTRFENVELOPE, MTRFPCA, LAGGEN.
+%   See also RESAMPLE, DECIMATE, DOWNSAMPLE, UPSAMPLE.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -115,11 +115,6 @@ p = inputParser;
 errorMsg = 'It must be a positive integer scalar within indexing range.';
 validFcn = @(x) assert(x==1||x==2,errorMsg);
 addParameter(p,'dim',1,validFcn);
-
-% Boolean arguments
-errorMsg = 'It must be a numeric scalar (0,1) or logical.';
-validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
-addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});

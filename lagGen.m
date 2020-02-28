@@ -22,14 +22,12 @@ function [xlag,idx] = lagGen(x,lags,zeropad,stack)
 %   for each variable. Note that mTRF-Toolbox functions are designed to
 %   unwrap model weights computed using option 1.
 %
-%   See also MTRFRESAMPLE, MTRFENVELOPE, MTRFPCA.
+%   See also LAGMATRIX, MTRFRESAMPLE, MTRFENVELOPE.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 05-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Set default values
 if nargin < 3 || isempty(zeropad)

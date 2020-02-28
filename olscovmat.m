@@ -29,14 +29,13 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %   a separate cell. Pass in 1 to sum them (default), or 0 to return them
 %   separately.
 %
-%   See also MLSCOVMAT.
+%   See also LSCOV, MLSCOVMAT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse, Nate Zuk
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Nate Zuk <zukn@tcd.ie>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Set default values
 if nargin < 4 || isempty(type)

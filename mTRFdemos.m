@@ -20,9 +20,7 @@ function mTRFdemos(demo)
 %          Hum Neurosci 10:604.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   License: BSD 3-Clause
-%   Apr 2014; Last revision: 26-Feb-2020
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 switch demo
     
@@ -114,18 +112,17 @@ switch demo
         
         
         % Load data
-        load('data/speech_data.mat','stim','resp','fs');
+        load('data/speech_data.mat','stim','resp','fs','factor');
         
         % Normalize data
-        stim = stim/std(stim(:));
-        resp = resp/std(resp(:));
+        resp = resp*factor;
         n = size(stim,2);
         
         % Model parameters
         dir = 1;
         tmin = -150;
         tmax = 450;
-        lambda = 10*n^2;
+        lambda = 0.5;
         
         % Compute model weights
         model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,...
@@ -156,7 +153,7 @@ switch demo
         dir = 1;
         tmin = -150;
         tmax = 450;
-        lambda = 10*n;
+        lambda = 0.05;
         
         % Compute model weights
         model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,...
@@ -240,7 +237,7 @@ switch demo
         % ---Model training---
         
         % Model parameters
-        [rmax,idx] = max(mean(cv.r));
+        [rmax,idx] = max(mean(cv.acc));
         lambda = lambdas(idx);
         
         % Train model
@@ -255,7 +252,7 @@ switch demo
         % Plot cross-validation results
         figure(4)
         subplot(2,2,1)
-        errorbar(1:nlambda,mean(cv.r),std(cv.r)/sqrt(nfold-1),...
+        errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),...
             'linewidth',2)
         set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6)
         xlim([0,nlambda+1])
@@ -265,13 +262,13 @@ switch demo
         axis square
         grid on
         subplot(2,2,2)
-        errorbar(1:nlambda,mean(cv.rmse),std(cv.rmse)/sqrt(nfold-1),...
+        errorbar(1:nlambda,mean(cv.err),std(cv.err)/sqrt(nfold-1),...
             'linewidth',2)
         set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6)
         xlim([0,nlambda+1])
         title('CV Error')
         xlabel('Lambda (1\times10^\lambda)')
-        ylabel('RMSE')
+        ylabel('MSE')
         axis square
         grid on
         
@@ -291,7 +288,7 @@ switch demo
         subplot(2,2,4)
         bar(1,rmax)
         hold on
-        bar(2,test.r)
+        bar(2,test.acc)
         title('Test Result')
         xlabel('Metric')
         ylabel('Correlation')
@@ -362,7 +359,6 @@ switch demo
         stim = resample(stim,fsNew,fs);
         resp = resample(resp,fsNew,fs);
         fs = fsNew;
-        nobs = size(stim,1);
         
         % ---Create training/test sets---
         
@@ -391,10 +387,10 @@ switch demo
         [stats,t] = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,...
             lambdas,'type','single','zeropad',0);
         
-        mr = squeeze(mean(stats.r))';
-        vr = squeeze(var(stats.r))';
-        mrmse = squeeze(mean(stats.rmse))';
-        vrmse = squeeze(var(stats.rmse))';
+        mr = squeeze(mean(stats.acc))';
+        vr = squeeze(var(stats.acc))';
+        mrmse = squeeze(mean(stats.err))';
+        vrmse = squeeze(var(stats.err))';
         
         % Plot reconstruction accuracy
         figure(6)
@@ -423,7 +419,7 @@ switch demo
         xlim([tmin,tmax])
         title('Reconstruction Error')
         xlabel('Time lag (ms)')
-        ylabel('RMSE')
+        ylabel('MSE')
         axis square
         grid on
         

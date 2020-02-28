@@ -9,7 +9,7 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %   the first non-singleton dimension corresponds to observations.
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT) resamples the envelope of X from a
-%   sample rate of FSIN to FSOUT by averaging the signal power every 
+%   sample rate of FSIN to FSOUT by averaging the signal power every
 %   FSIN/FSOUT samples and taking the square root (i.e., RMS intensity).
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW) specifies the window size used to
@@ -18,12 +18,12 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %   smoothing. By default, a window size of 1 is used.
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC) specifies the amount of
-%   dynamic range compression (DRC) to apply by raising the RMS value of X 
+%   dynamic range compression (DRC) to apply by raising the RMS value of X
 %   to the power of DRC. By default, a value of log10(2) is used to model
 %   human auditory perception (Stevens, 1955).
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC,BUFF) prepends a buffer
-%   of intital data to the beginning of X to enable centering of the first
+%   of initial data to the beginning of X to enable centering of the first
 %   window at time t=0. The buffer should be passed from the final
 %   state of previous data sampled at the input sample rate FSIN..
 %
@@ -50,10 +50,9 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %      [2] Stevens SS (1955) The Measurement of Loudness. J Acoust Soc Am
 %          27(2):815-829.
 
-%   Authors: Mick Crosse
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Jan 2020; Last revision: 18-Feb-2020
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Edmund Lalor <edmundlalor@gmail.com>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
@@ -96,11 +95,6 @@ p = inputParser;
 errorMsg = 'It must be a positive integer scalar within indexing range.';
 validFcn = @(x) assert(x==1||x==2,errorMsg);
 addParameter(p,'dim',1,validFcn);
-
-% Boolean arguments
-errorMsg = 'It must be a numeric scalar (0,1) or logical.';
-validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
-addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});

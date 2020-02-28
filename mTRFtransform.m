@@ -37,7 +37,7 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %
 %   See mTRFdemos for examples of use.
 %
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFCROSSVAL, MTRFMULTICROSSVAL.
+%   See also MTRFTRAIN, MTRFMULTITRAIN.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -51,10 +51,11 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %          linear models in multivariate neuroimaging. NeuroImage
 %          87:96-110.
 
-%   Authors: Adam Bednar, Emily Teoh, Giovanni Di Liberto, Mick Crosse
-%   Contact: mickcrosse@gmail.com, edmundlalor@gmail.com
-%   Lalor Lab, Trinity College Dublin, IRELAND
-%   Apr 2014; Last revision: 18-Feb-2020
+%   Authors: Adam Bednar <bednara@tcd.ie>
+%            Emily Teoh <teohe@tcd.ie>
+%            Giovanni Di Liberto <diliberg@tcd.ie>
+%            Mick Crosse <mickcrosse@gmail.com>
+%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
