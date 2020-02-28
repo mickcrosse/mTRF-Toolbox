@@ -8,6 +8,8 @@ mTRF-Toolbox is an open-source MATLAB package for quantitative modelling of sens
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [mTRF Modelling Framework](#mtrf-modelling-framework)
+- [Examples](#examples)
+  - [STRF Estimation](#strf-estimation)
 - [Contents](#contents)
   - [Fitting Encoding and Decoding Models](#fitting-encoding-and-decoding-models)
   - [Decoding Attention and Multisensory Processing](#decoding-attention-and-multisensory-processing)
@@ -33,8 +35,48 @@ mTRF-Toolbox provides a complementary forward/backward quantitative modelling fr
 A backward model, known as a neural decoder, reverses the direction of causality between stimulus and response. Neural decoders can be used to reconstruct stimulus features from information encoded explicitly or implicitly in neuronal activity, or decode higher-order cognitive processes such as top-down attention. The mTRF modelling framework provides a basic machine learning platform for real-time BCI applications such as stimulus reconstruction/synthesis and auditory attention decoding (AAD).
 
 <div align="center">
-  <img src="docs/mTRF-Toolbox.png" height="400">
+  <img src="docs/mTRF-Toolbox.png">
 </div>
+
+## Examples
+### STRF Estimation
+Here, we compute a 16-channel STRF and then sum across frequency bands.
+```
+        % Load data
+        load('data/speech_data.mat','stim','resp','fs','factor');       
+        
+        % Compute model weights
+        model = mTRFtrain(stim,resp*factor,fs,1,-150,450,0.05);
+        
+        % Plot STRF & GFP
+        figure, subplot(2,2,1)
+        imagesc(model.t(14:66),1:16,squeeze(model.w(:,14:66,85)))
+        xlim([-50,350]), axis square
+        set(gca,'ydir','normal')
+        title('Speech STRF (Fz)')
+        ylabel('Frequency band')      
+        
+        subplot(2,2,2)
+        imagesc(model.t(14:66),1:16,squeeze(std(model.w(:,14:66,:),[],3)))
+        xlim([-50,350]), axis square
+        set(gca,'ydir','normal')
+        title('Global Field Power')
+        
+        subplot(2,2,3)
+        plot(model.t,squeeze(sum(model.w(:,:,85))),'linewidth',3)
+        xlim([-50,350]), axis square, grid on
+        title('Speech TRF (Fz)')
+        xlabel('Time lag (ms)')
+        ylabel('Amplitude (a.u.)')
+        
+        subplot(2,2,4)
+        area(model.t,squeeze(std(sum(model.w),[],3)),'edgecolor','none')
+        xlim([-50,350]), axis square, grid on
+        title('Global Field Power')
+        xlabel('Time lag (ms)')
+```
+
+<img src="docs/STRF_example.PNG">
 
 ## Contents
 ### Fitting Encoding and Decoding Models
