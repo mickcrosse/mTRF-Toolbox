@@ -40,15 +40,16 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ## Examples
 ### STRF Estimation
-Here, we compute a 16-channel STRF and then sum across frequency bands.
+Here, we estimate a 16-channel STRF from 2 minutes of EEG recorded while listening to natural speech. We compute global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels.
+
 ```
-        % Load data
+        % Load example speech dataset
         load('data/speech_data.mat','stim','resp','fs','factor');       
         
-        % Compute model weights
+        % Estimate STRF model weights
         model = mTRFtrain(stim,resp*factor,fs,1,-150,450,0.05);
         
-        % Plot STRF & GFP
+        % Plot STRF
         figure, subplot(2,2,1)
         imagesc(model.t(14:66),1:16,squeeze(model.w(:,14:66,85)))
         xlim([-50,350]), axis square
@@ -56,12 +57,14 @@ Here, we compute a 16-channel STRF and then sum across frequency bands.
         title('Speech STRF (Fz)')
         ylabel('Frequency band')      
         
+        % Plot GFP
         subplot(2,2,2)
         imagesc(model.t(14:66),1:16,squeeze(std(model.w(:,14:66,:),[],3)))
         xlim([-50,350]), axis square
         set(gca,'ydir','normal')
         title('Global Field Power')
         
+        % Plot broadband TRF
         subplot(2,2,3)
         plot(model.t,squeeze(sum(model.w(:,:,85))),'linewidth',3)
         xlim([-50,350]), axis square, grid on
@@ -69,6 +72,7 @@ Here, we compute a 16-channel STRF and then sum across frequency bands.
         xlabel('Time lag (ms)')
         ylabel('Amplitude (a.u.)')
         
+        % Plot broadband GFP
         subplot(2,2,4)
         area(model.t,squeeze(std(sum(model.w),[],3)),'edgecolor','none')
         xlim([-50,350]), axis square, grid on
