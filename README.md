@@ -8,13 +8,13 @@ mTRF-Toolbox is an open-source MATLAB package for quantitative modelling of sens
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [mTRF Modelling Framework](#mtrf-modelling-framework)
-- [Examples](#examples)
-  - [STRF Estimation](#strf-estimation)
 - [Contents](#contents)
   - [Fitting Encoding and Decoding Models](#fitting-encoding-and-decoding-models)
   - [Decoding Attention and Multisensory Processing](#decoding-attention-and-multisensory-processing)
-  - [Least Squares Estimation](#least-squares-estimation)
+  - [Covariance Matrix Estimation](#covariance-matrix-estimation)
   - [Feature Extraction](#feature-extraction)
+- [Examples](#examples)
+  - [STRF Estimation](#strf-estimation)
 - [License](#license)
 
 ## Installation
@@ -38,63 +38,21 @@ A backward model, known as a neural decoder, reverses the direction of causality
   <img src="docs/mTRF-Toolbox.png">
 </div>
 
-## Examples
-### STRF Estimation
-Here, we estimate a 16-channel STRF from 2 minutes of EEG recorded while listening to natural speech. We compute global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels.
-
-```
-        % Load example speech dataset
-        load('data/speech_data.mat','stim','resp','fs','factor');       
-        
-        % Estimate STRF model weights
-        model = mTRFtrain(stim,resp*factor,fs,1,-150,450,0.05);
-        
-        % Plot STRF
-        figure, subplot(2,2,1)
-        imagesc(model.t(14:66),1:16,squeeze(model.w(:,14:66,85)))
-        xlim([-50,350]), axis square
-        set(gca,'ydir','normal')
-        title('Speech STRF (Fz)')
-        ylabel('Frequency band')      
-        
-        % Plot GFP
-        subplot(2,2,2)
-        imagesc(model.t(14:66),1:16,squeeze(std(model.w(:,14:66,:),[],3)))
-        xlim([-50,350]), axis square
-        set(gca,'ydir','normal')
-        title('Global Field Power')
-        
-        % Plot broadband TRF
-        subplot(2,2,3)
-        plot(model.t,squeeze(sum(model.w(:,:,85))),'linewidth',3)
-        xlim([-50,350]), axis square, grid on
-        title('Speech TRF (Fz)')
-        xlabel('Time lag (ms)')
-        ylabel('Amplitude (a.u.)')
-        
-        % Plot broadband GFP
-        subplot(2,2,4)
-        area(model.t,squeeze(std(sum(model.w),[],3)),'edgecolor','none')
-        xlim([-50,350]), axis square, grid on
-        title('Global Field Power')
-        xlabel('Time lag (ms)')
-```
-
-<img src="docs/STRF_example.PNG">
-
 ## Contents
 ### Fitting Encoding and Decoding Models
-* `mTRFcrossval()` - cross-validation for tuning model hyperparameters
-* `mTRFtrain()` - encoding/decoding model fitting (TRF/STRF estimation)
-* `mTRFpredict()` - model prediction and evaluation
-* `mTRFtransform()` - transforms decoding models into neurophysiologically interpretable encoding models
+* `mTRFcrossval()` - cross-validation for hyperparameter optimization
+* `mTRFtrain()` - fitting encoding/decoding models (TRF/STRF estimation)
+* `mTRFtransform()` - transforming decoding models into neurophysiologically interpretable encoding models
  
+ * `mTRFpredict()` - model prediction and evaluation
+* `mTRFevaluate()` - model evaluation metrics
+
 ### Decoding Attention and Multisensory Processing
 * `mTRFattncrossval()` - cross-validation for building an attention decoder
 * `mTRFmulticrossval()` - cross-validation for building an additive model of multisensory processing
-* `mTRFmultitrain()` - additive multisensory model fitting (TRF/STRF estimation)
+* `mTRFmultitrain()` - fitting an additive multisensory model (TRF/STRF estimation)
 
-### Least Squares Estimation
+### Covariance Matrix Estimation
 * `olscovmat()` - ordinary least squares covariance matrix estimation
 * `mlscovmat()` - multisensory least squares covariance matrix estimation
 
@@ -102,6 +60,34 @@ Here, we estimate a 16-channel STRF from 2 minutes of EEG recorded while listeni
 * `mTRFenvelope()` - computes the acoustic envelope of an audio signal
 * `mTRFresample()` - resamples and smooths temporal features
 * `lagGen()` - generates time-lagged input features
+
+## Examples
+### STRF Estimation
+Here, we estimate a 16-channel STRF from 2 minutes of EEG recorded while listening to natural speech. We compute global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels.
+
+```
+% Load example speech dataset
+load('data/speech_data.mat','stim','resp','fs');       
+
+% Estimate STRF model weights
+model = mTRFtrain(stim,resp,fs,1,-150,450,0.05);
+
+% Compute broadband TRF
+strf = model.w;
+trf = sum(model.w);
+
+% Compute global field power
+sgfp = std(strf,[],3);
+gfp = std(trf,[],3);
+
+% Plot STRF & GFP
+subplot(2,2,1), imagesc(model.t(14:66),1:16,squeeze(strf(:,14:66,85))))  
+subplot(2,2,2), imagesc(model.t(14:66),1:16,squeeze(sgfp(:,14:66)))
+subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3)
+subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none')
+```
+
+<img src="docs/STRF_example.PNG">
 
 ## License
 [BSD 3-Clause License](LICENSE)
