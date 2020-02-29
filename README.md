@@ -19,7 +19,7 @@ mTRF-Toolbox is an open-source MATLAB package for quantitative modelling of sens
 
 ## Installation
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
-```
+```matlab
 addpath 'directory/mTRF-Toolbox-master'
 savepath
 ```
@@ -65,7 +65,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 ### STRF Estimation
 Here, we estimate a 16-channel STRF from 2 minutes of EEG recorded while listening to natural speech. We compute global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels.
 
-```
+```matlab
 % Load example speech dataset
 load('data/speech_data.mat','stim','resp','fs');       
 
