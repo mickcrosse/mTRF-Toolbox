@@ -62,7 +62,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ## Examples
 ### STRF Estimation
-Here, we estimate a 16-channel STRF from 2 minutes of EEG recorded while listening to natural speech. We compute global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels.
+Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while listening to natural speech. We compute the global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels.
 
 ```matlab
 % Load example speech dataset
