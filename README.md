@@ -35,7 +35,7 @@ mTRF-Toolbox provides a complementary forward/backward quantitative modelling fr
 A backward model, known as a neural decoder, reverses the direction of causality between stimulus and response. Neural decoders can be used to reconstruct stimulus features from information encoded explicitly or implicitly in neuronal activity, or decode higher-order cognitive processes such as top-down attention. The mTRF modelling framework provides a basic machine learning platform for real-time BCI applications such as stimulus reconstruction/synthesis and auditory attention decoding (AAD).
 
 <div align="center">
-  <img src="docs/mTRF-Toolbox.png">
+  <img src="docs/mTRF_modelling_framework.PNG">
 </div>
 
 ## Contents
