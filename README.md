@@ -41,16 +41,15 @@ A backward model, known as a neural decoder, reverses the direction of causality
 ## Contents
 ### Fitting Encoding and Decoding Models
 * `mTRFcrossval()` - cross-validation for hyperparameter optimization
-* `mTRFtrain()` - fitting encoding/decoding models (TRF/STRF estimation)
-* `mTRFtransform()` - transforming decoding models into neurophysiologically interpretable encoding models
- 
- * `mTRFpredict()` - model prediction and evaluation
-* `mTRFevaluate()` - model evaluation metrics
+* `mTRFtrain()` - fits an encoding/decoding model (TRF/STRF estimation)
+* `mTRFtransform()` - transforms a decoding model into an encoding model
+* `mTRFpredict()` - predicts encoding/decoding model output
+* `mTRFevaluate()` - evaluates prediction accuracy/error
 
 ### Decoding Attention and Multisensory Processing
 * `mTRFattncrossval()` - cross-validation for building an attention decoder
 * `mTRFmulticrossval()` - cross-validation for building an additive model of multisensory processing
-* `mTRFmultitrain()` - fitting an additive multisensory model (TRF/STRF estimation)
+* `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
 ### Covariance Matrix Estimation
 * `olscovmat()` - ordinary least squares covariance matrix estimation
