@@ -165,7 +165,8 @@ end
 
 % Check equal number of observations
 if ~isequal(xobs,yobs,zobs)
-    error('STIM and RESP arguments must have the same number of observations.')
+    error(['STIM and RESP arguments must have the same number of '...
+        'observations.'])
 end
 
 % Convert time lags to samples

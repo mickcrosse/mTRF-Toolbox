@@ -154,7 +154,8 @@ end
 
 % Check equal number of observations
 if ~isequal(xobs,yobs,zobs1,zobs2)
-    error('STIM and RESP arguments must have the same number of observations.')
+    error(['STIM and RESP arguments must have the same number of '...
+        'observations.'])
 end
 
 % Convert time lags to samples
@@ -181,23 +182,22 @@ nbatch = ntrial*arg.split;
 nlambda = numel(lambda);
 
 % Compute unisensory covariance matrices
+if arg.fast
+    sumcov = 0;
+else
+    sumcov = 1;
+end
 if dir == 1
-    if arg.fast
-        [CXX,CXY1,CXY2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,arg.zeropad,0);
-    else
-        [CXX,CXY1,CXY2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,arg.zeropad,1);
-    end
+    [CXX,CXY1,CXY2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,...
+        arg.zeropad,sumcov);
 elseif dir == -1
-    if arg.fast
-        [CXX1,CXY1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad,0);
-        [CXX2,CXY2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad,0);
-    else
-        [CXX1,CXY1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad,1);
-        [CXX2,CXY2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad,1);
-    end
+    [CXX1,CXY1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad,...
+        sumcov);
+    [CXX2,CXY2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad,...
+        sumcov);
 end
 
-% Compute covariances for additive model
+% Compute covariances of additive model
 if dir == 1
     if arg.fast
         for i = 1:nbatch

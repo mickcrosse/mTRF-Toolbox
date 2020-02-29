@@ -1,7 +1,7 @@
 function [acc,err] = mTRFevaluate(y,yhat,varargin)
 %MTRFEVALUATE  Evaluate model performance.
 %   ACC = MTRFEVALUATE(Y,YHAT) returns the accuracy of the prediction YHAT
-%   relative to the ground truth Y based on the Pearson correlation
+%   relative to the ground truth Y based on Pearson's linear correlation
 %   coefficient.
 %
 %   [ACC,ERR] = MTRFEVALUATE(Y,YHAT) returns the error of the prediction
@@ -21,12 +21,12 @@ function [acc,err] = mTRFevaluate(y,yhat,varargin)
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
-%                                   coefficient: suitable for data with
+%                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'err'       A string specifying the error metric to use:
-%                       'msc'       Mean square error (default): take the
-%                                   square root to convert it to the
-%                                   original units of the data (i.e., RMSE)
+%                       'msc'       Mean squared error (default): take the
+%                                   square root to convert to the original
+%                                   units (i.e., RMSE)
 %                       'mae'       Mean absolute error: more robust to
 %                                   outliers than MSE
 %

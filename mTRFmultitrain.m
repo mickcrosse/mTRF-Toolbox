@@ -84,9 +84,6 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %      [2] Crosse MC, Butler JS, Lalor EC (2015) Congruent Visual Speech
 %          Enhances Cortical Entrainment to Continuous Auditory Speech in
 %          Noise-Free Conditions. J Neurosci 35(42):14195-14204.
-%      [3] Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006)
-%          The VESPA: a method for the rapid estimation of a visual evoked
-%          potential. NeuroImage 32:1549-1561.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %            Giovanni Di Liberto <diliberg@tcd.ie>
@@ -123,33 +120,23 @@ end
 [z2,zobs2,zvar2] = formatcells(resp2,arg.dim);
 if dir == 1
     [x,xobs,xvar] = formatcells(x,arg.dim);
-    if ~isequal(zvar1,zvar2)
-        error(['RESP1 and RESP2 arguments must have the same number of '...
-            'variables.'])
-    else
-        yvar = unique(zvar1);
-    end
+    yvar = unique(zvar1);
 elseif dir == -1
     [y,yobs,yvar] = formatcells(y,arg.dim);
-    if ~isequal(zvar1,zvar2)
-        error(['RESP1 and RESP2 arguments must have the same number of '...
-            'variables.'])
-    else
-        xvar = unique(zvar1);
-    end
+    xvar = unique(zvar1);
+end
+
+% Check equal number of variables
+if ~isequal(zvar1,zvar2)
+    error(['RESP1 and RESP2 arguments must have the same number of '...
+        'variables.'])
 end
 
 % Check equal number of observations
-if dir == 1
-    if ~isequal(xobs,zobs1,zobs2)
-        error(['STIM and RESP arguments must have the same number of '...
-            'observations.'])
-    end
-elseif dir == -1
-    if ~isequal(yobs,zobs1,zobs2)
-        error(['STIM and RESP arguments must have the same number of '...
-            'observations.'])
-    end
+if (dir == 1 && ~isequal(xobs,zobs1,zobs2)) || ...
+        (dir == -1 && ~isequal(yobs,zobs1,zobs2))
+    error(['STIM and RESP arguments must have the same number of '...
+        'observations.'])
 end
 
 % Convert time lags to samples
@@ -176,7 +163,8 @@ end
 
 % Compute covariance matrices
 if dir == 1
-    [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,arg.zeropad);
+    [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,...
+        arg.zeropad);
 elseif dir == -1
     [Cxx1,Cxy1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad);
     [Cxx2,Cxy2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad);
