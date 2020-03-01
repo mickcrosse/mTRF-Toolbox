@@ -1,0 +1,9 @@
+@article{crosse2016multivariate,
+  title={The multivariate temporal response function (mTRF) toolbox: a MATLAB toolbox for relating neural signals to continuous stimuli},
+  author={Crosse, Michael J and Di Liberto, Giovanni M and Bednar, Adam and Lalor, Edmund C},
+  journal={Frontiers in Human Neuroscience},
+  volume={10},
+  pages={604},
+  year={2016},
+  publisher={Frontiers}
+}
