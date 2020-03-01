@@ -90,14 +90,20 @@ trf = squeeze(sum(model.w));
 sgfp = squeeze(std(strf,[],3));
 gfp = std(trf,[],2);
 
-% Plot STRF & GFP
+% Plot STRF
 figure
 subplot(2,2,1), imagesc(model.t(7:59),1:16,strf(:,7:59,85)), axis square
 title('Speech STRF (Fz)'), ylabel('Frequency band'), set(gca,'ydir','normal')
+
+% Plot GFP
 subplot(2,2,2), imagesc(model.t(7:59),1:16,sgfp(:,7:59)), axis square
 title('Global Field Power'), set(gca,'ydir','normal')
+
+% Plot TRF
 subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3), xlim([-50,350]), axis square, grid on
 title('Speech TRF (Fz)'), xlabel('Time lag (ms)'), ylabel('Amplitude (a.u.)')
+
+% Plot GFP
 subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none'), xlim([-50,350]), axis square, grid on
 title('Global Field Power'), xlabel('Time lag (ms)')
 ```
@@ -149,9 +155,8 @@ model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
 
-figure
-
 % Plot CV accuracy
+figure
 subplot(2,2,1), errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),'linewidth',2)
 set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
 title('CV Accuracy'), xlabel('Lambda (1\times10^\lambda)'), ylabel('Correlation')
