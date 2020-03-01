@@ -19,6 +19,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 - [License](#license)
 
 ## Installation
+
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
 ```matlab
 addpath 'directory/mTRF-Toolbox-master'
@@ -26,11 +27,13 @@ savepath
 ```
 
 ## Documentation
+
 For documentation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
 For code demonstrating usage, please see [mTRFdemos](mTRFdemos.m).
 
 ## mTRF Modelling Framework
+
 mTRF-Toolbox provides a complementary forward/backward quantitative modelling framework. A forward model, known as a temporal response function or temporal receptive field (TRF), describes how sensory information is encoded in neuronal activity. Multivariate stimulus features such as spatio- or spectro-temporal representations, as well as categorical features such as phonetic or semantic embeddings, can be used as inputs to the model. TRFs can be subjected to conventional time-frequency/source analysis techniques or used to predict the neural responses to an independent set of stimuli. mTRF-Toolbox provides an efficient cross-validation procedure for hyperparameter optimization.
 
 A backward model, known as a neural decoder, reverses the direction of causality between stimulus and response. Neural decoders can be used to reconstruct stimulus features from information encoded explicitly or implicitly in neuronal activity, or decode higher-order cognitive processes such as top-down attention. The mTRF modelling framework provides a basic machine learning platform for real-time BCI applications such as stimulus reconstruction/synthesis and auditory attention decoding (AAD).
@@ -40,7 +43,9 @@ A backward model, known as a neural decoder, reverses the direction of causality
 </div>
 
 ## Contents
+
 ### Fitting Encoding and Decoding Models
+
 * `mTRFcrossval()` - cross-validation for hyperparameter optimization
 * `mTRFtrain()` - fits an encoding/decoding model (TRF/STRF estimation)
 * `mTRFtransform()` - transforms a decoding model into an encoding model
@@ -48,21 +53,26 @@ A backward model, known as a neural decoder, reverses the direction of causality
 * `mTRFevaluate()` - evaluates prediction accuracy/error
 
 ### Decoding Attention and Multisensory Processing
+
 * `mTRFattncrossval()` - cross-validation for building an attention decoder
 * `mTRFmulticrossval()` - cross-validation for building an additive model of multisensory processing
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
 ### Covariance Matrix Estimation
+
 * `olscovmat()` - ordinary least squares covariance matrix estimation
 * `mlscovmat()` - multisensory least squares covariance matrix estimation
 
 ### Feature Extraction
+
 * `mTRFenvelope()` - computes the acoustic envelope of an audio signal
 * `mTRFresample()` - resamples and smooths temporal features
 * `lagGen()` - generates time-lagged input features
 
 ## Examples
+
 ### STRF Estimation
+
 Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while a human participant listened to natural speech. We compute the global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels. This example can also be run from [plot_speech_STRF](examples/plot_speech_strf.m)
 
 ```matlab
@@ -81,7 +91,7 @@ sgfp = std(strf,[],3);
 gfp = std(trf,[],3);
 
 % Plot STRF & GFP
-subplot(2,2,1), imagesc(model.t(14:66),1:16,squeeze(strf(:,14:66,85))))  
+subplot(2,2,1), imagesc(model.t(14:66),1:16,squeeze(strf(:,14:66,85)))
 subplot(2,2,2), imagesc(model.t(14:66),1:16,squeeze(sgfp(:,14:66)))
 subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3)
 subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none')
@@ -90,4 +100,5 @@ subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none')
 <img src="docs/STRF_example.PNG">
 
 ## License
+
 [BSD 3-Clause License](LICENSE)
