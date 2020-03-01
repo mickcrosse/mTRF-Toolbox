@@ -119,27 +119,8 @@ stim = resample(sum(stim,2),64,fs);
 resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
-% Create training/test sets
-nfold = 11;
-batch = ceil(size(stim,1)/nfold);
-
-% Training set
-stimtrain = cell(nfold,1);
-resptrain = cell(nfold,1);
-for i = 1:nfold
-    idx = batch*(i-1)+1:min(batch*i,size(resp,1));
-    stimtrain{i} = stim(idx,:);
-    resptrain{i} = resp(idx,:);
-end
-
-% Test set
-itest = 1;
-stimtest = stimtrain{itest};
-resptest = resptrain{itest};
-
-% Remove test set from training set
-stimtrain(itest) = [];
-resptrain(itest) = [];
+% Generate training/test sets
+[stimtrain,resptrain,stimtest,resptest] = mTRFcvfold(stim,resp,10+1,1);
 
 % Model hyperparameters
 dir = -1;
