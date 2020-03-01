@@ -33,7 +33,7 @@ savepath
 
 For documentation and citation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
-For code demonstrating usage, please see [mTRFdemos](mTRFdemos.m).
+For example code demonstrating usage, please see [mTRFdemos](examples/mTRFexamples.m).
 
 ## mTRF Modelling Framework
 
