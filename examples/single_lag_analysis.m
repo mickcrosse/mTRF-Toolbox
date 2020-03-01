@@ -42,22 +42,11 @@ stim = resample(stim,fsNew,fs);
 resp = resample(resp,fsNew,fs);
 fs = fsNew;
 
-% ---Create training/test sets---
-
-% Define cross-validation folds
-nfold = 10;
-batch = ceil(size(stim,1)/nfold);
-
-% Training set
-stimtrain = cell(nfold,1);
-resptrain = cell(nfold,1);
-for i = 1:nfold
-    idx = batch*(i-1)+1:min(batch*i,size(resp,1));
-    stimtrain{i} = stim(idx,:);
-    resptrain{i} = resp(idx,:);
-end
-
 % ---Cross-validation---
+
+% Generate training/test sets
+nfold = 10;
+[stimtrain,resptrain] = mTRFcvfold(stim,resp,nfold);
 
 % Model hyperparameters
 dir = -1;
