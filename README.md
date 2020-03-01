@@ -16,6 +16,8 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
   - [Feature Extraction](#feature-extraction)
 - [Examples](#examples)
   - [STRF Estimation](#strf-estimation)
+  - [Stimulus Reconstruction](#stimulus-reconstruction)
+  - [Single-lag Decoding Analysis](#single-lag-decoding-analysis)
 - [License](#license)
 
 ## Installation
@@ -112,9 +114,9 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 ### Stimulus Reconstruction
 
-Here, we perform a 10-fold cross-validation to optimize regularization of a neural decoder. We then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
+Here, we perform cross-validation (CV) to optimize the performance of a neural decoder, and then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
 
-First, we allocate training and test sets, and then run the 10-fold cross-validation to find the regularization value that optimizes the decoders ability to predict new stimulus features. 
+First, we allocate training and test sets, and then run a 10-fold CV to find the regularization value that optimizes the decoders ability to predict new stimulus features.
 
 ```matlab
 % Load data
@@ -139,7 +141,7 @@ nlambda = length(lambda);
 cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
 ```
 
-Based on the cross-validation analysis, we train our model using the optimal regularization value and test it on a dataset that was held-out during cross-validation. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
+Based on the CV analysis, we train our model using the optimal regularization value and test it on a dataset that was held-out during CV. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
 
 ``` matlab
 % Use optimal regularization value
@@ -176,7 +178,9 @@ title('Test Result'), xlabel('Metric'), ylabel('Correlation')
 
 <img src="docs/stim_recon_example.PNG">
 
-### Single-lag Analysis
+### Single-lag Decoding Analysis
+
+Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoding analysis. We perform a 10-fold cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using an optimized regularization parameter. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
 
 ```
 % Load data
