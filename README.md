@@ -80,21 +80,26 @@ Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 
 load('data/speech_data.mat','stim','resp','fs');       
 
 % Estimate STRF model weights
-model = mTRFtrain(stim,resp,fs,1,-150,450,0.05);
+model = mTRFtrain(stim,resp,fs,1,-100,400,0.1);
 
 % Compute broadband TRF
 strf = model.w;
-trf = sum(model.w);
+trf = squeeze(sum(model.w));
 
 % Compute global field power
-sgfp = std(strf,[],3);
-gfp = std(trf,[],3);
+sgfp = squeeze(std(strf,[],3));
+gfp = std(trf,[],2);
 
 % Plot STRF & GFP
-subplot(2,2,1), imagesc(model.t(14:66),1:16,squeeze(strf(:,14:66,85)))
-subplot(2,2,2), imagesc(model.t(14:66),1:16,squeeze(sgfp(:,14:66)))
-subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3)
-subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none')
+figure
+subplot(2,2,1), imagesc(model.t(7:59),1:16,strf(:,7:59,85)), axis square
+title('Speech STRF (Fz)'), ylabel('Frequency band'), set(gca,'ydir','normal')
+subplot(2,2,2), imagesc(model.t(7:59),1:16,sgfp(:,7:59)), axis square
+title('Global Field Power'), set(gca,'ydir','normal')
+subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3), xlim([-50,350]), axis square, grid on
+title('Speech TRF (Fz)'), xlabel('Time lag (ms)'), ylabel('Amplitude (a.u.)')
+subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none'), xlim([-50,350]), axis square, grid on
+title('Global Field Power'), xlabel('Time lag (ms)')
 ```
 
 <img src="docs/STRF_example.PNG">
