@@ -137,7 +137,6 @@ nlambda = length(lambda);
 
 % Run fast cross-validation
 cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
-    
 ```
 
 Based on the cross-validation analysis, we train our model using the optimal regularization value and test it on a dataset that was held-out during cross-validation. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
