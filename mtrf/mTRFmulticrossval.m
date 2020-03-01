@@ -1,58 +1,47 @@
-function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFATTNCROSSVAL  Cross-validation for attention decoding.
-%   STATS = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
+function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,lambda,varargin)
+%MTRFMULTICROSSVAL  Cross-validation for multisensory additive models.
+%   STATS = MTRFMULTICROSSVAL(STIM,RESP,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
-%   multiple trials of data for building an attention decoder. Models are
-%   trained on the attended stimuli STIM1, and validated on both the
-%   attended stimuli and unattended stimuli STIM2 as per O'Sullivan et al.
-%   (2015). Pass in 1 for DIR to validate a forward model, or -1 to
-%   validate a backward model. STIM1, STIM2 and RESP are cell arrays
+%   multiple trials of data for building a model of multisensory
+%   processing. Models are trained on the sum of the unisensory responses
+%   RESP1 and RESP2 (i.e., the additive model of multisensory processing),
+%   and validated on the actual multisensory responses RESP as per Crosse
+%   et al. (2015). Pass in 1 for DIR to validate a forward model, or -1 to
+%   validate a backward model. STIM, RESP, RESP1 and RESP2 are cell arrays
 %   containing corresponding trials of continuous data. FS is a scalar
-%   specifying the sample rate in Hertz, and TMIN and TMAX are scalars
+%   specifying the sample rate in Hertz, and TMIN  and TMAX are scalars
 %   specifying the minimum and maximum time lags in milliseconds. For
-%   backward models, MTRFATTNCROSSVAL automatically reverses the time lags.
-%   LAMBDA is a scalar or vector of regularization values to be validated
-%   and controls overfitting.
+%   backward models, MTRFMULTICROSSVAL automatically reverses the time
+%   lags. LAMBDA is a scalar or vector of regularization values to be
+%   validated and controls overfitting.
 %
-%   MTRFATTNCROSSVAL returns the summary cross-validation statistics in a
-%   structure with the following fields:
-%       'ami'       -- attention modulation index (AMI) based on the
-%                      difference between the Pearson's correlation
-%                      coefficient for the attended and unattended stimuli
-%                      (ntrial-by-nlambda-by-yvar)
-%       'dprime'    -- sensitivity index based on d', where the attended
-%                      stimulus correlation is considered signal and the
-%                      unattended stimulus correlation is considered noise
-%                      (ntrial-by-nlambda-by-yvar)
-%
-%   [STATS,STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-
-%   validation statistics for the attended and unattended stimuli,
-%   respectively, in structures with the following fields:
+%   STATS = MTRFMULTICROSSVAL(...) returns the cross-validation statistics
+%   in a structure with the following fields:
 %       'acc'       -- prediction accuracy based on Pearson's correlation
 %                      coefficient (ntrial-by-nlambda-by-yvar)
 %       'err'       -- prediction error based on the mean squared error
 %                      (ntrial-by-nlambda-by-yvar)
 %
-%   MTRFATTNCROSSVAL performs a leave-one-out cross-validation over all
-%   trials. To achieve a k-fold cross-validation, arrange STIM1, STIM2 and
-%   RESP in k-by-1 cell arrays. The number of folds can also be increased
-%   by an integer factor using the 'split' parameter (see below).
+%   MTRFMULTICROSSVAL performs a leave-one-out cross-validation over all
+%   trials. To achieve a k-fold cross-validation, arrange STIM, RESP, RESP1
+%   and RESP2 in k-by-1 cell arrays. The number of folds can also be
+%   increased by an integer factor using the 'split' parameter (see below).
 %
-%   If STIM1, STIM2 or RESP contain matrices, it is assumed that the rows
-%   correspond to observations and the columns to variables, unless
+%   If STIM, RESP, RESP1 or RESP2 contain matrices, it is assumed that the
+%   rows correspond to observations and the columns to variables, unless
 %   otherwise stated via the 'dim' parameter (see below). If they contain
 %   vectors, it is assumed that the first non-singleton dimension
-%   corresponds to observations. Each trial of STIM1, STIM2 and RESP must
-%   have the same number of observations.
+%   corresponds to observations. Each trial of STIM, RESP, RESP1 or RESP2
+%   must have the same number of observations.
 %
-%   [STATS1,STATS2,T] = MTRFATTNCROSSVAL(...) returns a vector containing
-%   the time lags used in milliseconds. These data are useful for
-%   interpreting the results of single-lag models.
+%   [STATS,T] = MTRFMULTICROSSVAL(...) returns a vector containing the time
+%   lags used in milliseconds. These data are useful for interpreting the
+%   results of single-lag models.
 %
-%   [...] = MTRFATTNCROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
-%   additional parameters and their values. Valid parameters are the
-%   following:
+%   [...] = MTRFMULTICROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...)
+%   specifies additional parameters and their values. Valid parameters are
+%   the following:
 %
 %       Parameter   Value
 %       'dim'       A scalar specifying the dimension to work along: pass
@@ -99,22 +88,22 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %                   method. Note, both methods are numerically equivalent.
 %
 %   Notes:
-%   Each iteration of MTRFATTNCROSSVAL partitions the N trials of data into
-%   two subsets, fitting a model to N-1 trials (training set) and testing
-%   on the left-out trial (validation set). Performance on the validation
-%   set can be used to optimize hyperparameters (e.g., LAMBDA). Once
-%   completed, it is recommended to test the model performance on separate
-%   held-out data using the mTRFpredict function.
+%   Each iteration of MTRFMULTICROSSVAL partitions the N trials of data
+%   into two subsets, fitting a model to N-1 trials (training set) and
+%   testing on the left-out trial (validation set). Performance on the
+%   validation set can be used to optimize hyperparameters (e.g., LAMBDA).
+%   Once completed, it is recommended to test the model performance on
+%   separate held-out data using the mTRFpredict function.
 %
 %   Discontinuous trials of data should not be concatenated prior to cross-
 %   validation as this will introduce artifacts in places where time lags
 %   cross over trial boundaries. Each trial should be input as an
-%   individual cell of continuous data and MTRFATTNCROSSVAL will zero-pad
+%   individual cell of continuous data and MTRFMULTICROSSVAL will zero-pad
 %   the trial boundaries appropriately.
 %
 %   See mTRFdemos for examples of use.
 %
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
+%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFAADCROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -123,10 +112,9 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %          multivariate temporal response function (mTRF) toolbox: a MATLAB
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
-%      [2] O'Sullivan JA, Power AJ, Mesgarani N, Rajaram S, Foxe JJ, Shinn-
-%          Cunningham BG, Slaney M, Shamma SA, Lalor EC (2015) Attentional
-%          Selection in a Cocktail Party Environment Can Be Decoded from
-%          Single-Trial EEG. Cereb Cortex 25(7):1697-1706.
+%      [2] Crosse MC, Butler JS, Lalor EC (2015) Congruent Visual Speech
+%          Enhances Cortical Entrainment to Continuous Auditory Speech in
+%          Noise-Free Conditions. J Neurosci 35(42):14195-14204.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %            Giovanni Di Liberto <diliberg@tcd.ie>
@@ -150,9 +138,9 @@ end
 
 % Define X and Y variables
 if dir == 1
-    x = stim1; y = resp;
+    x = stim; y = resp;
 elseif dir == -1
-    x = resp; y = stim1;
+    x = resp; y = stim;
     [tmin,tmax] = deal(tmax,tmin);
 else
     error('DIR argument must have a value of 1 or -1.')
@@ -161,10 +149,11 @@ end
 % Format data in cell arrays
 [x,xobs,xvar] = formatcells(x,arg.dim);
 [y,yobs,yvar] = formatcells(y,arg.dim);
-[z,zobs,~] = formatcells(stim2,arg.dim);
+[z1,zobs1,~] = formatcells(resp1,arg.dim);
+[z2,zobs2,~] = formatcells(resp2,arg.dim);
 
 % Check equal number of observations
-if ~isequal(xobs,yobs,zobs)
+if ~isequal(xobs,yobs,zobs1,zobs2)
     error(['STIM and RESP arguments must have the same number of '...
         'observations.'])
 end
@@ -192,11 +181,43 @@ ntrial = numel(x);
 nbatch = ntrial*arg.split;
 nlambda = numel(lambda);
 
-% Compute covariance matrices
+% Compute unisensory covariance matrices
 if arg.fast
-    [CXX,CXY,XLAG] = olscovmat(x,y,lags,arg.type,arg.split,arg.zeropad,0);
+    sumcov = 0;
 else
-    [CXX,CXY] = olscovmat(x,y,lags,arg.type,arg.split,arg.zeropad,1);
+    sumcov = 1;
+end
+if dir == 1
+    [CXX,CXY1,CXY2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,...
+        arg.zeropad,sumcov);
+elseif dir == -1
+    [CXX1,CXY1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad,...
+        sumcov);
+    [CXX2,CXY2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad,...
+        sumcov);
+end
+
+% Compute covariances of additive model
+if dir == 1
+    if arg.fast
+        for i = 1:nbatch
+            CXX{i} = CXX{i} + CXX{i};
+            CXY{i} = CXY1{i} + CXY2{i};
+        end
+    else
+        CXX = CXX + CXX;
+        CXY = CXY1 + CXY2;
+    end
+elseif dir == -1
+    if arg.fast
+        for i = 1:nbatch
+            CXX{i} = CXX1{i} + CXX2{i};
+            CXY{i} = CXY1{i} + CXY2{i};
+        end
+    else
+        CXX = CXX1 + CXX2;
+        CXY = CXY1 + CXY2;
+    end
 end
 
 % Set up sparse regularization matrix
@@ -214,31 +235,30 @@ end
 M = M/delta;
 
 % Initialize performance variables
-acc1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-err1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-acc2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-err2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+acc = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+err = zeros(ntrial*arg.split,nlambda,yvar,nlag);
 
 % Leave-one-out cross-validation
 n = 0;
 for i = 1:ntrial
     
     % Max segment size
-    seg = ceil(xobs(i)/arg.split);
+    nseg = ceil(xobs(i)/arg.split);
     
     for j = 1:arg.split
         
         n = n+1;
         
         % Segment indices
-        iseg = seg*(j-1)+1:min(seg*j,xobs(i));
+        iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
+        
+        % Multisensory validation set
+        [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+        xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
         
         if arg.fast % fast method
             
-            % Validation set
-            xlag = XLAG{n};
-            
-            % Training set
+            % Unisensory training set
             idx = 1:nbatch; idx(n) = [];
             Cxx = 0; Cxy = 0;
             for k = idx
@@ -248,20 +268,16 @@ for i = 1:ntrial
             
         else % memory-efficient method
             
-            % Validation set
-            [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
-            xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
+            % Unisensory left-out set
+            [z1lag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+            z1lag = [ones(numel(idx),1),z1lag];
+            [z2lag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
+            z2lag = [ones(numel(idx),1),z2lag];
             
-            % Training set
-            Cxx = CXX - xlag'*xlag;
-            Cxy = CXY - xlag'*y{i}(iseg(idx),:);
+            % Unisensory training set
+            Cxx = CXX - z1lag'*z1lag - z2lag'*z2lag;
+            Cxy = CXY - z1lag'*y{i}(iseg(idx),:) - z2lag'*y{i}(iseg(idx),:);
             
-        end
-        
-        % Unattended validation set
-        if dir == 1
-            [zlag,idx] = lagGen(z{i}(iseg,:),lags,arg.zeropad);
-            zlag = [ones(numel(idx),1),zlag];
         end
         
         % Remove zero-padded indices
@@ -275,79 +291,37 @@ for i = 1:ntrial
                 
                 case 'multi'
                     
-                    % ---Attended Stimulus---
-                    
-                    % Fit linear model
+                    % Fit linear additive model
                     w = (Cxx + lambda(k)*M)\Cxy;
                     
-                    % Predict output
+                    % Account for superposition
+                    w = w*2;
+                    
+                    % Predict multisensory output
                     pred = xlag*w;
                     
                     % Evaluate performance
-                    [acc1(n,k,:),err1(n,k,:)] = ...
-                        mTRFevaluate(y{i}(iseg,:),pred,...
-                        'acc',arg.acc,'err',arg.err);
-                    
-                    % ---Unattended Stimulus---
-                    
-                    if dir == 1
-                        
-                        % Predict output
-                        pred = zlag*w;
-                        
-                        % Evaluate performance
-                        [acc2(n,k,:),err2(n,k,:)] = ...
-                            mTRFevaluate(y{i}(iseg,:),pred,...
-                            'acc',arg.acc,'err',arg.err);
-                        
-                    elseif dir == -1
-                        
-                        % Evaluate performance
-                        [acc2(n,k,:),err2(n,k,:)] = ...
-                            mTRFevaluate(z{i}(iseg,:),pred,...
-                            'acc',arg.acc,'err',arg.err);
-                        
-                    end
+                    [acc(n,k,:),err(n,k,:)] = mTRFevaluate(y{i}(iseg,:),...
+                        pred,'acc',arg.acc,'err',arg.err);
                     
                 case 'single'
                     
                     for l = 1:nlag
                         
-                        % ---Attended Stimulus---
-                        
-                        % Fit linear model
+                        % Fit linear additive model
                         w = (Cxx(:,:,l) + lambda(k)*M)\Cxy(:,:,l);
                         
-                        % Predict output
+                        % Account for superposition
+                        w = w*2;
+                        
+                        % Predict multisensory output
                         ilag = [1,xvar*(l-1)+2:xvar*l+1];
                         pred = xlag(:,ilag)*w;
                         
                         % Evaluate performance
-                        [acc1(n,k,:,l),err1(n,k,:,l)] = ...
+                        [acc(n,k,:,l),err(n,k,:,l)] = ...
                             mTRFevaluate(y{i}(iseg,:),pred,...
                             'acc',arg.acc,'err',arg.err);
-                        
-                        % ---Unattended Stimulus---
-                        
-                        if dir == 1
-                            
-                            % Predict output
-                            ilag = [1,xvar*(l-1)+2:xvar*l+1];
-                            pred = zlag(:,ilag)*w;
-                            
-                            % Evaluate performance
-                            [acc2(n,k,:,l),err2(n,k,:,l)] = ...
-                                mTRFevaluate(y{i}(iseg,:),pred,...
-                                'acc',arg.acc,'err',arg.err);
-                            
-                        elseif dir == -1
-                            
-                            % Evaluate performance
-                            [acc2(n,k,:,l),err2(n,k,:,l)] = ...
-                                mTRFevaluate(z{i}(iseg,:),pred,...
-                                'acc',arg.acc,'err',arg.err);
-                            
-                        end
                         
                     end
                     
@@ -359,16 +333,9 @@ for i = 1:ntrial
     
 end
 
-% Compute AMI and d'
-ami = acc1-acc2;
-d = (mean(acc1,1) - mean(acc2,1)) ./ ...
-    sqrt(0.5*(var(acc1,[],1) + var(acc2,[],1)));
-
 % Format output arguments
-stats = struct('ami',ami,'dprime',d);
-stats1 = struct('acc',acc1,'err',err1);
-stats2 = struct('acc',acc2,'err',err2);
-if nargout > 2
+stats = struct('acc',acc,'err',err);
+if nargout > 1
     t = lags/fs*1e3;
 end
 

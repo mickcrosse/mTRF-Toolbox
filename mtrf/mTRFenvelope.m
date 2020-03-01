@@ -43,10 +43,9 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   References:
-%      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
-%          multivariate temporal response function (mTRF) toolbox: a MATLAB
-%          toolbox for relating neural signals to continuous stimuli. Front
-%          Hum Neurosci 10:604.
+%      [1] Lalor EC, Foxe JJ (2010) Neural responses to uninterrupted
+%          natural speech can be extracted with precise temporal
+%          resolution. Eur J Neurosci 31(1):189-193.
 %      [2] Stevens SS (1955) The Measurement of Loudness. J Acoust Soc Am
 %          27(2):815-829.
 
