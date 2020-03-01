@@ -106,7 +106,9 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 ### Stimulus Reconstruction
 
-Here, we perform a 10-fold cross-validation to optimize regularization of our neural decoder. We then test our optimized decoder on a held-out dataset. This example can also be run from the [stimulus_reconstruction](examples/stimulus_reconstruction.m) example script.
+Here, we perform a 10-fold cross-validation to optimize regularization of a neural decoder. We then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
+
+First, we allocate training and test sets, and then run the 10-fold cross-validation to find the reularization value that optimizes the decoders ability to predict new stimulus features. 
 
 ```matlab
 % Load data
@@ -149,7 +151,12 @@ nlambda = length(lambda);
 % Run fast cross-validation
 cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
     'zeropad',0,'fast',1);
+    
+```
 
+Based on the cross-validation analysis, we train our model using the optimial regularization value and test it on a dataset that was held-out during cross-validation. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
+
+``` matlab
 % Use optimal regularization value
 [rmax,idx] = max(mean(cv.acc));
 lambda = lambda(idx);
