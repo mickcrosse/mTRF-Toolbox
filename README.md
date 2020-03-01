@@ -15,7 +15,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
   - [Efficient Covariance Matrix Estimation](#efficient-covariance-matrix-estimation)
   - [Feature Extraction](#feature-extraction)
 - [Examples](#examples)
-  - [STRF Estimation](#strf-estimation)
+  - [TRF/STRF Estimation](#trfstrf-estimation)
   - [Stimulus Reconstruction](#stimulus-reconstruction)
   - [Single-lag Decoding Analysis](#single-lag-decoding-analysis)
 - [License](#license)
@@ -33,7 +33,7 @@ savepath
 
 For documentation and citation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
-For example code demonstrating usage, please see [mTRFexamples](examples/mTRFexamples.m).
+For usage, please see [examples](#examples) and [example M-files](examples).
 
 ## mTRF Modelling Framework
 
