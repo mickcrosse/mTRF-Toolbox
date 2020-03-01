@@ -23,6 +23,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 ## Installation
 
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
+
 ```matlab
 addpath 'directory/mTRF-Toolbox-master'
 savepath
@@ -182,7 +183,7 @@ title('Test Result'), xlabel('Metric'), ylabel('Correlation')
 
 Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoding analysis. We perform a 10-fold cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using an optimized regularization parameter. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
 
-```
+```matlab
 % Load data
 load('data/speech_data.mat','stim','resp','fs');
 
