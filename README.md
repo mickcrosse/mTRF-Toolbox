@@ -136,8 +136,7 @@ lambda = 10.^(-6:2:6);
 nlambda = length(lambda);
 
 % Run fast cross-validation
-cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
-    'zeropad',0,'fast',1);
+cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
     
 ```
 
@@ -149,8 +148,7 @@ Based on the cross-validation analysis, we train our model using the optimial re
 lambda = lambda(idx);
 
 % Train model
-model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
-    'zeropad',0);
+model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0);
 
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
