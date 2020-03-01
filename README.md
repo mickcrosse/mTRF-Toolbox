@@ -57,8 +57,8 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ### Decoding Attention and Multisensory Processing
 
-* `mTRFattncrossval()` - cross-validation for building an attention decoder
-* `mTRFmulticrossval()` - cross-validation for building an additive model of multisensory processing
+* `mTRFattncrossval()` - cross-validation for optimizing an attention decoder
+* `mTRFmulticrossval()` - cross-validation for optimizing an additive multisensory model
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
 ### Efficient Covariance Matrix Estimation
