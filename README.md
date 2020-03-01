@@ -12,7 +12,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 - [Contents](#contents)
   - [Fitting Encoding and Decoding Models](#fitting-encoding-and-decoding-models)
   - [Decoding Attention and Multisensory Processing](#decoding-attention-and-multisensory-processing)
-  - [Covariance Matrix Estimation](#covariance-matrix-estimation)
+  - [Efficient Covariance Matrix Estimation](#efficient-covariance-matrix-estimation)
   - [Feature Extraction](#feature-extraction)
 - [Examples](#examples)
   - [STRF Estimation](#strf-estimation)
@@ -58,7 +58,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 * `mTRFmulticrossval()` - cross-validation for building an additive model of multisensory processing
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
-### Covariance Matrix Estimation
+### Efficient Covariance Matrix Estimation
 
 * `olscovmat()` - ordinary least squares covariance matrix estimation
 * `mlscovmat()` - multisensory least squares covariance matrix estimation
@@ -114,7 +114,7 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 Here, we perform a 10-fold cross-validation to optimize regularization of a neural decoder. We then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
 
-First, we allocate training and test sets, and then run the 10-fold cross-validation to find the reularization value that optimizes the decoders ability to predict new stimulus features. 
+First, we allocate training and test sets, and then run the 10-fold cross-validation to find the regularization value that optimizes the decoders ability to predict new stimulus features. 
 
 ```matlab
 % Load data
@@ -140,7 +140,7 @@ cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast'
     
 ```
 
-Based on the cross-validation analysis, we train our model using the optimial regularization value and test it on a dataset that was held-out during cross-validation. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
+Based on the cross-validation analysis, we train our model using the optimal regularization value and test it on a dataset that was held-out during cross-validation. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
 
 ``` matlab
 % Use optimal regularization value
