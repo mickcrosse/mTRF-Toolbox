@@ -71,9 +71,9 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ## Examples
 
-### STRF Estimation
+### TRF/STRF Estimation
 
-Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while a human participant listened to natural speech. We compute the global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels. This example can also be run from [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m)
+Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while a human participant listened to natural speech. We compute the global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels. This example can also be run from the [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m) example scripts.
 
 ```matlab
 % Load example speech dataset
@@ -103,6 +103,88 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 ```
 
 <img src="docs/STRF_example.PNG">
+
+### Stimulus Reconstruction
+
+Here, we perform a 10-fold cross-validation to optimize regularization of our neural decoder. We then test our optimized decoder on a held-out dataset. This example can also be run from the [stimulus_reconstruction](examples/stimulus_reconstruction.m) example script.
+
+```matlab
+% Load data
+load('data/speech_data.mat','stim','resp','fs');
+
+% Normalize and downsample data
+stim = resample(sum(stim,2),64,fs);
+resp = resample(resp/std(resp(:)),64,fs);
+fs = 64;
+
+% Create training/test sets
+nfold = 11;
+batch = ceil(size(stim,1)/nfold);
+
+% Training set
+stimtrain = cell(nfold,1);
+resptrain = cell(nfold,1);
+for i = 1:nfold
+    idx = batch*(i-1)+1:min(batch*i,size(resp,1));
+    stimtrain{i} = stim(idx,:);
+    resptrain{i} = resp(idx,:);
+end
+
+% Test set
+itest = 1;
+stimtest = stimtrain{itest};
+resptest = resptrain{itest};
+
+% Remove test set from training set
+stimtrain(itest) = [];
+resptrain(itest) = [];
+
+% Model hyperparameters
+dir = -1;
+tmin = 0;
+tmax = 250;
+lambda = 10.^(-6:2:6);
+nlambda = length(lambda);
+
+% Run fast cross-validation
+cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
+    'zeropad',0,'fast',1);
+
+% Use optimal regularization value
+[rmax,idx] = max(mean(cv.acc));
+lambda = lambda(idx);
+
+% Train model
+model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
+    'zeropad',0);
+
+% Test model
+[pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
+
+figure
+
+% Plot CV accuracy
+subplot(2,2,1), errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),'linewidth',2)
+set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
+title('CV Accuracy'), xlabel('Lambda (1\times10^\lambda)'), ylabel('Correlation')
+
+% Plot CV error
+subplot(2,2,2), errorbar(1:nlambda,mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
+set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
+title('CV Error'), xlabel('Lambda (1\times10^\lambda)'), ylabel('MSE')
+
+% Plot reconstruction
+subplot(2,2,3), plot((1:length(stimtest))/fs,stimtest,'linewidth',2), hold on
+plot((1:length(pred))/fs,pred,'linewidth',2), hold off, xlim([0,10]), axis square, grid on
+title('Reconstruction'), xlabel('Time (s)'), ylabel('Amplitude (a.u.)'), legend('Orig','Pred')
+
+% Plot test accuracy
+subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.acc), hold off
+set(gca,'xtick',1:2,'xticklabel',{'CV','Test'}), axis square, grid on
+title('Test Result'), xlabel('Metric'), ylabel('Correlation')
+```
+
+<img src="docs/stim_recon_example.PNG">
 
 ## License
 
