@@ -77,10 +77,10 @@ Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 
 
 ```matlab
 % Load example speech dataset
-load('data/speech_data.mat','stim','resp','fs');       
+load('data/speech_data.mat','stim','resp','fs','factor');       
 
 % Estimate STRF model weights
-model = mTRFtrain(stim,resp,fs,1,-100,400,0.1);
+model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
 
 % Compute broadband TRF
 strf = model.w;
