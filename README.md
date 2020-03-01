@@ -126,7 +126,7 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Generate training/test sets
-[stimtrain,resptrain,stimtest,resptest] = mTRFcvfold(stim,resp,10+1,1);
+[stimtrain,resptrain,stimtest,resptest] = mTRFcvfold(stim,resp,11,1);
 
 % Model hyperparameters
 dir = -1;
@@ -175,6 +175,48 @@ title('Test Result'), xlabel('Metric'), ylabel('Correlation')
 ```
 
 <img src="docs/stim_recon_example.PNG">
+
+### Single-lag Analysis
+
+```
+% Load data
+load('data/speech_data.mat','stim','resp','fs');
+
+% Normalize and downsample data
+stim = resample(sum(stim,2),64,fs);
+resp = resample(resp/std(resp(:)),64,fs);
+fs = 64;
+
+% Generate training/test sets
+[stimtrain,resptrain] = mTRFcvfold(stim,resp,10);
+
+% Run single-lag cross-validation
+[stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
+
+% Compute mean and variance
+macc = squeeze(mean(stats.acc))'; vacc = squeeze(var(stats.acc))';
+merr = squeeze(mean(stats.err))'; verr = squeeze(var(stats.err))';
+
+% Compute variance bound
+xacc = [-fliplr(t),-t]; yacc = [fliplr(macc-sqrt(vacc/nfold)),macc+sqrt(vacc/nfold)];
+xerr = [-fliplr(t),-t]; yerr = [fliplr(merr-sqrt(verr/nfold)),merr+sqrt(verr/nfold)];
+
+% Plot accuracy
+figure
+subplot(1,2,1), h = fill(xacc,yacc,'b','edgecolor','none'); hold on
+set(h,'facealpha',0.2), xlim([tmin,tmax]), axis square, grid on
+plot(-fliplr(t),fliplr(macc),'linewidth',2), hold off
+title('Reconstruction Accuracy'), xlabel('Time lag (ms)'), ylabel('Correlation')
+
+% Plot error
+subplot(1,2,2)
+h = fill(xerr,yerr,'b','edgecolor','none'); hold on
+set(h,'facealpha',0.2), xlim([tmin,tmax]), axis square, grid on
+plot(-fliplr(t),fliplr(merr),'linewidth',2), hold off
+title('Reconstruction Error'), xlabel('Time lag (ms)'), ylabel('MSE')
+```
+
+<img src="docs/single_lag_analysis_example.PNG">
 
 ## License
 
