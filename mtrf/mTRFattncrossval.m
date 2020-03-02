@@ -1,9 +1,9 @@
 function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFATTNCROSSVAL  Cross-validation for attention decoding.
+%MTRFATTNCROSSVAL  Cross-validation for attention decoder optimization.
 %   STATS = MTRFATTNCROSSVAL(STIM1,STIM2,RESP,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
-%   multiple trials of data for building an attention decoder. Models are
+%   multiple trials of data for optimizing an attention decoder. Models are
 %   trained on the attended stimuli STIM1, and validated on both the
 %   attended stimuli and unattended stimuli STIM2 as per O'Sullivan et al.
 %   (2015). Pass in 1 for DIR to validate a forward model, or -1 to
@@ -15,24 +15,16 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %   LAMBDA is a scalar or vector of regularization values to be validated
 %   and controls overfitting.
 %
-%   MTRFATTNCROSSVAL returns the summary cross-validation statistics in a
-%   structure with the following fields:
-%       'ami'       -- attention modulation index (AMI) based on the
-%                      difference between the Pearson's correlation
-%                      coefficient for the attended and unattended stimuli
-%                      (ntrial-by-nlambda-by-yvar)
-%       'dprime'    -- sensitivity index based on d', where the attended
-%                      stimulus correlation is considered signal and the
-%                      unattended stimulus correlation is considered noise
-%                      (ntrial-by-nlambda-by-yvar)
-%
-%   [STATS,STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-
-%   validation statistics for the attended and unattended stimuli,
-%   respectively, in structures with the following fields:
-%       'acc'       -- prediction accuracy based on Pearson's correlation
-%                      coefficient (ntrial-by-nlambda-by-yvar)
-%       'err'       -- prediction error based on the mean squared error
-%                      (ntrial-by-nlambda-by-yvar)
+%   MTRFATTNCROSSVAL returns the cross-validation statistics for attention
+%   decoding in a structure with the following fields:
+%       'adi'       -- attention decoding index (ADI) based on the
+%                      proportion of folds where the accuracy for attended
+%                      stimuli were greater than that of the unattended
+%                      stimuli (nlambda-by-yvar)
+%       'dprime'    -- sensitivity index based on d', where the accuracy
+%                      for attended stimuli is considered signal and that
+%                      of the unattended stimuli is considered noise
+%                      (nlambda-by-yvar)
 %
 %   MTRFATTNCROSSVAL performs a leave-one-out cross-validation over all
 %   trials. To achieve a k-fold cross-validation, arrange STIM1, STIM2 and
@@ -46,9 +38,17 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %   corresponds to observations. Each trial of STIM1, STIM2 and RESP must
 %   have the same number of observations.
 %
-%   [STATS1,STATS2,T] = MTRFATTNCROSSVAL(...) returns a vector containing
-%   the time lags used in milliseconds. These data are useful for
-%   interpreting the results of single-lag models.
+%   [STATS,STATS1,STATS2] = MTRFATTNCROSSVAL(...) returns the cross-
+%   validation statistics for the attended and unattended stimuli,
+%   respectively, in structures with the following fields:
+%       'acc'       -- prediction accuracy based on Pearson's correlation
+%                      coefficient (ntrial-by-nlambda-by-yvar)
+%       'err'       -- prediction error based on the mean squared error
+%                      (ntrial-by-nlambda-by-yvar)
+%
+%   [STATS,STATS1,STATS2,T] = MTRFATTNCROSSVAL(...) returns a vector
+%   containing the time lags used in milliseconds. These data are useful
+%   for interpreting the results of single-lag models.
 %
 %   [...] = MTRFATTNCROSSVAL(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -77,7 +77,7 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
-%                                   coefficient: suitable for data with
+%                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'err'       A string specifying the error metric to use:
 %                       'msc'       Mean square error (default): take the
@@ -112,9 +112,7 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %   individual cell of continuous data and MTRFATTNCROSSVAL will zero-pad
 %   the trial boundaries appropriately.
 %
-%   See mTRFdemos for examples of use.
-%
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
+%   See also CROSSVAL, CVFOLD, MTRFTRAIN, MTRFPREDICT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -214,10 +212,10 @@ end
 M = M/delta;
 
 % Initialize performance variables
-acc1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-err1 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-acc2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
-err2 = zeros(ntrial*arg.split,nlambda,yvar,nlag);
+acc1 = zeros(nbatch,nlambda,yvar,nlag);
+err1 = zeros(nbatch,nlambda,yvar,nlag);
+acc2 = zeros(nbatch,nlambda,yvar,nlag);
+err2 = zeros(nbatch,nlambda,yvar,nlag);
 
 % Leave-one-out cross-validation
 n = 0;
@@ -359,13 +357,13 @@ for i = 1:ntrial
     
 end
 
-% Compute AMI and d'
-ami = acc1-acc2;
+% Compute ADI and d'
+adi = sum(acc1>acc2,1)/nbatch;
 d = (mean(acc1,1) - mean(acc2,1)) ./ ...
     sqrt(0.5*(var(acc1,[],1) + var(acc2,[],1)));
 
 % Format output arguments
-stats = struct('ami',ami,'dprime',d);
+stats = struct('adi',adi,'dprime',d);
 stats1 = struct('acc',acc1,'err',err1);
 stats2 = struct('acc',acc2,'err',err2);
 if nargout > 2
