@@ -10,14 +10,14 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 - [Documentation](#documentation)
 - [mTRF Modelling Framework](#mtrf-modelling-framework)
 - [Contents](#contents)
-  - [Fitting Encoding and Decoding Models](#fitting-encoding-and-decoding-models)
-  - [Decoding Attention and Multisensory Processing](#decoding-attention-and-multisensory-processing)
-  - [Efficient Covariance Matrix Estimation](#efficient-covariance-matrix-estimation)
-  - [Feature Extraction](#feature-extraction)
+  - [Fitting encoding/decoding models](#fitting-encodingdecoding-models)
+  - [Decoding attention and multisensory processing](#decoding-attention-and-multisensory-processing)
+  - [Efficient covariance matrix estimation](#efficient-covariance-matrix-estimation)
+  - [Feature extraction](#feature-extraction)
 - [Examples](#examples)
-  - [STRF Estimation](#strf-estimation)
-  - [Stimulus Reconstruction](#stimulus-reconstruction)
-  - [Single-lag Decoding Analysis](#single-lag-decoding-analysis)
+  - [TRF/STRF estimation](#trfstrf-estimation)
+  - [Stimulus reconstruction](#stimulus-reconstruction)
+  - [Single-lag decoding analysis](#single-lag-decoding-analysis)
 - [License](#license)
 
 ## Installation
@@ -33,7 +33,7 @@ savepath
 
 For documentation and citation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
 
-For code demonstrating usage, please see [mTRFdemos](mTRFdemos.m).
+For usage, please see [examples](#examples) and [example M-files](examples).
 
 ## mTRF Modelling Framework
 
@@ -47,7 +47,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ## Contents
 
-### Fitting Encoding and Decoding Models
+### Fitting encoding/decoding models
 
 * `mTRFcrossval()` - cross-validation for hyperparameter optimization
 * `mTRFtrain()` - fits an encoding/decoding model (TRF/STRF estimation)
@@ -55,18 +55,18 @@ A backward model, known as a neural decoder, reverses the direction of causality
 * `mTRFpredict()` - predicts encoding/decoding model output
 * `mTRFevaluate()` - evaluates prediction accuracy/error
 
-### Decoding Attention and Multisensory Processing
+### Decoding attention and multisensory processing
 
 * `mTRFattncrossval()` - cross-validation for optimizing an attention decoder
 * `mTRFmulticrossval()` - cross-validation for optimizing an additive multisensory model
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
-### Efficient Covariance Matrix Estimation
+### Efficient covariance matrix estimation
 
 * `olscovmat()` - ordinary least squares covariance matrix estimation
 * `mlscovmat()` - multisensory least squares covariance matrix estimation
 
-### Feature Extraction
+### Feature extraction
 
 * `mTRFenvelope()` - computes the acoustic envelope of an audio signal
 * `mTRFresample()` - resamples and smooths temporal features
@@ -74,7 +74,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ## Examples
 
-### TRF/STRF Estimation
+### TRF/STRF estimation
 
 Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while a human participant listened to natural speech. We compute the global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
 
@@ -113,7 +113,7 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 <img src="docs/STRF_example.PNG">
 
-### Stimulus Reconstruction
+### Stimulus reconstruction
 
 Here, we perform cross-validation (CV) to optimize the performance of a neural decoder, and then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
 
@@ -179,7 +179,7 @@ title('Test Result'), xlabel('Metric'), ylabel('Correlation')
 
 <img src="docs/stim_recon_example.PNG">
 
-### Single-lag Decoding Analysis
+### Single-lag decoding analysis
 
 Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoding analysis. We perform a 10-fold cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using an optimized regularization parameter. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
 
