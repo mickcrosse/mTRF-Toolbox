@@ -129,7 +129,7 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Generate training/test sets
-[stimtrain,resptrain,stimtest,resptest] = mTRFcvfold(stim,resp,11,1);
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,11,1);
 
 % Model hyperparameters
 dir = -1;
@@ -193,7 +193,7 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Generate training/test sets
-[stimtrain,resptrain] = mTRFcvfold(stim,resp,10);
+[stimtrain,resptrain] = mTRFpartition(stim,resp,10);
 
 % Run single-lag cross-validation
 [stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
