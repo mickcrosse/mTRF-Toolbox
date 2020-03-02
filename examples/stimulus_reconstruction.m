@@ -46,7 +46,7 @@ fs = fsNew;
 % Generate training/test sets
 nfold = 11;
 testfold = 1;
-[stimtrain,resptrain,stimtest,resptest] = mTRFcvfold(stim,resp,nfold,...
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,...
     testfold);
 
 % Model hyperparameters
