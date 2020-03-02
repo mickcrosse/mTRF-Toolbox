@@ -1,23 +1,23 @@
 function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFMULTICROSSVAL  Cross-validation for multisensory additive models.
+%MTRFMULTICROSSVAL  Cross-validation for multisensory model optimization.
 %   STATS = MTRFMULTICROSSVAL(STIM,RESP,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA)
 %   cross validates a forward encoding model (stimulus to neural response)
 %   or a backward decoding model (neural response to stimulus) over
-%   multiple trials of data for building a model of multisensory
-%   processing. Models are trained on the sum of the unisensory responses
-%   RESP1 and RESP2 (i.e., the additive model of multisensory processing),
-%   and validated on the actual multisensory responses RESP as per Crosse
-%   et al. (2015). Pass in 1 for DIR to validate a forward model, or -1 to
-%   validate a backward model. STIM, RESP, RESP1 and RESP2 are cell arrays
-%   containing corresponding trials of continuous data. FS is a scalar
+%   multiple trials of data for optimizing an additive model of
+%   multisensory processing. Additive models are trained on the summed
+%   covariances of the unisensory responses RESP1 and RESP2, and validated
+%   on the actual multisensory responses RESP as per Crosse et al. (2015).
+%   Pass in 1 for DIR to validate a forward model, or -1 to validate a
+%   backward model. STIM, RESP, RESP1 and RESP2 are cell arrays containing
+%   corresponding trials of continuous data. FS is a scalar
 %   specifying the sample rate in Hertz, and TMIN  and TMAX are scalars
 %   specifying the minimum and maximum time lags in milliseconds. For
 %   backward models, MTRFMULTICROSSVAL automatically reverses the time
 %   lags. LAMBDA is a scalar or vector of regularization values to be
 %   validated and controls overfitting.
 %
-%   STATS = MTRFMULTICROSSVAL(...) returns the cross-validation statistics
-%   in a structure with the following fields:
+%   MTRFMULTICROSSVAL returns the cross-validation statistics in a
+%   structure with the following fields:
 %       'acc'       -- prediction accuracy based on Pearson's correlation
 %                      coefficient (ntrial-by-nlambda-by-yvar)
 %       'err'       -- prediction error based on the mean squared error
@@ -66,7 +66,7 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
-%                                   coefficient: suitable for data with
+%                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'err'       A string specifying the error metric to use:
 %                       'msc'       Mean square error (default): take the
@@ -101,9 +101,7 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %   individual cell of continuous data and MTRFMULTICROSSVAL will zero-pad
 %   the trial boundaries appropriately.
 %
-%   See mTRFdemos for examples of use.
-%
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFTRANSFORM, MTRFAADCROSSVAL.
+%   See also CROSSVAL, CVFOLD, MTRFMULTITRAIN, MTRFPREDICT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

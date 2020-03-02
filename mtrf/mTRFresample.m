@@ -1,11 +1,11 @@
 function [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,varargin)
-%MTRFRESAMPLE  Resample data by non-integer factor via averaging.
+%MTRFRESAMPLE  Resample uniform data by a non-integer factor via averaging.
 %   Y = MTRFRESAMPLE(X,FSIN,FSOUT) resamples the uniformly-sampled signal X
-%   from a sample rate of FSIN to FSOUT by averaging data every FSIN/FSOUT
-%   samples. To avoid phase distortion, the inital window is centered on
-%   the first sample. MTRFRESAMPLE does not apply an anti-aliasing filter,
-%   but the data are in effect low-pass filtered by convolution with a
-%   square window.
+%   from a sample rate of FSIN to FSOUT by averaging the nearest neighbours
+%   every FSIN/FSOUT samples. To avoid phase distortion, the inital window
+%   is centered on the first sample. MTRFRESAMPLE does not apply an anti-
+%   aliasing filter, but the data are in effect low-pass filtered by
+%   convolution with a square window.
 %
 %   If X is a matrix, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
@@ -13,10 +13,11 @@ function [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,varargin)
 %   the first non-singleton dimension corresponds to observations.
 %
 %   Y = MTRFRESAMPLE(X,FSIN,FSOUT,WINDOW) specifies the window size used to
-%   average data. Values greater than 1 result in overlap between the data
-%   used to estimate adjacent output frames, resulting in increased
-%   smoothing. The default value is 1. Note, changing the value of WINDOW
-%   does not affect the output sample rate, only the degree of smoothing.
+%   average the nearest neighbours. Values greater than 1 result in overlap
+%   between the data used to estimate neighbouring output frames, resulting
+%   in increased smoothing. If WINDOW is not specified, it is set as 1 by
+%   default. Note, changing the value of WINDOW does not affect the output
+%   sample rate, only the degree of smoothing.
 %
 %   Y = MTRFRESAMPLE(X,FSIN,FSOUT,WINDOW,BUFF) concatenates a buffer of
 %   initial data to the beginning of X to enable centering of the first
@@ -40,7 +41,7 @@ function [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,varargin)
 %                   in 1 to work along the columns (default) or 2 to work
 %                   along the rows.
 %
-%   See also RESAMPLE, DECIMATE, DOWNSAMPLE, UPSAMPLE.
+%   See also RESAMPLE, DECIMATE, UPFIRDN, INTERP.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

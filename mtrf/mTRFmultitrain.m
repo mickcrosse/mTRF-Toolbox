@@ -1,19 +1,18 @@
 function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFMULTITRAIN  Train multisensory additive model.
+%MTRFMULTITRAIN  Train a multisensory additive model.
 %   MODEL = MTRFMULTITRAIN(STIM,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA) trains
 %   a forward encoding model (stimulus to neural response) or a backward
 %   decoding model (neural response to stimulus) using time-lagged input
-%   features for building a model of multisensory processing. Models are
-%   trained on the sum of the unisensory responses RESP1 and RESP2 (i.e.,
-%   the additive model of multisensory processing), as per Crosse et al.
-%   (2015). Pass in 1 for DIR to fit a forward model, or -1 to fit a
-%   backward model. STIM, RESP1 and RESP2 are matrices or cell arrays
-%   containing corresponding trials of continuous training data. FS is a
-%   scalar specifying the sample rate in Hertz, and TMIN and TMAX are
-%   scalars specifying the minimum and maximum time lags in milliseconds.
-%   For backward models, MTRFMULTITRAIN automatically reverses the time
-%   lags. LAMBDA is a scalar specifying the regularization parameter for
-%   controlling overfitting.
+%   features for building an additive model of multisensory processing.
+%   Additive models are trained on the summed covariances of the unisensory
+%   responses RESP1 and RESP2, as per Crosse et al. (2015). Pass in 1 for
+%   DIR to fit a forward model, or -1 to fit a backward model. STIM, RESP1
+%   and RESP2 are matrices or cell arrays containing corresponding trials
+%   of continuous training data. FS is a scalar specifying the sample rate
+%   in Hertz, and TMIN and TMAX are scalars specifying the minimum and
+%   maximum time lags in milliseconds. For backward models, MTRFMULTITRAIN
+%   automatically reverses the time lags. LAMBDA is a scalar specifying the
+%   regularization parameter for controlling overfitting.
 %
 %   MTRFMULTITRAIN returns the additive model in a structure with the
 %   following fields:
@@ -70,20 +69,17 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
 %
-%   See mTRFdemos for examples of use.
-%
-%   See also RIDGE, REGRESS, MTRFPREDICT, MTRFTRANSFORM, MTRFMULTICROSSVAL.
+%   See also RIDGE, REGRESS, MTRFTRANSFORM, MTRFMULTICROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   References:
-%      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
-%          multivariate temporal response function (mTRF) toolbox: a MATLAB
-%          toolbox for relating neural signals to continuous stimuli. Front
-%          Hum Neurosci 10:604.
-%      [2] Crosse MC, Butler JS, Lalor EC (2015) Congruent Visual Speech
+%      [1] Crosse MC, Butler JS, Lalor EC (2015) Congruent Visual Speech
 %          Enhances Cortical Entrainment to Continuous Auditory Speech in
 %          Noise-Free Conditions. J Neurosci 35(42):14195-14204.
+%      [2] Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006)
+%          The VESPA: a method for the rapid estimation of a visual evoked
+%          potential. NeuroImage 32:1549-1561.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %            Giovanni Di Liberto <diliberg@tcd.ie>

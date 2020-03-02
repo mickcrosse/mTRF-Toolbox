@@ -1,5 +1,5 @@
 function [x,rows,cols] = formatcells(x,dim,nanflag)
-%FORMATCELLS  Format data in cell array.
+%FORMATCELLS  Format data in a cell array.
 %   X = FORMATCELLS(X,DIM) returns a cell array containing the data in X
 %   with DIM as the first dimension. Pass in 2 for DIM to transpose the
 %   data in each cell, or 1 to keep the existing dimensions. If X is a

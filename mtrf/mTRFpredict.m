@@ -1,5 +1,5 @@
 function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
-%MTRFPREDICT  Predict model output.
+%MTRFPREDICT  Predict and evaluate the output of a model.
 %   PRED = MTRFPREDICT(STIM,RESP,MODEL) predicts the output of a forward
 %   encoding model (stimulus to neural response) or a backward decoding
 %   model (neural response to stimulus) using time-lagged input features.
@@ -24,8 +24,8 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %   predictions are made for each trial and returned in a cell array. STIM
 %   and RESP must contain the same number of trials.
 %
-%   [PRED,STATS] = MTRFPREDICT(...) returns the statistics in a structure
-%   with the following fields:
+%   [PRED,STATS] = MTRFPREDICT(...) returns the test statistics in a
+%   structure with the following fields:
 %       'acc'       -- prediction accuracy based on Pearson's correlation
 %                      coefficient (ntrial-by-yvar)
 %       'err'       -- prediction error based on the mean squared error
@@ -44,7 +44,7 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
-%                                   coefficient: suitable for data with
+%                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'err'       A string specifying the error metric to use:
 %                       'msc'       Mean square error (default): take the
@@ -60,9 +60,7 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
 %
-%   See mTRFdemos for examples of use.
-%
-%   See also MTRFTRAIN, MTRFTRANSFORM, MTRFCROSSVAL, MTRFMULTICROSSVAL.
+%   See also PREDICT, CORR, MSE, MAE, MTRFCROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

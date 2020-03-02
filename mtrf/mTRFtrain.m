@@ -1,5 +1,5 @@
 function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
-%MTRFTRAIN  Train linear encoding/decoding model.
+%MTRFTRAIN  Train a linear encoding/decoding model.
 %   MODEL = MTRFTRAIN(STIM,RESP,FS,DIR,TMIN,TMAX,LAMBDA) trains a forward
 %   encoding model (stimulus to neural response) or a backward decoding
 %   model (neural response to stimulus) using time-lagged input features.
@@ -64,9 +64,7 @@ function model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
 %
-%   See mTRFdemos for examples of use.
-%
-%   See also RIDGE, REGRESS, MTRFPREDICT, MTRFTRANSFORM, MTRFCROSSVAL.
+%   See also RIDGE, REGRESS, MTRFTRANSFORM, MTRFCROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

@@ -1,5 +1,5 @@
 function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
-%OLSCOVMAT  Ordinary least squares covariance matrix estimation.
+%OLSCOVMAT  Covariance matrices for ordinary least squares estimation.
 %   [CXX,CXY] = OLSCOVMAT(X,Y,LAGS) returns the covariance matrices for
 %   ordinary least squares (OLS) estimation using time-lagged features of
 %   X. X and Y are matrices or cell arrays containing corresponding trials
@@ -29,7 +29,7 @@ function [Cxx,Cxy,xlag] = olscovmat(x,y,lags,type,split,zeropad,sumcov)
 %   a separate cell. Pass in 1 to sum them (default), or 0 to return them
 %   separately.
 %
-%   See also LSCOV, MLSCOVMAT.
+%   See also COV, LSCOV, MLSCOVMAT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

@@ -1,5 +1,5 @@
 function fmodel = mTRFtransform(bmodel,resp,varargin)
-%MTRFTRANSFORM  Transform backward model into forward model.
+%MTRFTRANSFORM  Transform a backward model into a forward model.
 %   FMODEL = MTRFTRANSFORM(BMODEL,RESP) transforms a backward decoding
 %   model (stimulus to neural response) into the corresponding forward
 %   encoding model (neural response to stimulus) as per Haufe et al.
@@ -34,8 +34,6 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
-%
-%   See mTRFdemos for examples of use.
 %
 %   See also MTRFTRAIN, MTRFMULTITRAIN.
 %

@@ -1,10 +1,10 @@
 function [acc,err] = mTRFevaluate(y,yhat,varargin)
-%MTRFEVALUATE  Evaluate model performance.
-%   ACC = MTRFEVALUATE(Y,YHAT) returns the accuracy of the prediction YHAT
-%   relative to the ground truth Y based on Pearson's linear correlation
-%   coefficient.
+%MTRFEVALUATE  Evaluate the prediction of a model.
+%   ACC = MTRFEVALUATE(Y,YHAT) evaluates the accuracy of the prediction
+%   YHAT relative to the ground truth Y based on Pearson's linear
+%   correlation coefficient.
 %
-%   [ACC,ERR] = MTRFEVALUATE(Y,YHAT) returns the error of the prediction
+%   [ACC,ERR] = MTRFEVALUATE(Y,YHAT) evaluates the error of the prediction
 %   YHAT relative to the ground truth Y based on the mean squared error
 %   (MSE).
 %
@@ -29,8 +29,6 @@ function [acc,err] = mTRFevaluate(y,yhat,varargin)
 %                                   units (i.e., RMSE)
 %                       'mae'       Mean absolute error: more robust to
 %                                   outliers than MSE
-%
-%   See mTRFdemos for examples of use.
 %
 %   See also CORR, CORRCOEF, TIEDRANK, MSE, MAE.
 %

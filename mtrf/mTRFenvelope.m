@@ -1,16 +1,14 @@
 function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
-%MTRFENVELOPE  Temporal envelope estimation.
-%   Y = MTRFENVELOPE(X) returns the temporal envelope of audio signal X. X
-%   is a vector or matrix of audio channels.
+%MTRFENVELOPE  Estimate the temporal envelope of an audio signal.
+%   Y = MTRFENVELOPE(X,FSIN,FSOUT) computes the resampled temporal envelope
+%   of the audio signal X by averaging the square of the nearest neighbours
+%   every FSIN/FSOUT samples, taking the square root and logarithmically
+%   scaling the RMS intesnity as per Lalor and Foxe (2010).
 %
 %   If X is a matrix, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
 %   the 'dim' parameter (see below). If it is a vector, it is assumed that
 %   the first non-singleton dimension corresponds to observations.
-%
-%   Y = MTRFENVELOPE(X,FSIN,FSOUT) resamples the envelope of X from a
-%   sample rate of FSIN to FSOUT by averaging the signal power every
-%   FSIN/FSOUT samples and taking the square root (i.e., RMS intensity).
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW) specifies the window size used to
 %   average data. Values greater than 1 result in overlap between the data
@@ -35,8 +33,6 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %       'dim'       A scalar specifying the dimension to work along: pass
 %                   in 1 to work along the columns (default), or 2 to work
 %                   along the rows.
-%
-%   See mTRFdemos for examples of use.
 %
 %   See also ENVELOPE, HILBERT, RMS.
 %

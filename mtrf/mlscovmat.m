@@ -1,5 +1,5 @@
 function [Cxx,Cxy1,Cxy2,X] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
-%MLSCOVMAT  Multisensory least squares covariance matrix estimation.
+%MLSCOVMAT  Covariance matrices for multisensory least squares estimation.
 %   [CXX,CXY1,CXY2] = MLSCOVMAT(X,Y1,Y2,LAGS) returns the covariance
 %   matrices for multisensory least squares (MLS) estimation using time-
 %   lagged features of X. X, Y1 and Y2 are matrices or cell arrays
@@ -29,7 +29,7 @@ function [Cxx,Cxy1,Cxy2,X] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
 %   a separate cell. Pass in 1 to sum them (default), or 0 to return them
 %   separately.
 %
-%   See also LSCOV, OLSCOVMAT.
+%   See also COV, LSCOV, OLSCOVMAT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -142,7 +142,7 @@ else % keep trials separate
             % Compute covariance matrices
             switch type
                 case 'multi'
-                    Cxx{n} = X{n}'*X{n}; 
+                    Cxx{n} = X{n}'*X{n};
                     Cxy1{n} = X{n}'*y1{i}(iseg(idx),:);
                     Cxy2{n} = X{n}'*y2{i}(iseg(idx),:);
                 case 'single'

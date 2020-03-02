@@ -62,7 +62,7 @@ function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
-%                                   coefficient: suitable for data with
+%                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'err'       A string specifying the error metric to use:
 %                       'msc'       Mean square error (default): take the
@@ -97,9 +97,7 @@ function [stats,t] = mTRFcrossval(stim,resp,fs,dir,tmin,tmax,lambda,varargin)
 %   individual cell of continuous data and MTRFCROSSVAL will zero-pad the
 %   trial boundaries appropriately.
 %
-%   See mTRFdemos for examples of use.
-%
-%   See also MTRFTRAIN, MTRFPREDICT, MTRFAADCROSSVAL, MTRFMULTICROSSVAL.
+%   See also CROSSVAL, CVFOLD, MTRFTRAIN, MTRFPREDICT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

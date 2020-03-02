@@ -1,5 +1,5 @@
 function [xlag,idx] = lagGen(x,lags,zeropad,stack)
-%LAGGEN  Time lag generator.
+%LAGGEN  Generate time-lagged features of multivariate data.
 %   XLAG = LAGGEN(X,LAGS) returns a design matrix containing the time-
 %   lagged features of input data X. X is a column vector or a matrix, with
 %   the rows corresponding to observations and the columns to variables.
