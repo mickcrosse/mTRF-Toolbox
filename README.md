@@ -52,25 +52,25 @@ A backward model, known as a neural decoder, reverses the direction of causality
 * `mTRFcrossval()` - cross-validation for hyperparameter optimization
 * `mTRFtrain()` - fits an encoding/decoding model (TRF/STRF estimation)
 * `mTRFtransform()` - transforms a decoding model into an encoding model
-* `mTRFpredict()` - predicts encoding/decoding model output
-* `mTRFevaluate()` - evaluates prediction accuracy/error
+* `mTRFpredict()` - predicts and evaluates the output of a model
+* `mTRFevaluate()` - evaluates the accuracy and error of a prediction
 
 ### Decoding attention and multisensory processing
 
-* `mTRFattncrossval()` - cross-validation for optimizing an attention decoder
-* `mTRFmulticrossval()` - cross-validation for optimizing an additive multisensory model
+* `mTRFattncrossval()` - cross-validation for attention decoder optimization
+* `mTRFmulticrossval()` - cross-validation for multisensory model optimization
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
 ### Efficient covariance matrix estimation
 
-* `olscovmat()` - ordinary least squares covariance matrix estimation
-* `mlscovmat()` - multisensory least squares covariance matrix estimation
+* `olscovmat()` - covariance matrices for ordinary least squares estimation
+* `mlscovmat()` - covariance matrices for multisensory least squares estimation
 
 ### Feature extraction
 
-* `mTRFenvelope()` - computes the acoustic envelope of an audio signal
+* `mTRFenvelope()` - computes the temporal envelope of an audio signal
 * `mTRFresample()` - resamples and smooths temporal features
-* `lagGen()` - generates time-lagged input features
+* `lagGen()` - generates time-lagged input features of multivariate data
 
 ## Examples
 
