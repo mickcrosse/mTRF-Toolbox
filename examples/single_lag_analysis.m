@@ -46,7 +46,7 @@ fs = fsNew;
 
 % Generate training/test sets
 nfold = 10;
-[stimtrain,resptrain] = mTRFcvfold(stim,resp,nfold);
+[stimtrain,resptrain] = mTRFpartition(stim,resp,nfold);
 
 % Model hyperparameters
 dir = -1;
