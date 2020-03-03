@@ -1,12 +1,17 @@
-function [acc,err] = mTRFevaluate(y,yhat,varargin)
-%MTRFEVALUATE  Evaluate the prediction of a model.
-%   ACC = MTRFEVALUATE(Y,YHAT) evaluates the accuracy of the prediction
-%   YHAT relative to the ground truth Y based on Pearson's linear
+function [acc,err] = mTRFevaluate(y,pred,varargin)
+%MTRFEVALUATE  Evaluate the prediction of a regression model.
+%   ACC = MTRFEVALUATE(Y,PRED) evaluates the accuracy of the prediction
+%   PRED relative to the ground truth Y based on Pearson's linear
 %   correlation coefficient.
 %
-%   [ACC,ERR] = MTRFEVALUATE(Y,YHAT) evaluates the error of the prediction
-%   YHAT relative to the ground truth Y based on the mean squared error
-%   (MSE).
+%   If Y or PRED are matrices, it is assumed that the rows correspond to
+%   observations and the columns to variables, unless otherwise stated via
+%   the 'dim' parameter (see below). If they are vectors, it is assumed
+%   that the first non-singleton dimension corresponds to observations.
+%   Y and PRED must have the same number of observations.
+%
+%   [ACC,ERR] = MTRFEVALUATE(Y,PRED) evaluates the error of the prediction
+%   relative to the ground truth based on the mean squared error (MSE).
 %
 %   [...] = MTRFEVALUATE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -15,7 +20,7 @@ function [acc,err] = mTRFevaluate(y,yhat,varargin)
 %       Parameter   Value
 %       'dim'       A scalar specifying the dimension to work along: pass
 %                   in 1 to work along the columns (default), or 2 to work
-%                   along the rows. Applies to both STIM and RESP.
+%                   along the rows. Applies to both Y and PRED.
 %       'acc'       A string specifying the accuracy metric to use:
 %                       'Pearson'   Pearson's linear correlation
 %                                   coefficient (default): suitable for
@@ -57,11 +62,11 @@ end
 % Get dimensions
 if arg.dim == 2
     y = y';
-    yhat = yhat';
+    pred = pred';
 end
 n = size(y,1);
-if size(yhat,1) ~= n
-    error(['Y and YHAT arguments must have the same number of '...
+if size(pred,1) ~= n
+    error(['Y and PRED arguments must have the same number of '...
         'observations.'])
 end
 
@@ -69,11 +74,11 @@ end
 switch arg.acc
     case 'Spearman'
         y = num2rank(y);
-        yhat = num2rank(yhat);
+        pred = num2rank(pred);
 end
-muxy = sum(y).*sum(yhat)/n;
-sdxy = sqrt((sum(y.^2)-(sum(y).^2)/n).*(sum(yhat.^2)-(sum(yhat).^2)/n));
-acc = (sum(y.*yhat)-muxy)./sdxy;
+muxy = sum(y).*sum(pred)/n;
+sdxy = sqrt((sum(y.^2)-(sum(y).^2)/n).*(sum(pred.^2)-(sum(pred).^2)/n));
+acc = (sum(y.*pred)-muxy)./sdxy;
 
 % Compute error
 switch arg.err
@@ -82,7 +87,7 @@ switch arg.err
     case 'mae'
         exponent = 1;
 end
-err = sum(abs(y-yhat).^exponent,1)/n;
+err = sum(abs(y-pred).^exponent,1)/n;
 
 function xranked = num2rank(x)
 %NUM2RANK  Rank numbers and average ties.

@@ -101,7 +101,7 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,dir,tmin,tmax,la
 %   individual cell of continuous data and MTRFMULTICROSSVAL will zero-pad
 %   the trial boundaries appropriately.
 %
-%   See also CROSSVAL, CVFOLD, MTRFMULTITRAIN, MTRFPREDICT.
+%   See also CROSSVAL, MTRFPARTITION, MTRFMULTITRAIN, MTRFPREDICT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

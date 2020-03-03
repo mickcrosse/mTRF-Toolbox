@@ -19,7 +19,7 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %   decoding in a structure with the following fields:
 %       'adi'       -- attention decoding index (ADI) based on the
 %                      proportion of folds where the accuracy for attended
-%                      stimuli were greater than that of the unattended
+%                      stimuli was greater than that of the unattended
 %                      stimuli (nlambda-by-yvar)
 %       'dprime'    -- sensitivity index based on d', where the accuracy
 %                      for attended stimuli is considered signal and that
@@ -112,7 +112,7 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,dir,tmin
 %   individual cell of continuous data and MTRFATTNCROSSVAL will zero-pad
 %   the trial boundaries appropriately.
 %
-%   See also CROSSVAL, CVFOLD, MTRFTRAIN, MTRFPREDICT.
+%   See also CROSSVAL, DPRIME, MTRFPARTITION, MTRFTRAIN, MTRFPREDICT.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -358,9 +358,7 @@ for i = 1:ntrial
 end
 
 % Compute ADI and d'
-adi = sum(acc1>acc2,1)/nbatch;
-d = (mean(acc1,1) - mean(acc2,1)) ./ ...
-    sqrt(0.5*(var(acc1,[],1) + var(acc2,[],1)));
+[adi,d] = mTRFattnevaluate(acc1,acc2);
 
 % Format output arguments
 stats = struct('adi',adi,'dprime',d);
