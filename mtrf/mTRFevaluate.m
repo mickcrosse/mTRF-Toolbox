@@ -190,4 +190,4 @@ arg = p.Results;
 
 % Redefine partially matched strings
 arg.corr = validatestring(arg.corr,corrOptions);
-arg.err = validatestring(arg.err,errOptions);
+arg.error = validatestring(arg.error,errOptions);
