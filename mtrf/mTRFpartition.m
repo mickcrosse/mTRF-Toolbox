@@ -3,15 +3,13 @@ function [strain,rtrain,stest,rtest] = mTRFpartition(stim,resp,k,testfold,vararg
 %   [STRAIN,RTRAIN] = MTRFPARTITION(STIM,RESP,K) partitions the stimulus
 %   and response data into K equal folds for cross-validation. STIM and
 %   RESP are vectors or matrices of continuous data and are returned as
-%   K-by-1 cell arrays. To utilize all available data, the number of samples in
-%   each fold is rounded up and adjusted for in the size of the last fold.
-%   If K is not specified, it is set to 10 by default.
+%   K-by-1 cell arrays. To utilize all available data, the number of
+%   samples in each fold is rounded up and adjusted for in the size of the
+%   last fold. If K is not specified, it is set to 10 by default.
 %
-%   [STRAIN,RTRAIN,STEST,RTEST] = MTRFPARTITION(STIM,RESP,K,TESTFOLD) returns
-%   the fold specified by TESTFOLD as a separate test set and removes it
-%   from the training set. STEST and RTEST are returned as vectors or
-%   matrices. If TESTFOLD is not specified, it is chosen at random by
-%   default.
+%   [STRAIN,RTRAIN,STEST,RTEST] = MTRFPARTITION(STIM,RESP,K,TESTFOLD) holds
+%   out the fold specified by TESTFOLD and returns it as a separate test
+%   set. If TESTFOLD is not specified, it is chosen at random by default.
 %
 %   [...] = MTRFPARTITION(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -22,10 +20,10 @@ function [strain,rtrain,stest,rtest] = mTRFpartition(stim,resp,k,testfold,vararg
 %                   in 1 to work along the columns (default), or 2 to work
 %                   along the rows. Applies to both STIM and RESP.
 %       'equal'     A numeric or logical specifying whether to return folds
-%                   of equal size or use all available data: pass in 0 to
-%                   use all available data (default), or 1 for equal folds.
+%                   of equal size or use all available data: pass in 1 for
+%                   equal folds, or 0 to use all available data (default).
 %
-%   See also CVPARTITION, MTRFCROSSVAL.
+%   See also CVPARTITION, MTRFCROSSVAL, MTRFNESTEDCROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
