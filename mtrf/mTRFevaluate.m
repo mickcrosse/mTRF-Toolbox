@@ -1,8 +1,8 @@
-function [acc,err] = mTRFevaluate(y,pred,varargin)
-%MTRFEVALUATE  Evaluate the prediction of a regression model.
-%   ACC = MTRFEVALUATE(Y,PRED) evaluates the accuracy of the prediction
-%   PRED relative to the ground truth Y based on Pearson's linear
-%   correlation coefficient.
+function [r,err] = mTRFevaluate(y,pred,varargin)
+%MTRFEVALUATE  Evaluate the performance of a regression model.
+%   R = MTRFEVALUATE(Y,PRED) returns the correlation between the prediction
+%   of a regression model PRED and the ground truth Y, based on Pearson's
+%   linear correlation coefficient.
 %
 %   If Y or PRED are matrices, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
@@ -10,8 +10,8 @@ function [acc,err] = mTRFevaluate(y,pred,varargin)
 %   that the first non-singleton dimension corresponds to observations.
 %   Y and PRED must have the same number of observations.
 %
-%   [ACC,ERR] = MTRFEVALUATE(Y,PRED) evaluates the error of the prediction
-%   relative to the ground truth based on the mean squared error (MSE).
+%   [R,ERR] = MTRFEVALUATE(Y,PRED) returns the error between the prediction
+%   and the ground truth, based on the mean squared error (MSE).
 %
 %   [...] = MTRFEVALUATE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -21,19 +21,22 @@ function [acc,err] = mTRFevaluate(y,pred,varargin)
 %       'dim'       A scalar specifying the dimension to work along: pass
 %                   in 1 to work along the columns (default), or 2 to work
 %                   along the rows. Applies to both Y and PRED.
-%       'acc'       A string specifying the accuracy metric to use:
+%       'corr'      A string specifying the correlation metric to use:
 %                       'Pearson'   Pearson's linear correlation
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
 %                                   coefficient: suitable for data with a
 %                                   non-linear relationship
-%       'err'       A string specifying the error metric to use:
+%       'error'     A string specifying the error metric to use:
 %                       'msc'       Mean squared error (default): take the
 %                                   square root to convert to the original
 %                                   units (i.e., RMSE)
 %                       'mae'       Mean absolute error: more robust to
 %                                   outliers than MSE
+%       'window'    A scalar specifying the window size over which to
+%                   compute performance in samples. By default, the entire
+%                   trial or segment is used.
 %
 %   See also CORR, CORRCOEF, TIEDRANK, MSE, MAE.
 %
@@ -51,51 +54,79 @@ function [acc,err] = mTRFevaluate(y,pred,varargin)
 % Parse input arguments
 arg = parsevarargin(varargin);
 
-% Set default values
-if nargin < 3 || isempty(arg.acc)
-    arg.acc = 'Pearson';
-end
-if nargin < 4 || isempty(arg.err)
-    arg.err = 'mse';
-end
-
-% Get dimensions
+% Orient data column-wise
 if arg.dim == 2
     y = y';
     pred = pred';
 end
-n = size(y,1);
-if size(pred,1) ~= n
+
+% Get dimensions
+[yobs,yvar] = size(y);
+[pobs,pvar] = size(pred);
+if pobs ~= yobs || pvar ~= yvar
     error(['Y and PRED arguments must have the same number of '...
-        'observations.'])
+        'observations and variables.'])
+end
+if arg.window
+    nwin = floor(yobs/arg.window);
+else
+    nwin = 1;
 end
 
-% Compute accuracy
-switch arg.acc
+% Compute rank values
+switch arg.corr
     case 'Spearman'
-        y = num2rank(y);
-        pred = num2rank(pred);
+        y = num2rank(y,yobs,yvar);
+        pred = num2rank(pred,pobs,pvar);
 end
-muxy = sum(y).*sum(pred)/n;
-sdxy = sqrt((sum(y.^2)-(sum(y).^2)/n).*(sum(pred.^2)-(sum(pred).^2)/n));
-acc = (sum(y.*pred)-muxy)./sdxy;
 
-% Compute error
-switch arg.err
-    case 'mse'
-        exponent = 2;
-    case 'mae'
-        exponent = 1;
+% Initialize variables
+r = zeros(nwin,yvar);
+err = zeros(nwin,yvar);
+
+for i = 1:nwin
+    
+    if arg.window % use window
+        idx = arg.window*(i-1)+1:arg.window*i;
+        yi = y(idx,:);
+        pi = pred(idx,:);
+        nobs = numel(idx);
+    else % use entire trial
+        yi = y;
+        pi = pred;
+        nobs = yobs;
+    end
+    
+    % Compute standard deviation
+    sumy = sum(yi,1); sump = sum(pi,1);
+    sdyp = sqrt((sum(yi.^2,1) - (sumy.^2)/nobs) .* ...
+        (sum(pi.^2,1) - (sump.^2)/nobs));
+    
+    % Compute correlation
+    r(i,:) = (sum(yi.*pi,1) - sumy.*sump/nobs)./sdyp;
+    
+    % Compute error
+    switch arg.error
+        case 'mse'
+            err(i,:) = sum(abs(yi - pi).^2,1)/nobs;
+        case 'mae'
+            err(i,:) = sum(abs(yi - pi),1)/nobs;
+    end
+    
 end
-err = sum(abs(y-pred).^exponent,1)/n;
 
-function xranked = num2rank(x)
+function xranked = num2rank(x,nobs,nvar)
 %NUM2RANK  Rank numbers and average ties.
 %   XRANKED = NUM2RANK(X) ranks the values in each column of X and averages
 %   any tied ranks.
 
+% Get dimensions
+if nargin < 2
+    nobs = size(x,1);
+    nvar = size(x,2);
+end
+
 % Initialize variables
-[nobs,nvar] = size(x);
 xranked = zeros(nobs,nvar);
 
 for i = 1:nvar
@@ -138,20 +169,25 @@ errorMsg = 'It must be a positive integer scalar within indexing range.';
 validFcn = @(x) assert(x==1||x==2,errorMsg);
 addParameter(p,'dim',1,validFcn);
 
-% Accuracy metric
-accOptions = {'Pearson','Spearman'};
-validFcn = @(x) any(validatestring(x,accOptions));
-addParameter(p,'acc','Pearson',validFcn);
+% Correlation metric
+corrOptions = {'Pearson','Spearman'};
+validFcn = @(x) any(validatestring(x,corrOptions));
+addParameter(p,'corr','Pearson',validFcn);
 
 % Error metric
 errOptions = {'mse','mae'};
 validFcn = @(x) any(validatestring(x,errOptions));
-addParameter(p,'err','msc',validFcn);
+addParameter(p,'error','msc',validFcn);
+
+% Window size
+errorMsg = 'It must be a positive numeric scalar within indexing range.';
+validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
+addParameter(p,'window',0,validFcn);
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
 arg = p.Results;
 
-% Redefine partially-matched strings
-arg.acc = validatestring(arg.acc,accOptions);
+% Redefine partially matched strings
+arg.corr = validatestring(arg.corr,corrOptions);
 arg.err = validatestring(arg.err,errOptions);
