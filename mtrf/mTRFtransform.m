@@ -12,7 +12,7 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %       'w'         -- transformed model weights (xvar-by-nlag-by-yvar)
 %       't'         -- time lags (ms)
 %       'fs'        -- sample rate (Hz)
-%       'dir'       -- direction of causality (forward=1, backward=-1)
+%       'Dir'       -- direction of causality (forward=1, backward=-1)
 %       'type'      -- type of model (multi-lag, single-lag)
 %
 %   If RESP is a matrix, it is assumed that the rows correspond to
@@ -34,6 +34,9 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
+%       'verbose'   A numeric or logical specifying whether to display
+%                   details about transformation progress: pass in 1 to
+%                   display details (default), or 0 to not display details.
 %
 %   See also MTRFTRAIN, MTRFMULTITRAIN.
 %
@@ -60,20 +63,59 @@ arg = parsevarargin(varargin);
 
 % Format data in cell arrays
 resp = formatcells(resp,arg.dim);
+nfold = numel(resp);
+
+% Verbose mode
+if arg.verbose
+    fprintf('\nTransformation\n')
+    fprintf('--------------\n')
+end
 
 % Predict output
-pred = mTRFpredict([],resp,bmodel,'dim',arg.dim,'zeropad',arg.zeropad);
+pred = mTRFpredict([],resp,bmodel,'dim',arg.dim,'zeropad',arg.zeropad,...
+    'verbose',0);
 
 % Convert to cell array
 if ~iscell(pred)
     pred = {pred};
 end
 
-% Compute covariance matrices
-Cxx = 0; Cyy = 0;
-for i = 1:numel(resp)
+% Verbose mode
+if arg.verbose
+    fprintf('Computing covariance matrices\n')
+    msg = 'Fold %d/%d [';
+    h = fprintf(msg,0,nfold);
+    tocs = 0; tic
+end
+
+% Initialize variables
+Cxx = 0;
+Cyy = 0;
+
+for i = 1:nfold
+    
+    % Compute covariance matrices
     Cxx = Cxx + resp{i}'*resp{i};
     Cyy = Cyy + pred{i}'*pred{i};
+    
+    % Verbose mode
+    if arg.verbose
+        fprintf(repmat('\b',1,h))
+        msg = strcat(msg,'=');
+        h = fprintf(msg,i,nfold);
+        tocs = tocs+toc;
+        if i == nfold
+            fprintf('] - %.2fs/fold\n',tocs/nfold)
+        else
+            tic
+        end
+    end
+    
+end
+
+% Verbose mode
+if arg.verbose
+    fprintf('Transforming model\n'); tic
 end
 
 % Transform backward model weights
@@ -81,7 +123,13 @@ bmodel.w = Cxx*bmodel.w/Cyy;
 
 % Format output arguments
 fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
-    'fs',bmodel.fs,'dir',-bmodel.dir,'type',bmodel.type);
+    'fs',bmodel.fs,'Dir',-bmodel.Dir,'type',bmodel.type);
+
+% Verbose mode
+if arg.verbose
+    fprintf('model shape: %d x %d x %d - %.2fs\n',size(fmodel.w,1),...
+        size(fmodel.w,2),size(fmodel.w,3),toc)
+end
 
 function arg = parsevarargin(varargin)
 %PARSEVARARGIN  Parse input arguments.
@@ -100,7 +148,7 @@ addParameter(p,'dim',1,validFcn);
 errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
-addParameter(p,'gpu',false,validFcn); % run on GPU
+addParameter(p,'verbose',true,validFcn); % print progress
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
