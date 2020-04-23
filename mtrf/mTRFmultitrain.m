@@ -1,4 +1,4 @@
-function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargin)
+function model = mTRFmultitrain(stim,resp1,resp2,fs,Dir,tmin,tmax,lambda,varargin)
 %MTRFMULTITRAIN  Train a multisensory additive model.
 %   MODEL = MTRFMULTITRAIN(STIM,RESP1,RESP2,FS,DIR,TMIN,TMAX,LAMBDA) trains
 %   a forward encoding model (stimulus to neural response) or a backward
@@ -10,8 +10,8 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %   and RESP2 are matrices or cell arrays containing corresponding trials
 %   of continuous training data. FS is a scalar specifying the sample rate
 %   in Hertz, and TMIN and TMAX are scalars specifying the minimum and
-%   maximum time lags in milliseconds. For backward models, MTRFMULTITRAIN
-%   automatically reverses the time lags. LAMBDA is a scalar specifying the
+%   maximum time lags in milliseconds. For backward models, the time lags
+%   are automatically reversed. LAMBDA is a scalar specifying the
 %   regularization parameter for controlling overfitting.
 %
 %   MTRFMULTITRAIN returns the additive model in a structure with the
@@ -20,7 +20,7 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %       'b'         -- normalized bias term (1-by-nlag-by-yvar)
 %       't'         -- time lags (ms)
 %       'fs'        -- sample rate (Hz)
-%       'dir'       -- direction of causality (forward=1, backward=-1)
+%       'Dir'       -- direction of causality (forward=1, backward=-1)
 %       'type'      -- type of model (multi-lag, single-lag)
 %
 %   MTRFMULTITRAIN normalizes the model weights and regularization matrix
@@ -32,7 +32,7 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %   correspond to observations and the columns to variables, unless
 %   otherwise stated via the 'dim' parameter (see below). If they are
 %   vectors, it is assumed that the first non-singleton dimension
-%   orresponds to observations. STIM, RESP1 and RESP2 must have the same
+%   corresponds to observations. STIM, RESP1 and RESP2 must have the same
 %   number of observations.
 %
 %   If STIM, RESP1 or RESP2 are cell arrays containing multiple trials, the
@@ -68,6 +68,9 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
+%       'verbose'   A numeric or logical specifying whether to display
+%                   details about training progress: pass in 1 to display
+%                   details (default), or 0 to not display details.
 %
 %   See also RIDGE, REGRESS, MTRFTRANSFORM, MTRFMULTICROSSVAL.
 %
@@ -91,35 +94,30 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,dir,tmin,tmax,lambda,varargi
 arg = parsevarargin(varargin);
 
 % Validate input parameters
-if ~isnumeric(fs) || ~isscalar(fs) || fs <= 0
-    error('FS argument must be a positive numeric scalar.')
-elseif ~isnumeric([tmin,tmax]) || ~isscalar(tmin) || ~isscalar(tmax)
-    error('TMIN and TMAX arguments must be numeric scalars.')
-elseif tmin > tmax
-    error('The value of TMIN must be less than that of TMAX.')
-elseif ~isnumeric(lambda) || ~isscalar(lambda) || lambda < 0
-    error('LAMBDA argument must be a positive numeric scalar.')
-end
+validateparamin(fs,Dir,tmin,tmax,lambda)
 
 % Define X and Y variables
-if dir == 1
+if Dir == 1
     x = stim;
-elseif dir == -1
+elseif Dir == -1
     y = stim;
     [tmin,tmax] = deal(tmax,tmin);
-else
-    error('DIR argument must have a value of 1 or -1.')
 end
 
 % Format data in cell arrays
-[z1,zobs1,zvar1] = formatcells(resp1,arg.dim);
-[z2,zobs2,zvar2] = formatcells(resp2,arg.dim);
-if dir == 1
-    [x,xobs,xvar] = formatcells(x,arg.dim);
-    yvar = unique(zvar1);
-elseif dir == -1
-    [y,yobs,yvar] = formatcells(y,arg.dim);
-    xvar = unique(zvar1);
+[z1,zobs1,zvar1] = formatcells(resp1,arg.dim,arg.split);
+[z2,zobs2,zvar2] = formatcells(resp2,arg.dim,arg.split);
+if Dir == 1
+    [x,xobs,xvar] = formatcells(x,arg.dim,arg.split);
+elseif Dir == -1
+    [y,yobs,yvar] = formatcells(y,arg.dim,arg.split);
+end
+
+% Check equal number of observations
+if (Dir == 1 && ~isequal(xobs,zobs1,zobs2)) || ...
+        (Dir == -1 && ~isequal(yobs,zobs1,zobs2))
+    error(['STIM and RESP arguments must have the same number of '...
+        'observations.'])
 end
 
 % Check equal number of variables
@@ -128,16 +126,9 @@ if ~isequal(zvar1,zvar2)
         'variables.'])
 end
 
-% Check equal number of observations
-if (dir == 1 && ~isequal(xobs,zobs1,zobs2)) || ...
-        (dir == -1 && ~isequal(yobs,zobs1,zobs2))
-    error(['STIM and RESP arguments must have the same number of '...
-        'observations.'])
-end
-
 % Convert time lags to samples
-tmin = floor(tmin/1e3*fs*dir);
-tmax = ceil(tmax/1e3*fs*dir);
+tmin = floor(tmin/1e3*fs*Dir);
+tmax = ceil(tmax/1e3*fs*Dir);
 lags = tmin:tmax;
 
 % Compute sampling interval
@@ -145,67 +136,88 @@ delta = 1/fs;
 
 % Get dimensions
 nlag = numel(lags);
-if dir == 1
+if Dir == 1
     xvar = unique(xvar);
-elseif dir == -1
+    yvar = unique(zvar1);
+elseif Dir == -1
+    xvar = unique(zvar1);
     yvar = unique(yvar);
 end
 switch arg.type
     case 'multi'
-        mvar = xvar*nlag+1;
+        nvar = xvar*nlag+1;
     case 'single'
-        mvar = xvar+1;
+        nvar = xvar+1;
+end
+
+% Verbose mode
+if arg.verbose
+    fprintf('\nTraining\n')
+    fprintf('--------\n')
 end
 
 % Compute covariance matrices
-if dir == 1
-    [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.split,...
-        arg.zeropad);
-elseif dir == -1
-    [Cxx1,Cxy1] = olscovmat(z1,y,lags,arg.type,arg.split,arg.zeropad);
-    [Cxx2,Cxy2] = olscovmat(z2,y,lags,arg.type,arg.split,arg.zeropad);
+if Dir == 1
+    [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.zeropad);
+elseif Dir == -1
+    [Cxx1,Cxy1] = olscovmat(z1,y,lags,arg.type,arg.zeropad);
+    [Cxx2,Cxy2] = olscovmat(z2,y,lags,arg.type,arg.zeropad);
 end
 
-% Compute covariances for additive model
-if dir == 1
+% Sum covariances for additive model
+if Dir == 1
     Cxx = Cxx + Cxx;
     Cxy = Cxy1 + Cxy2;
-elseif dir == -1
+elseif Dir == -1
     Cxx = Cxx1 + Cxx2;
     Cxy = Cxy1 + Cxy2;
 end
 
 % Set up sparse regularization matrix
-M = sparse(eye(mvar));
-switch arg.method
-    case 'ridge'
-        M(1,1) = 0;
-    case 'Tikhonov'
-        M = M - 0.5*(diag(ones(mvar-1,1),1)+diag(ones(mvar-1,1),-1));
-        M([mvar+2,end]) = 0.5;
-        M([1,2,mvar+1]) = 0;
-    case 'ols'
-        lambda = 0;
-end
-M = lambda*M/delta;
+M = regmat(nvar,arg.method)*lambda/delta;
 
-% Fit additive linear model
+% Verbose mode
+if arg.verbose
+    fprintf('Fitting model\n'); tic
+end
+
+% Fit linear model
 switch arg.type
     case 'multi'
-        w = (Cxx + M)\Cxy/delta;
+        w = (Cxx + M)\Cxy*2/delta;
     case 'single'
-        w = zeros(xvar+1,nlag,yvar);
+        w = zeros(nvar,nlag,yvar);
         for i = 1:nlag
-            w(:,i,:) = (Cxx(:,:,i) + M)\Cxy(:,:,i)/delta;
+            w(:,i,:) = (Cxx(:,:,i) + M)\Cxy(:,:,i)*2/delta;
         end
 end
 
-% Account for superposition
-w = w*2;
-
 % Format output arguments
 model = struct('w',reshape(w(2:end,:,:),[xvar,nlag,yvar]),'b',w(1,:,:),...
-    't',lags/fs*1e3,'fs',fs,'dir',dir,'type',arg.type);
+    't',lags/fs*1e3,'fs',fs,'Dir',Dir,'type',arg.type);
+
+% Verbose mode
+if arg.verbose
+    fprintf('model shape: %d x %d x %d - %.2fs\n',size(model.w,1),...
+        size(model.w,2),size(model.w,3),toc)
+end
+
+function validateparamin(fs,Dir,tmin,tmax,lambda)
+%VALIDATEPARAMIN  Validate input parameters.
+%   VALIDATEPARAMIN(FS,DIR,TMIN,TMAX,LAMBDA) validates the input parameters
+%   of the main function.
+
+if ~isnumeric(fs) || ~isscalar(fs) || fs <= 0
+    error('FS argument must be a positive numeric scalar.')
+elseif Dir ~= 1 && Dir ~= -1
+    error('DIR argument must have a value of 1 or -1.')
+elseif ~isnumeric([tmin,tmax]) || ~isscalar(tmin) || ~isscalar(tmax)
+    error('TMIN and TMAX arguments must be numeric scalars.')
+elseif tmin > tmax
+    error('The value of TMIN must be less than that of TMAX.')
+elseif ~isnumeric(lambda) || ~isscalar(lambda) || lambda < 0
+    error('LAMBDA argument must be a positive numeric scalar.')
+end
 
 function arg = parsevarargin(varargin)
 %PARSEVARARGIN  Parse input arguments.
@@ -239,7 +251,7 @@ addParameter(p,'split',1,validFcn);
 errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
-addParameter(p,'gpu',false,validFcn); % run on GPU
+addParameter(p,'verbose',true,validFcn); % print progress
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
