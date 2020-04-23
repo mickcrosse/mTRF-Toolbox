@@ -59,23 +59,23 @@ lambda = 10.^-2;
     lambda,'type','single','zeropad',0);
 
 % Compute mean and variance
-macc = squeeze(mean(stats.acc))';
-vacc = squeeze(var(stats.acc))';
+mr = squeeze(mean(stats.r))';
+vr = squeeze(var(stats.r))';
 merr = squeeze(mean(stats.err))';
 verr = squeeze(var(stats.err))';
 
 % Compute variance bound
-xacc = [-fliplr(t),-t];
+xr = [-fliplr(t),-t];
 xerr = [-fliplr(t),-t];
-yacc = [fliplr(macc-sqrt(vacc/nfold)),macc+sqrt(vacc/nfold)];
+yr = [fliplr(mr-sqrt(vr/nfold)),mr+sqrt(vr/nfold)];
 yerr = [fliplr(merr-sqrt(verr/nfold)),merr+sqrt(verr/nfold)];
 
 % Plot accuracy
 figure
 subplot(1,2,1)
-h = fill(xacc,yacc,'b','edgecolor','none'); hold on
+h = fill(xr,yr,'b','edgecolor','none'); hold on
 set(h,'facealpha',0.2), xlim([tmin,tmax])
-plot(-fliplr(t),fliplr(macc),'linewidth',2), hold off
+plot(-fliplr(t),fliplr(mr),'linewidth',2), hold off
 title('Reconstruction Accuracy')
 xlabel('Time lag (ms)')
 ylabel('Correlation')
