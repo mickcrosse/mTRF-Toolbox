@@ -1,33 +1,35 @@
-function [Cxx,Cxy1,Cxy2,X] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
+function [Cxx,Cxy,Cxz,folds] = mlscovmat(x,y,z,lags,type,zeropad,verbose)
 %MLSCOVMAT  Covariance matrices for multisensory least squares estimation.
-%   [CXX,CXY1,CXY2] = MLSCOVMAT(X,Y1,Y2,LAGS) returns the covariance
-%   matrices for multisensory least squares (MLS) estimation using time-
-%   lagged features of X. X, Y1 and Y2 are matrices or cell arrays
-%   containing corresponding trials of continuous data, with columns
-%   corresponding to observations and rows corresponding to variables. LAGS
-%   is a scalar or vector of time lags in samples.
+%   [CXX,CXY,CXZ] = MLSCOVMAT(X,Y,Z,LAGS) returns the covariance matrices
+%   for multisensory least squares (MLS) estimation using time-lagged
+%   features of X. X, Y and Z are matrices or cell arrays containing
+%   corresponding trials of continuous data. LAGS is a vector of time lags
+%   in samples.
 %
-%   [CXX,CXY1,CXY2,XLAG] = MLSCOVMAT(...) returns the time-lagged features
-%   of X used to compute the covariance matrices.
+%   If X, Y or Z are matrices, it is assumed that the rows correspond to
+%   observations and the columns to variables. If they are cell arrays
+%   containing multiple trials, the covariance matrices of each trial are
+%   summed to produce CXX, CXY and CXZ.
 %
-%   [...] = MLSCOVMAT(X,Y,LAGS,TYPE) specifies the type of model that the
+%   [CXX,CXY,CXZ,FOLDS] = OLSCOVMAT(...) returns cell arrays containing the
+%   individual folds in a structure with the following fields:
+%       'xlag'      -- design matrices containing time-lagged features of X
+%       'Cxx'       -- autocovariance matrices of XLAG
+%       'Cxy'       -- cross-covariance matrices of XLAG and Y
+%       'Cxz'       -- cross-covariance matrices of XLAG and Z
+%
+%   [...] = MLSCOVMAT(X,Y,Z,LAGS,TYPE) specifies the type of model that the
 %   covariance matrices will be used to fit. Pass in 'multi' for TYPE to
 %   use all lags simultaneously (default), or 'single' to use each lag
 %   individually.
 %
-%   [...] = MLSCOVMAT(X,Y,LAGS,TYPE,SPLIT) specifies the number of segments
-%   in which to split each trial of data when computing the covariance
-%   matrices. This is useful for reducing memory usage on large datasets.
-%   By default, the entire trial is used.
+%   [...] = MLSCOVMAT(X,Y,Z,LAGS,TYPE,ZEROPAD) specifies whether to zero-
+%   pad the outer rows of the design matrix or delete them. Pass in 1 for
+%   ZEROPAD to zero-pad them (default), or 0 to delete them.
 %
-%   [...] = MLSCOVMAT(X,Y,LAGS,TYPE,SPLIT,ZEROPAD) specifies whether to
-%   zero-pad the outer rows of the design matrix or delete them. Pass in 1
-%   to zero-pad them (default), or 0 to delete them.
-%
-%   [...] = MLSCOVMAT(X,Y,LAGS,TYPE,SPLIT,ZEROPAD,SUMCOV) specifies whether
-%   to sum over the covariance matrices of each trial or return each one in
-%   a separate cell. Pass in 1 to sum them (default), or 0 to return them
-%   separately.
+%   [...] = MLSCOVMAT(X,Y,Z,LAGS,TYPE,ZEROPAD,VERBOSE) specifies whether to
+%   display details about cross-validation progress. Pass in 1 for VERBOSE
+%   to display details (default), or 0 to not display details.
 %
 %   See also COV, LSCOV, OLSCOVMAT.
 %
@@ -41,124 +43,109 @@ function [Cxx,Cxy1,Cxy2,X] = mlscovmat(x,y1,y2,lags,type,split,zeropad,sumcov)
 if nargin < 5 || isempty(type)
     type = 'multi';
 end
-if nargin < 6 || isempty(split)
-    split = 1;
-end
-if nargin < 7 || isempty(zeropad)
+if nargin < 6 || isempty(zeropad)
     zeropad = true;
 end
-if nargin < 8 || isempty(sumcov)
-    sumcov = true;
+if nargin < 7 || isempty(verbose)
+    verbose = true;
 end
 
 % Get dimensions
-[~,xobs,xvar] = formatcells(x,1,0);
-[~,~,y1var] = formatcells(y1,1,0);
-[~,~,y2var] = formatcells(y1,1,0);
-nlag = numel(lags);
-xvar = unique(xvar);
-y1var = unique(y1var);
-y2var = unique(y2var);
-nvar = xvar*nlag;
-ntrial = numel(x);
-nfold = ntrial*split;
-
-% Initialize covariance matrices
-if sumcov
-    switch type
-        case 'multi'
-            Cxx = zeros(nvar+1,nvar+1);
-            Cxy1 = zeros(nvar+1,y1var);
-            Cxy2 = zeros(nvar+1,y2var);
-        case 'single'
-            Cxx = zeros(xvar+1,xvar+1,nlag);
-            Cxy1 = zeros(xvar+1,y1var,nlag);
-            Cxy2 = zeros(xvar+1,y2var,nlag);
-    end
+xvar = size(x{1},2);
+yvar = size(y{1},2);
+nfold = numel(x);
+switch type
+    case 'multi'
+        nvar = xvar*numel(lags)+1;
+        nlag = 1;
+    case 'single'
+        nvar = xvar+1;
+        nlag = numel(lags);
+end
+if nargout > 2
+    ncell = nfold;
 else
-    X = cell(nfold,1);
-    Cxx = cell(nfold,1);
-    Cxy1 = cell(nfold,1);
-    Cxy2 = cell(nfold,1);
+    ncell = 1;
 end
 
-if sumcov % sum over trials
+% Verbose mode
+if verbose
+    fprintf('Computing covariance matrices\n')
+    msg = 'Fold %d/%d [';
+    h = fprintf(msg,0,nfold);
+    tocs = 0; tic
+end
+
+% Initialize variables
+CxxInit = zeros(nvar,nvar,nlag);
+CxyInit = zeros(nvar,yvar,nlag);
+Cxx = CxxInit;
+Cxy = CxyInit;
+Cxz = CxyInit;
+Cxxi = cell(ncell,1);
+Cxyi = cell(ncell,1);
+Cxzi = cell(ncell,1);
+xlag = cell(ncell,1);
+ii = 1;
+
+for i = 1:nfold
     
-    for i = 1:ntrial
+    % Generate design matrix
+    xlag{ii} = lagGen(x{i},lags,zeropad,1);
+    
+    switch type
         
-        % Max segment size
-        seg = ceil(xobs(i)/split);
-        
-        for j = 1:split
-            
-            % Segment indices
-            iseg = seg*(j-1)+1:min(seg*j,xobs(i));
-            
-            % Generate design matrix
-            [X,idx] = lagGen(x{i}(iseg,:),lags,zeropad);
-            X = [ones(numel(idx),1),X]; %#ok<*AGROW>
+        case 'multi'
             
             % Compute covariance matrices
-            switch type
-                case 'multi'
-                    Cxx = Cxx + X'*X;
-                    Cxy1 = Cxy1 + X'*y1{i}(iseg(idx),:);
-                    Cxy2 = Cxy2 + X'*y2{i}(iseg(idx),:);
-                case 'single'
-                    for k = 1:nlag
-                        ilag = [1,xvar*(k-1)+2:xvar*k+1];
-                        Cxx(:,:,k) = Cxx(:,:,k) + ...
-                            X(:,ilag)'*X(:,ilag);
-                        Cxy1(:,:,k) = Cxy1(:,:,k) + ...
-                            X(:,ilag)'*y1{i}(iseg(idx),:);
-                        Cxy2(:,:,k) = Cxy2(:,:,k) + ...
-                            X(:,ilag)'*y2{i}(iseg(idx),:);
-                    end
+            Cxxi{ii} = xlag{ii}'*xlag{ii};
+            Cxyi{ii} = xlag{ii}'*y{i};
+            Cxzi{ii} = xlag{ii}'*z{i};
+            
+        case 'single'
+            
+            % Initialize cells
+            Cxxi{ii} = CxxInit;
+            Cxyi{ii} = CxyInit;
+            Cxzi{ii} = CxyInit;
+            
+            for j = 1:nlag
+                
+                % Index lag
+                idx = [1,xvar*(j-1)+2:xvar*j+1];
+                
+                % Compute covariance matrices
+                Cxxi{ii}(:,:,j) = xlag{ii}(:,idx)'*xlag{ii}(:,idx);
+                Cxyi{ii}(:,:,j) = xlag{ii}(:,idx)'*y{i};
+                Cxzi{ii}(:,:,j) = xlag{ii}(:,idx)'*z{i};
+                
             end
             
-        end
-        
     end
     
-else % keep trials separate
+    % Sum covariance matrices
+    Cxx = Cxx + Cxxi{ii};
+    Cxy = Cxy + Cxyi{ii};
+    Cxz = Cxz + Cxzi{ii};
     
-    n = 0;
-    for i = 1:ntrial
-        
-        % Max segment size
-        seg = ceil(xobs(i)/split);
-        
-        for j = 1:split
-            
-            n = n+1;
-            
-            % Segment indices
-            iseg = seg*(j-1)+1:min(seg*j,xobs(i));
-            
-            % Generate design matrix
-            [X{n},idx] = lagGen(x{i}(iseg,:),lags,zeropad);
-            X{n} = [ones(numel(idx),1),X{n}];
-            
-            % Compute covariance matrices
-            switch type
-                case 'multi'
-                    Cxx{n} = X{n}'*X{n};
-                    Cxy1{n} = X{n}'*y1{i}(iseg(idx),:);
-                    Cxy2{n} = X{n}'*y2{i}(iseg(idx),:);
-                case 'single'
-                    Cxx{n} = zeros(nvar+1,nvar+1,nlag);
-                    Cxy1{n} = zeros(nvar+1,y1var,nlag);
-                    Cxy2{n} = zeros(nvar+1,y2var,nlag);
-                    for k = 1:nlag
-                        ilag = [1,xvar*(k-1)+2:xvar*k+1];
-                        Cxx{n}(:,:,k) = X{n}(:,ilag)'*X{n}(:,ilag);
-                        Cxy1{n}(:,:,k) = X{n}(:,ilag)'*y1{i}(iseg(idx),:);
-                        Cxy2{n}(:,:,k) = X{n}(:,ilag)'*y2{i}(iseg(idx),:);
-                    end
-            end
-            
+    % Verbose mode
+    if verbose
+        fprintf(repmat('\b',1,h))
+        msg = strcat(msg,'=');
+        h = fprintf(msg,i,nfold);
+        tocs = tocs+toc; tic
+        if i == nfold
+            fprintf('] - %.2fs/fold\n',tocs/nfold)
         end
-        
     end
     
+    if nargout > 3
+        ii = ii+1;
+    end
+    
+end
+
+% Format output
+if nargout > 3
+    folds = struct('xlag',{xlag},'Cxx',{Cxxi},'Cxy',{Cxyi},'Cxz',{Cxzi});
 end
