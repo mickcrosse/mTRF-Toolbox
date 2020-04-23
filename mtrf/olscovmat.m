@@ -68,10 +68,7 @@ end
 
 % Verbose mode
 if verbose
-    fprintf('Computing covariance matrices\n')
-    msg = 'Fold %d/%d [';
-    h = fprintf(msg,0,nfold);
-    tocs = 0; tic
+    v = verbosemode(0,nfold);
 end
 
 % Initialize variables
@@ -120,19 +117,13 @@ for i = 1:nfold
     Cxx = Cxx + Cxxi{ii};
     Cxy = Cxy + Cxyi{ii};
     
-    % Verbose mode
-    if verbose
-        fprintf(repmat('\b',1,h))
-        msg = strcat(msg,'=');
-        h = fprintf(msg,i,nfold);
-        tocs = tocs+toc; tic
-        if i == nfold
-            fprintf('] - %.2fs/fold\n',tocs/nfold)
-        end
-    end
-    
     if nargout > 2
         ii = ii+1;
+    end
+    
+    % Verbose mode
+    if verbose
+        v = verbosemode(i,nfold,v);
     end
     
 end
@@ -140,4 +131,30 @@ end
 % Format output
 if nargout > 2
     folds = struct('xlag',{xlag},'Cxx',{Cxxi},'Cxy',{Cxyi});
+end
+
+function v = verbosemode(fold,nfold,v)
+%VERBOSEMODE  Execute verbose mode.
+%   V = VERBOSEMODE(FOLD,NFOLD,V) prints details about the progress of the
+%   main function to the screen.
+
+if fold == 0
+    v = struct('msg',[],'h',[],'tocs',[]);
+    fprintf('Computing covariance matrices\n')
+    v.msg = '%d/%d [';
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = 0; tic
+else
+    if fold == 1 && toc < 0.1
+        pause(0.1)
+    end
+    fprintf(repmat('\b',1,v.h))
+    v.msg = strcat(v.msg,'=');
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = v.tocs + toc;
+    if fold == nfold
+        fprintf('] - %.2fs/step\n',v.tocs/nfold)
+    else
+        tic
+    end
 end
