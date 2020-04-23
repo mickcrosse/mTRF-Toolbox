@@ -1,8 +1,8 @@
 function [r,err] = mTRFevaluate(y,pred,varargin)
 %MTRFEVALUATE  Evaluate the performance of a regression model.
-%   R = MTRFEVALUATE(Y,PRED) returns the correlation between the prediction
-%   of a regression model PRED and the ground truth Y, based on Pearson's
-%   linear correlation coefficient.
+%   R = MTRFEVALUATE(Y,PRED) returns the correlation between the predicted
+%   output of a regression model PRED and the ground truth Y, based on
+%   Pearson's linear correlation coefficient.
 %
 %   If Y or PRED are matrices, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
@@ -10,8 +10,8 @@ function [r,err] = mTRFevaluate(y,pred,varargin)
 %   that the first non-singleton dimension corresponds to observations.
 %   Y and PRED must have the same number of observations.
 %
-%   [R,ERR] = MTRFEVALUATE(Y,PRED) returns the error between the prediction
-%   and the ground truth, based on the mean squared error (MSE).
+%   [R,ERR] = MTRFEVALUATE(Y,PRED) returns the error between the predicted
+%   output and the ground truth, based on the mean squared error (MSE).
 %
 %   [...] = MTRFEVALUATE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -38,7 +38,7 @@ function [r,err] = mTRFevaluate(y,pred,varargin)
 %                   compute performance in samples. By default, the entire
 %                   trial or segment is used.
 %
-%   See also CORR, CORRCOEF, TIEDRANK, MSE, MAE.
+%   See also CORR, CORRCOEF, TIEDRANK, IMMSE, MSE, MAE.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
