@@ -11,7 +11,7 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %       'b'         -- normalized bias term (1-by-nlag-by-yvar)
 %       't'         -- time lags (ms)
 %       'fs'        -- sample rate (Hz)
-%       'dir'       -- direction of causality (forward=1, backward=-1)
+%       'Dir'       -- direction of causality (forward=1, backward=-1)
 %       'type'      -- type of model (multi-lag, single-lag)
 %
 %   If STIM or RESP are matrices, it is assumed that the rows correspond to
@@ -26,10 +26,10 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %
 %   [PRED,STATS] = MTRFPREDICT(...) returns the test statistics in a
 %   structure with the following fields:
-%       'acc'       -- prediction accuracy based on Pearson's correlation
-%                      coefficient (ntrial-by-yvar)
+%       'r'         -- prediction accuracy based on Pearson's correlation
+%                      coefficient (nfold-by-yvar)
 %       'err'       -- prediction error based on the mean squared error
-%                      (ntrial-by-yvar)
+%                      (nfold-by-yvar)
 %
 %   [...] = MTRFPREDICT(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -39,14 +39,14 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %       'dim'       A scalar specifying the dimension to work along: pass
 %                   in 1 to work along the columns (default), or 2 to work
 %                   along the rows. Applies to both STIM and RESP.
-%       'acc'       A string specifying the accuracy metric to use:
+%       'corr'      A string specifying the correlation metric to use:
 %                       'Pearson'   Pearson's linear correlation
 %                                   coefficient (default): suitable for
 %                                   data with a linear relationship
 %                       'Spearman'  Spearman's rank correlation
 %                                   coefficient: suitable for data with a
 %                                   non-linear relationship
-%       'err'       A string specifying the error metric to use:
+%       'error'     A string specifying the error metric to use:
 %                       'msc'       Mean square error (default): take the
 %                                   square root to convert it to the
 %                                   original units of the data (i.e., RMSE)
@@ -59,6 +59,9 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
+%       'verbose'   A numeric or logical specifying whether to display
+%                   details about testing progress: pass in 1 to display
+%                   details (default), or 0 to not display details.
 %
 %   See also PREDICT, CORR, MSE, MAE, MTRFCROSSVAL.
 %
@@ -83,15 +86,15 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 arg = parsevarargin(varargin);
 
 % Define X and Y variables
-if model.dir == 1
+if model.Dir == 1
     x = stim; y = resp;
-elseif model.dir == -1
+elseif model.Dir == -1
     x = resp; y = stim;
 end
 
 % Format data in cell arrays
-[x,xobs,xvar] = formatcells(x,arg.dim);
-[y,yobs,yvar] = formatcells(y,arg.dim);
+[x,xobs,xvar] = formatcells(x,arg.dim,arg.split);
+[y,yobs,yvar] = formatcells(y,arg.dim,arg.split);
 if isempty(y)
     yobs = xobs;
     yvar = size(model.w,3);
@@ -107,90 +110,139 @@ end
 tmin = model.t(1)*model.fs/1e3;
 tmax = model.t(end)*model.fs/1e3;
 lags = tmin:tmax;
+arg.window = round(arg.window*model.fs);
 
 % Compute sampling interval
 delta = 1/model.fs;
 
 % Get dimensions
-nlag = numel(lags);
 xvar = unique(xvar);
 yvar = unique(yvar);
-ntrial = numel(x);
+nfold = numel(x);
+switch model.type
+    case 'multi'
+        nlag = 1;
+    case 'single'
+        nlag = numel(lags);
+end
+
+% Truncate output
+if ~arg.zeropad && ~isempty(y)
+    [y,yobs] = truncate(y,tmin,tmax,yobs);
+end
+if arg.window
+    nwin = sum(floor(yobs/arg.window));
+else
+    nwin = nfold;
+end
+
+% Verbose mode
+if arg.verbose
+    fprintf('\nTesting\n')
+    fprintf('-------\n')
+end
 
 % Format model weights
 switch model.type
     case 'multi'
-        model.w = [model.b;reshape(model.w,[xvar*nlag,yvar])]*delta;
-        nlag = 1;
+        model.w = [model.b;reshape(model.w,[xvar*numel(lags),yvar])]*delta;
     case 'single'
         model.w = [model.b;model.w]*delta;
 end
 
-% Initialize performance variables
-pred = cell(ntrial*arg.split,1);
-acc = zeros(ntrial*arg.split,yvar,nlag);
-err = zeros(ntrial*arg.split,yvar,nlag);
+% Verbose mode
+if arg.verbose
+    fprintf('Predicting output\n')
+    msg = 'Fold %d/%d [';
+    h = fprintf('Fold 0/%d [',nfold);
+    tocs = 0; tic
+end
+
+% Initialize variables
+pred = cell(nfold,1);
+r = zeros(nwin,yvar,nlag);
+err = zeros(nwin,yvar,nlag);
+ii = 0;
 
 % Test model
-n = 0;
-for i = 1:ntrial
+for i = 1:nfold
     
-    % Max segment size
-    nseg = ceil(xobs(i)/arg.split);
+    if arg.window
+        ii = ii(end)+1:ii(end)+floor(yobs(i)/arg.window);
+    else
+        ii = i;
+    end
     
-    for j = 1:arg.split
+    % Test set
+    xlag = lagGen(x{i},lags,arg.zeropad,1);
+    
+    switch model.type
         
-        n = n+1;
-        
-        % Test data
-        iseg = nseg*(j-1)+1:min(nseg*j,xobs(i));
-        [xlag,idx] = lagGen(x{i}(iseg,:),lags,arg.zeropad);
-        xlag = [ones(numel(idx),1),xlag]; %#ok<*AGROW>
-        
-        switch model.type
+        case 'multi'
             
-            case 'multi'
-                
-                % Predict output
-                pred{n} = xlag*model.w;
+            % Predict output
+            pred{i} = xlag*model.w;
+            
+            if nargout > 1 && ~isempty(y)
                 
                 % Evaluate performance
-                if nargout > 1
-                    [acc(n,:),err(n,:)] = mTRFevaluate(y{i}(idx,:),...
-                        pred{n},'acc',arg.acc,'err',arg.err);
-                end
+                [r(ii,:),err(ii,:)] = mTRFevaluate(y{i},pred{i},...
+                    'corr',arg.corr,'error',arg.error,...
+                    'window',arg.window);
                 
-            case 'single'
+            end
+            
+        case 'single'
+            
+            % Initialize cell
+            pred{i} = zeros(yobs(i),yvar,nlag);
+            
+            for j = 1:nlag
                 
-                pred{n} = zeros(numel(idx),yvar,nlag);
+                % Index lag
+                idx = [1,xvar*(j-1)+2:xvar*j+1];
                 
-                for k = 1:nlag
-                    
-                    % Predict output
-                    ilag = [1,xvar*(k-1)+2:xvar*k+1];
-                    pred{n}(:,:,k) = xlag(:,ilag)*squeeze(model.w(:,k,:));
+                % Predict output
+                pred{i}(:,:,j) = xlag(:,idx)*squeeze(model.w(:,j,:));
+                
+                if nargout > 1 && ~isempty(y)
                     
                     % Evaluate performance
-                    if nargout > 1
-                        [acc(n,:,k),err(n,:,k)] = ...
-                            mTRFevaluate(y{i}(idx,:),pred{n}(:,:,k),...
-                            'acc',arg.acc,'err',arg.err);
-                    end
+                    [r(ii,:,j),err(ii,:,j)] = ...
+                        mTRFevaluate(y{i},pred{i}(:,:,j),...
+                        'corr',arg.corr,'error',arg.error,...
+                        'window',arg.window);
                     
                 end
                 
+            end
+            
+    end
+    
+    % Verbose mode
+    if arg.verbose
+        fprintf(repmat('\b',1,h))
+        msg = strcat(msg,'=');
+        h = fprintf(msg,i,nfold);
+        tocs = tocs+toc; tic
+        if i == nfold
+            fprintf('] - %.2fs/fold\n',tocs/nfold)
+            if nargout > 1 && ~isempty(y)
+                ravg = max(max(max(mean(r,1))));
+                erravg = min(min(min(mean(err,1))));
+                fprintf('correlation: %.4f - error: %.4f\n',ravg,erravg)
+            end
         end
-        
     end
     
 end
 
 % Format output arguments
-if ntrial == 1
-    pred = pred{:};
+if nfold == 1
+    pred = pred{1};
 end
 if nargout > 1
-    stats = struct('acc',acc,'err',err);
+    stats = struct('r',r,'err',err);
 end
 
 function arg = parsevarargin(varargin)
@@ -206,31 +258,36 @@ errorMsg = 'It must be a positive integer scalar within indexing range.';
 validFcn = @(x) assert(x==1||x==2,errorMsg);
 addParameter(p,'dim',1,validFcn);
 
-% Accuracy metric
-accOptions = {'Pearson','Spearman'};
-validFcn = @(x) any(validatestring(x,accOptions));
-addParameter(p,'acc','Pearson',validFcn);
+% Correlation metric
+corrOptions = {'Pearson','Spearman'};
+validFcn = @(x) any(validatestring(x,corrOptions));
+addParameter(p,'corr','Pearson',validFcn);
 
 % Error metric
 errOptions = {'mse','mae'};
 validFcn = @(x) any(validatestring(x,errOptions));
-addParameter(p,'err','mse',validFcn);
+addParameter(p,'error','mse',validFcn);
 
 % Split data
 errorMsg = 'It must be a positive integer scalar.';
 validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
 addParameter(p,'split',1,validFcn);
 
+% Window size
+errorMsg = 'It must be a positive numeric scalar within indexing range.';
+validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
+addParameter(p,'window',0,validFcn);
+
 % Boolean arguments
 errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
-addParameter(p,'gpu',false,validFcn); % run on GPU
+addParameter(p,'verbose',true,validFcn); % print progress
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
 arg = p.Results;
 
 % Redefine partially-matched strings
-arg.acc = validatestring(arg.acc,accOptions);
-arg.err = validatestring(arg.err,errOptions);
+arg.corr = validatestring(arg.corr,corrOptions);
+arg.error = validatestring(arg.error,errOptions);
