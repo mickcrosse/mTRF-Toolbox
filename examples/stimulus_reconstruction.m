@@ -63,7 +63,7 @@ cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambdas,...
 % ---Model training---
 
 % Get optimal hyperparameters
-[rmax,idx] = max(mean(cv.acc));
+[rmax,idx] = max(mean(cv.r));
 lambda = lambdas(idx);
 
 % Train model
@@ -77,13 +77,13 @@ model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
 
 % ---Evaluation---
 
-% Plot CV accuracy
+% Plot CV correlation
 figure
 subplot(2,2,1)
-errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),'linewidth',2)
+errorbar(1:nlambda,mean(cv.r),std(cv.r)/sqrt(nfold-1),'linewidth',2)
 set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1])
-title('CV Accuracy')
-xlabel('Lambda (1\times10^\lambda)')
+title('CV Performance')
+xlabel('Reg. (1\times10^\lambda)')
 ylabel('Correlation')
 axis square, grid on
 
@@ -92,7 +92,7 @@ subplot(2,2,2)
 errorbar(1:nlambda,mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
 set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1])
 title('CV Error')
-xlabel('Lambda (1\times10^\lambda)')
+xlabel('Reg. (1\times10^\lambda)')
 ylabel('MSE')
 axis square, grid on
 
@@ -107,12 +107,12 @@ ylabel('Amplitude (a.u.)')
 axis square, grid on
 legend('Orig','Pred')
 
-% Plot test accuracy
+% Plot test correlation
 subplot(2,2,4)
 bar(1,rmax), hold on
-bar(2,test.acc), hold off
-set(gca,'xtick',1:2,'xticklabel',{'CV','Test'})
-title('Test Result')
-xlabel('Metric')
+bar(2,test.r), hold off
+set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'})
+title('Performance')
+xlabel('Dataset')
 ylabel('Correlation')
 axis square, grid on
