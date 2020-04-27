@@ -59,9 +59,9 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
-%       'verbose'   A numeric or logical specifying whether to display
-%                   details about testing progress: pass in 1 to display
-%                   details (default), or 0 to not display details.
+%       'verbose'   A numeric or logical specifying whether to execute in
+%                   verbose mode: pass in 1 for verbose mode (default), or
+%                   0 for non-verbose mode.
 %
 %   See also PREDICT, CORR, MSE, MAE, MTRFCROSSVAL.
 %
@@ -138,8 +138,7 @@ end
 
 % Verbose mode
 if arg.verbose
-    fprintf('\nTesting\n')
-    fprintf('-------\n')
+    v = verbosemode([],sum(yobs),0,nfold);
 end
 
 % Format model weights
@@ -150,18 +149,12 @@ switch model.type
         model.w = [model.b;model.w]*delta;
 end
 
-% Verbose mode
-if arg.verbose
-    fprintf('Predicting output\n')
-    msg = 'Fold %d/%d [';
-    h = fprintf('Fold 0/%d [',nfold);
-    tocs = 0; tic
-end
-
 % Initialize variables
 pred = cell(nfold,1);
-r = zeros(nwin,yvar,nlag);
-err = zeros(nwin,yvar,nlag);
+if nargout > 1 && ~isempty(y)
+    r = zeros(nwin,yvar,nlag);
+    err = zeros(nwin,yvar,nlag);
+end
 ii = 0;
 
 % Test model
@@ -221,18 +214,7 @@ for i = 1:nfold
     
     % Verbose mode
     if arg.verbose
-        fprintf(repmat('\b',1,h))
-        msg = strcat(msg,'=');
-        h = fprintf(msg,i,nfold);
-        tocs = tocs+toc; tic
-        if i == nfold
-            fprintf('] - %.2fs/fold\n',tocs/nfold)
-            if nargout > 1 && ~isempty(y)
-                ravg = max(max(max(mean(r,1))));
-                erravg = min(min(min(mean(err,1))));
-                fprintf('correlation: %.4f - error: %.4f\n',ravg,erravg)
-            end
-        end
+        v = verbosemode(v,[],i,nfold);
     end
     
 end
@@ -241,8 +223,46 @@ end
 if nfold == 1
     pred = pred{1};
 end
-if nargout > 1
+if nargout > 1 && ~isempty(y)
+    
     stats = struct('r',r,'err',err);
+    
+    % Verbose mode
+    if arg.verbose
+        verbosemode(v,[],i+1,nfold,stats);
+    end
+    
+end
+
+function v = verbosemode(v,nobs,fold,nfold,stats)
+%VERBOSEMODE  Execute verbose mode.
+%   V = VERBOSEMODE(V,NOBS,FOLD,NFOLD,STATS) prints details about the
+%   progress of the main function to the screen.
+
+if fold == 0
+    v = struct('msg',[],'h',[],'tocs',[]);
+    fprintf('\nTest on %d samples\n',nobs)
+    fprintf('Computing prediction\n')
+    v.msg = '%d/%d [';
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = 0; tic
+elseif fold <= nfold
+    if fold == 1 && toc < 0.1
+        pause(0.1)
+    end
+    fprintf(repmat('\b',1,v.h))
+    v.msg = strcat(v.msg,'=');
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = v.tocs + toc;
+    if fold == nfold
+        fprintf('] - %.3fs/step\n',v.tocs/nfold)
+    else
+        tic
+    end
+else
+    rmax = mean(stats.r,1); rmax = max(rmax(:));
+    emax = mean(stats.err,1); emax = max(emax(:));
+    fprintf('val_correlation: %.4f - val_error: %.4f\n\n',rmax,emax)
 end
 
 function arg = parsevarargin(varargin)
@@ -282,7 +302,7 @@ addParameter(p,'window',0,validFcn);
 errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
-addParameter(p,'verbose',true,validFcn); % print progress
+addParameter(p,'verbose',true,validFcn); % verbose mode
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
