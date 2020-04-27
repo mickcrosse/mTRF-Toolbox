@@ -33,40 +33,40 @@ elseif model.Dir == -1
 end
 
 % Print table
-for i = 1:50, fprintf('_'), end, fprintf('\n')
-fprintf('Param\t\t\tOutput Shape\t\t\tParam #\n')
-for i = 1:50, fprintf('='), end, fprintf('\n')
+for i = 1:52, fprintf('_'), end, fprintf('\n')
+fprintf('Param (type)\t\tOutput Shape\t\t\tParam #\n')
+for i = 1:52, fprintf('='), end, fprintf('\n')
 if isfield(model,'b')
     if b3 > 1
         if lb < 6
-            fprintf('bias\t\t\t(%d, %d, %d)\t\t\t\t%d\n',b1,b2,b3,nb)
+            fprintf('bias\t\t\t\t(%d, %d, %d)\t\t\t\t%d\n',b1,b2,b3,nb)
         else
-            fprintf('bias\t\t\t(%d, %d, %d)\t\t\t%d\n',b1,b2,b3,nb)
+            fprintf('bias\t\t\t\t(%d, %d, %d)\t\t\t%d\n',b1,b2,b3,nb)
         end
     else
         if lb < 4
-            fprintf('bias\t\t\t(%d, %d)\t\t\t\t\t%d\n',b1,b2,nb)
+            fprintf('bias\t\t\t\t(%d, %d)\t\t\t\t\t%d\n',b1,b2,nb)
         else
-            fprintf('bias\t\t\t(%d, %d)\t\t\t\t%d\n',b1,b2,nb)
+            fprintf('bias\t\t\t\t(%d, %d)\t\t\t\t%d\n',b1,b2,nb)
         end
     end
-    for i = 1:50, fprintf('_'), end, fprintf('\n\n')
+    for i = 1:52, fprintf('_'), end, fprintf('\n\n')
 end
 if w3 > 1
     if lw < 6
-        fprintf('weights\t\t\t(%d, %d, %d)\t\t\t\t%d\n',w1,w2,w3,nw)
+        fprintf('weights\t\t\t\t(%d, %d, %d)\t\t\t\t%d\n',w1,w2,w3,nw)
     else
-        fprintf('weights\t\t\t(%d, %d, %d)\t\t\t%d\n',w1,w2,w3,nw)
+        fprintf('weights\t\t\t\t(%d, %d, %d)\t\t\t%d\n',w1,w2,w3,nw)
     end
 else
     if lw < 4
-        fprintf('weights\t\t\t(%d, %d)\t\t\t\t\t%d\n',w1,w2,nw)
+        fprintf('weights\t\t\t\t(%d, %d)\t\t\t\t\t%d\n',w1,w2,nw)
     else
-        fprintf('weights\t\t\t(%d, %d)\t\t\t\t%d\n',w1,w2,nw)
+        fprintf('weights\t\t\t\t(%d, %d)\t\t\t\t%d\n',w1,w2,nw)
     end
 end
-for i = 1:50, fprintf('='), end, fprintf('\n')
+for i = 1:52, fprintf('='), end, fprintf('\n')
 fprintf('Total params: %d\n',nw+nb+ntparams)
 fprintf('Trainable params: %d\n',nw+nb)
 fprintf('Non-trainable params: %d\n',ntparams)
-for i = 1:50, fprintf('_'), end, fprintf('\n\n')
+for i = 1:52, fprintf('_'), end, fprintf('\n\n')
