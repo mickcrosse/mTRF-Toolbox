@@ -64,7 +64,7 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,Dir,tmin
 %                                   multivariate input features
 %                       'ols'       ordinary least squares: equivalent to
 %                                   setting LAMBDA=0 (no regularization)
-%       'type'      A string specifying type of model to fit:
+%       'type'      A string specifying the type of model to fit:
 %                       'multi'     use all lags simultaneously to fit a
 %                                   multi-lag model (default)
 %                       'single'    use each lag individually to fit
@@ -97,24 +97,22 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,Dir,tmin
 %                   slower method (requires less memory): pass in 1 to use
 %                   the fast method (default), or 0 to use the slower
 %                   method. Note, both methods are numerically equivalent.
-%       'verbose'   A numeric or logical specifying whether to display
-%                   details about cross-validation progress: pass in 1 to
-%                   display details (default), or 0 to not display details.
+%       'verbose'   A numeric or logical specifying whether to execute in
+%                   verbose mode: pass in 1 for verbose mode (default), or
+%                   0 for non-verbose mode.
 %
 %   Notes:
 %   Each iteration of MTRFATTNCROSSVAL partitions the N trials or segments
 %   of data into two subsets, fitting a model to N-1 trials (training set)
 %   and validating it on the left-out trial (validation set). Performance
 %   on the validation set can be used to optimize hyperparameters (e.g.,
-%   LAMBDA). Once completed, it is recommended to test the model on
-%   separate held-out data using the mTRFpredict function.
+%   LAMBDA, TMAX). Once completed, it is recommended to evaluate model
+%   performance on separate held-out data using the mTRFpredict function.
 %
 %   Discontinuous trials of data should not be concatenated prior to cross-
 %   validation, as this will introduce artifacts in places where the
 %   temporal integration window crosses over trial boundaries. Each trial
-%   of continuous data should be input as a separate cell and
-%   MTRFATTNCROSSVAL zero-pads or truncates the trial boundaries
-%   appropriately.
+%   of continuous data should be input as a separate cell.
 %
 %   See also CROSSVAL, DPRIME, MTRFPARTITION, MTRFTRAIN, MTRFPREDICT.
 %
@@ -198,8 +196,7 @@ end
 
 % Verbose mode
 if arg.verbose
-    fprintf('\nCross validation\n')
-    fprintf('----------------\n')
+    v = verbosemode([],[],nfold);
 end
 
 % Compute covariance matrices
@@ -207,6 +204,11 @@ if arg.fast
     [Cxx,Cxy,folds] = olscovmat(x,y,lags,arg.type,arg.zeropad,arg.verbose);
 else
     [Cxx,Cxy] = olscovmat(x,y,lags,arg.type,arg.zeropad,arg.verbose);
+end
+
+% Verbose mode
+if arg.verbose
+    v = verbosemode(v,0,nfold);
 end
 
 % Set up sparse regularization matrix
@@ -218,14 +220,6 @@ err1 = zeros(nwin,nreg,yvar,nlag);
 r2 = zeros(nwin,nreg,yvar,nlag);
 err2 = zeros(nwin,nreg,yvar,nlag);
 ii = 0;
-
-% Verbose mode
-if arg.verbose
-    fprintf('Validating model\n')
-    msg = 'Fold %d/%d [';
-    h = fprintf('Fold 0/%d [',nfold);
-    tocs = 0; tic
-end
 
 % Leave-one-out cross-validation
 for i = 1:nfold
@@ -353,19 +347,7 @@ for i = 1:nfold
     
     % Verbose mode
     if arg.verbose
-        fprintf(repmat('\b',1,h))
-        msg = strcat(msg,'=');
-        h = fprintf(msg,i,nfold);
-        tocs = tocs+toc; tic
-        if i == nfold
-            fprintf('] - %.2fs/fold\n',tocs/nfold)
-            ravg = max(max(max(mean(r1,1))));
-            erravg = min(min(min(mean(err1,1))));
-            fprintf('STIM1: correlation: %.4f - error: %.4f\n',ravg,erravg)
-            ravg = max(max(max(mean(r2,1))));
-            erravg = min(min(min(mean(err2,1))));
-            fprintf('STIM2: correlation: %.4f - error: %.4f\n',ravg,erravg)
-        end
+        v = verbosemode(v,i,nfold);
     end
     
 end
@@ -373,19 +355,54 @@ end
 % Compute decoding accuracy and d'
 [acc,d] = mTRFattnevaluate(r1,r2);
 
-% Print progress
-if arg.verbose
-    accavg = max(max(max(acc)));
-    davg = max(max(max(d)));
-    fprintf('accuracy: %.4f - d'': %.4f\n',accavg,davg)
-end
-
 % Format output arguments
 stats = struct('acc',acc,'d',d);
 stats1 = struct('r',r1,'err',err1);
 stats2 = struct('r',r2,'err',err2);
 if nargout > 3
     t = lags/fs*1e3;
+end
+
+% Verbose mode
+if arg.verbose
+    verbosemode(v,i+1,nfold,stats,stats1,stats2);
+end
+
+function v = verbosemode(v,fold,nfold,stats,stats1,stats2)
+%VERBOSEMODE  Execute verbose mode.
+%   V = VERBOSEMODE(V,FOLD,NFOLD,STATS,STATS1,STATS2) prints details about
+%   the progress of the main function to the screen.
+
+if isempty(fold)
+    v = struct('msg',[],'h',[],'tocs',[]);
+    fprintf('\nTrain on %d folds, validate on 1 fold\n',nfold-1)
+elseif fold == 0
+    fprintf('Validating model\n')
+    v.msg = '%d/%d [';
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = 0; tic
+elseif fold <= nfold
+    if fold == 1 && toc < 0.1
+        pause(0.1)
+    end
+    fprintf(repmat('\b',1,v.h))
+    v.msg = strcat(v.msg,'=');
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = v.tocs + toc;
+    if fold == nfold
+        fprintf('] - %.3fs/step\n',v.tocs/nfold)
+    else
+        tic
+    end
+else
+    rmax = mean(stats1.r,1); rmax = max(rmax(:));
+    emax = mean(stats1.err,1); emax = max(emax(:));
+    fprintf('STIM1 - val_correlation: %.4f - val_error: %.4f\n',rmax,emax)
+    rmax = mean(stats2.r,1); rmax = max(rmax(:));
+    emax = mean(stats2.err,1); emax = max(emax(:));
+    fprintf('STIM2 - val_correlation: %.4f - val_error: %.4f\n',rmax,emax)
+    amax = max(stats.acc(:)); dmax = max(stats.d(:));
+    fprintf('S1vS2 - val_accuracy: %.4f - val_d'': %.4f\n\n',amax,dmax)
 end
 
 function validateparamin(fs,Dir,tmin,tmax,lambda)
@@ -453,7 +470,7 @@ errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
 addParameter(p,'fast',true,validFcn); % fast CV method
-addParameter(p,'verbose',true,validFcn); % print progress
+addParameter(p,'verbose',true,validFcn); % verbose mode
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
