@@ -43,16 +43,15 @@ resp = resample(resp,fsNew,fs);
 fs = fsNew;
 
 % Model parameters
-dir = -1;
 tmin = -150;
 tmax = 450;
 lambda = 256;
 
 % Compute backward model weights
-bmodel = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,'zeropad',0);
+bmodel = mTRFtrain(stim,resp,fs,-1,tmin,tmax,lambda,'split',5,'zeropad',0);
 
 % Transform to forward model weights
-fmodel = mTRFtransform(bmodel,resp,'zeropad',0);
+fmodel = mTRFtransform(bmodel,resp,'split',5,'zeropad',0);
 
 % Define ROI
 chan = 85; % channel Fz
