@@ -42,20 +42,17 @@ stim = resample(stim,fsNew,fs);
 resp = resample(resp,fsNew,fs);
 fs = fsNew;
 
-% ---Cross-validation---
-
 % Generate training/test sets
 nfold = 10;
 [stimtrain,resptrain] = mTRFpartition(stim,resp,nfold);
 
 % Model hyperparameters
-dir = -1;
 tmin = 0;
 tmax = 1000;
 lambda = 10.^-2;
 
 % Run single-lag cross-validation
-[stats,t] = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,...
+[stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,tmin,tmax,...
     lambda,'type','single','zeropad',0);
 
 % Compute mean and variance
