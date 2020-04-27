@@ -1,8 +1,8 @@
 function plot_speech_strf
 %PLOT_SPEECH_STRF  Plot example speech STRF.
-%   PLOT_SPEECH_STRF loads an example dataset and estimates and plots a
-%   speech STRF and the global field power (GFP) from 2 minutes of
-%   128-channel EEG data as per Di Liberto et al. (2015).
+%   PLOT_SPEECH_STRF loads an example dataset, estimates and plots a speech
+%   STRF and the global field power (GFP) from 2 minutes of 128-channel EEG
+%   data as per Di Liberto et al. (2015).
 %
 %   Example data is loaded from SPEECH_DATA.MAT and consists of the
 %   following variables:
@@ -34,16 +34,15 @@ load('data/speech_data.mat','stim','resp','fs','factor');
 resp = resp*factor;
 
 % Model hyperparameters
-dir = 1;
 tmin = -100;
 tmax = 400;
 lambda = 0.5;
 
 % Compute model weights
-% Note, uses ridge regression instead of Tikhonov regularization due to
-% multivariate input features (i.e., spectrogram)
-model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,'method','ridge',...
-    'zeropad',0);
+% Note, ridge regression is used instead of Tikhonov regularization to
+% avoid cross-channel leakage of the multivariate input features
+model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','ridge',...
+    'split',5,'zeropad',0);
 
 % Get STRF and GFP
 strf = squeeze(model.w);
