@@ -26,8 +26,8 @@ function [Cxx,Cxy,folds] = olscovmat(x,y,lags,type,zeropad,verbose)
 %   ZEROPAD to zero-pad them (default), or 0 to delete them.
 %
 %   [...] = OLSCOVMAT(X,Y,LAGS,TYPE,ZEROPAD,VERBOSE) specifies whether to
-%   display details about cross-validation progress. Pass in 1 for VERBOSE
-%   to display details (default), or 0 to not display details.
+%   execute in verbose mode. Pass in 1 for VERBOSE to execute in verbose
+%   mode (default), or 0 to execute in non-verbose mode.
 %
 %   See also COV, LSCOV, MLSCOVMAT.
 %
@@ -68,7 +68,7 @@ end
 
 % Verbose mode
 if verbose
-    v = verbosemode(0,nfold);
+    v = verbosemode([],0,nfold);
 end
 
 % Initialize variables
@@ -123,7 +123,7 @@ for i = 1:nfold
     
     % Verbose mode
     if verbose
-        v = verbosemode(i,nfold,v);
+        v = verbosemode(v,i,nfold);
     end
     
 end
@@ -133,9 +133,9 @@ if nargout > 2
     folds = struct('xlag',{xlag},'Cxx',{Cxxi},'Cxy',{Cxyi});
 end
 
-function v = verbosemode(fold,nfold,v)
+function v = verbosemode(v,fold,nfold)
 %VERBOSEMODE  Execute verbose mode.
-%   V = VERBOSEMODE(FOLD,NFOLD,V) prints details about the progress of the
+%   V = VERBOSEMODE(V,FOLD,NFOLD) prints details about the progress of the
 %   main function to the screen.
 
 if fold == 0
@@ -153,7 +153,7 @@ else
     v.h = fprintf(v.msg,fold,nfold);
     v.tocs = v.tocs + toc;
     if fold == nfold
-        fprintf('] - %.2fs/step\n',v.tocs/nfold)
+        fprintf('] - %.3fs/step\n',v.tocs/nfold)
     else
         tic
     end
