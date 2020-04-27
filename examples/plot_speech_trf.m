@@ -1,8 +1,8 @@
 function plot_speech_trf
 %PLOT_SPEECH_TRF  Plot example speech TRF.
-%   PLOT_SPEECH_TRF loads an example dataset and estimates and plots a
-%   speech TRF and the global field power (GFP) from 2 minutes of
-%   128-channel EEG data as per Lalor and Foxe (2010).
+%   PLOT_SPEECH_TRF loads an example dataset, estimates and plots a speech
+%   TRF and the global field power (GFP) from 2 minutes of 128-channel EEG
+%   data as per Lalor and Foxe (2010).
 %
 %   Example data is loaded from SPEECH_DATA.MAT and consists of the
 %   following variables:
@@ -35,14 +35,13 @@ stim = sum(stim,2);
 resp = resp*factor;
 
 % Model hyperparameters
-dir = 1;
 tmin = -100;
 tmax = 400;
 lambda = 0.05;
 
 % Compute model weights
-model = mTRFtrain(stim,resp,fs,dir,tmin,tmax,lambda,'method','Tikhonov',...
-    'zeropad',0);
+model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','Tikhonov',...
+    'split',5,'zeropad',0);
 
 % Get TRF and GFP
 trf = squeeze(model.w);
