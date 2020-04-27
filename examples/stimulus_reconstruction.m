@@ -50,14 +50,12 @@ testfold = 1;
     testfold);
 
 % Model hyperparameters
-dir = -1;
 tmin = 0;
 tmax = 250;
 lambdas = 10.^(-6:2:6);
-nlambda = length(lambdas);
 
 % Run fast cross-validation
-cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambdas,...
+cv = mTRFcrossval(stimtrain,resptrain,fs,-1,tmin,tmax,lambdas,...
     'zeropad',0,'fast',1);
 
 % ---Model training---
@@ -65,10 +63,10 @@ cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambdas,...
 % Get optimal hyperparameters
 [rmax,idx] = max(mean(cv.r));
 lambda = lambdas(idx);
+nlambda = length(lambdas);
 
 % Train model
-model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,...
-    'zeropad',0);
+model = mTRFtrain(stimtrain,resptrain,fs,-1,tmin,tmax,lambda,'zeropad',0);
 
 % ---Model testing---
 
@@ -82,8 +80,8 @@ figure
 subplot(2,2,1)
 errorbar(1:nlambda,mean(cv.r),std(cv.r)/sqrt(nfold-1),'linewidth',2)
 set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1])
-title('CV Performance')
-xlabel('Reg. (1\times10^\lambda)')
+title('CV Accuracy')
+xlabel('Regularization (1\times10^\lambda)')
 ylabel('Correlation')
 axis square, grid on
 
@@ -92,7 +90,7 @@ subplot(2,2,2)
 errorbar(1:nlambda,mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
 set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1])
 title('CV Error')
-xlabel('Reg. (1\times10^\lambda)')
+xlabel('Regularization (1\times10^\lambda)')
 ylabel('MSE')
 axis square, grid on
 
