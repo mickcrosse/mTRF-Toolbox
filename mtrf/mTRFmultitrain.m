@@ -56,7 +56,7 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,Dir,tmin,tmax,lambda,varargi
 %                                   multivariate input features
 %                       'ols'       ordinary least squares: equivalent to
 %                                   setting LAMBDA=0 (no regularization)
-%       'type'      A string specifying type of model to fit:
+%       'type'      A string specifying the type of model to fit:
 %                       'multi'     use all lags simultaneously to fit a
 %                                   multi-lag model (default)
 %                       'single'    use each lag individually to fit
@@ -68,9 +68,9 @@ function model = mTRFmultitrain(stim,resp1,resp2,fs,Dir,tmin,tmax,lambda,varargi
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
-%       'verbose'   A numeric or logical specifying whether to display
-%                   details about training progress: pass in 1 to display
-%                   details (default), or 0 to not display details.
+%       'verbose'   A numeric or logical specifying whether to execute in
+%                   verbose mode: pass in 1 for verbose mode (default), or
+%                   0 for non-verbose mode.
 %
 %   See also RIDGE, REGRESS, MTRFTRANSFORM, MTRFMULTICROSSVAL.
 %
@@ -126,6 +126,11 @@ if ~isequal(zvar1,zvar2)
         'variables.'])
 end
 
+% Verbose mode
+if arg.verbose
+    v = verbosemode(1,sum(zobs1));
+end
+
 % Convert time lags to samples
 tmin = floor(tmin/1e3*fs*Dir);
 tmax = ceil(tmax/1e3*fs*Dir);
@@ -150,18 +155,17 @@ switch arg.type
         nvar = xvar+1;
 end
 
-% Verbose mode
-if arg.verbose
-    fprintf('\nTraining\n')
-    fprintf('--------\n')
-end
-
 % Compute covariance matrices
 if Dir == 1
     [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.zeropad);
 elseif Dir == -1
     [Cxx1,Cxy1] = olscovmat(z1,y,lags,arg.type,arg.zeropad);
     [Cxx2,Cxy2] = olscovmat(z2,y,lags,arg.type,arg.zeropad);
+end
+
+% Verbose mode
+if arg.verbose
+    v = verbosemode(v);
 end
 
 % Sum covariances for additive model
@@ -175,11 +179,6 @@ end
 
 % Set up sparse regularization matrix
 M = regmat(nvar,arg.method)*lambda/delta;
-
-% Verbose mode
-if arg.verbose
-    fprintf('Fitting model\n'); tic
-end
 
 % Fit linear model
 switch arg.type
@@ -198,9 +197,24 @@ model = struct('w',reshape(w(2:end,:,:),[xvar,nlag,yvar]),'b',w(1,:,:),...
 
 % Verbose mode
 if arg.verbose
-    fprintf('model shape: %d x %d x %d - %.2fs\n',size(model.w,1),...
-        size(model.w,2),size(model.w,3),toc)
+    verbosemode(v,[],model);
 end
+
+function v = verbosemode(v,nobs,model)
+%VERBOSEMODE  Execute verbose mode.
+%   V = VERBOSEMODE(V,NOBS,MODEL) prints details about the progress of the
+%   main function to the screen.
+
+if v == 1
+    fprintf('\nTrain on %d samples\n',nobs)
+elseif v == 2
+    fprintf('Computing model'); tic
+elseif v == 3
+    fprintf(' - %.3fs\n',toc)
+    modelsummary(model)
+end
+
+v = v+1;
 
 function validateparamin(fs,Dir,tmin,tmax,lambda)
 %VALIDATEPARAMIN  Validate input parameters.
@@ -251,7 +265,7 @@ addParameter(p,'split',1,validFcn);
 errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
-addParameter(p,'verbose',true,validFcn); % print progress
+addParameter(p,'verbose',true,validFcn); % verbose mode
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
