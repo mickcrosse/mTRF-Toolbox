@@ -31,26 +31,30 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %       'dim'       A scalar specifying the dimension to work along: pass
 %                   in 1 to work along the columns (default) or 2 to work
 %                   along the rows.
+%       'split'     A scalar specifying the number of segments in which to
+%                   split each trial of data when computing the covariance
+%                   matrices. This is useful for reducing memory usage on
+%                   large datasets. By default, the entire trial is used.
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.
-%       'verbose'   A numeric or logical specifying whether to display
-%                   details about transformation progress: pass in 1 to
-%                   display details (default), or 0 to not display details.
+%       'verbose'   A numeric or logical specifying whether to execute in
+%                   verbose mode: pass in 1 for verbose mode (default), or
+%                   0 for non-verbose mode.
 %
 %   See also MTRFTRAIN, MTRFMULTITRAIN.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
 %   References:
-%      [1] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
-%          multivariate temporal response function (mTRF) toolbox: a MATLAB
-%          toolbox for relating neural signals to continuous stimuli. Front
-%          Hum Neurosci 10:604.
-%      [2] Haufe S, Meinecke F, Gorgen K, Dahne S, Haynes JD, Blankertz B,
+%      [1] Haufe S, Meinecke F, Gorgen K, Dahne S, Haynes JD, Blankertz B,
 %          Bieﬂmann F (2014) On the interpretation of weight vectors of
 %          linear models in multivariate neuroimaging. NeuroImage
 %          87:96-110.
+%      [2] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
 
 %   Authors: Adam Bednar <bednara@tcd.ie>
 %            Emily Teoh <teohe@tcd.ie>
@@ -62,14 +66,12 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 arg = parsevarargin(varargin);
 
 % Format data in cell arrays
-resp = formatcells(resp,arg.dim);
+[resp,nobs] = formatcells(resp,arg.dim,arg.split);
 nfold = numel(resp);
 
-% Verbose mode
-if arg.verbose
-    fprintf('\nTransformation\n')
-    fprintf('--------------\n')
-end
+% Convert time lags to samples
+tmin = bmodel.t(1)*bmodel.fs/1e3;
+tmax = bmodel.t(end)*bmodel.fs/1e3;
 
 % Predict output
 pred = mTRFpredict([],resp,bmodel,'dim',arg.dim,'zeropad',arg.zeropad,...
@@ -80,46 +82,35 @@ if ~iscell(pred)
     pred = {pred};
 end
 
+% Truncate output
+if ~arg.zeropad
+    resp = truncate(resp,tmin,tmax,nobs);
+end
+
 % Verbose mode
 if arg.verbose
-    fprintf('Computing covariance matrices\n')
-    msg = 'Fold %d/%d [';
-    h = fprintf(msg,0,nfold);
-    tocs = 0; tic
+    v = verbosemode([],0,nfold);
 end
 
 % Initialize variables
 Cxx = 0;
-Cyy = 0;
+Css = 0;
 
 for i = 1:nfold
     
     % Compute covariance matrices
     Cxx = Cxx + resp{i}'*resp{i};
-    Cyy = Cyy + pred{i}'*pred{i};
+    Css = Css + pred{i}'*pred{i};
     
     % Verbose mode
     if arg.verbose
-        fprintf(repmat('\b',1,h))
-        msg = strcat(msg,'=');
-        h = fprintf(msg,i,nfold);
-        tocs = tocs+toc;
-        if i == nfold
-            fprintf('] - %.2fs/fold\n',tocs/nfold)
-        else
-            tic
-        end
+        v = verbosemode(v,i,nfold);
     end
     
 end
 
-% Verbose mode
-if arg.verbose
-    fprintf('Transforming model\n'); tic
-end
-
 % Transform backward model weights
-bmodel.w = Cxx*bmodel.w/Cyy;
+bmodel.w = Cxx*bmodel.w/Css;
 
 % Format output arguments
 fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
@@ -127,8 +118,37 @@ fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
 
 % Verbose mode
 if arg.verbose
-    fprintf('model shape: %d x %d x %d - %.2fs\n',size(fmodel.w,1),...
-        size(fmodel.w,2),size(fmodel.w,3),toc)
+    verbosemode(v,i+1,nfold,fmodel);
+end
+
+function v = verbosemode(v,fold,nfold,model)
+%VERBOSEMODE  Execute verbose mode.
+%   V = VERBOSEMODE(V,FOLD,NFOLD) prints details about the progress of the
+%   main function to the screen.
+
+if fold == 0
+    v = struct('msg',[],'h',[],'tocs',[]);
+    fprintf('\nTransform backward model into forward model\n')
+    fprintf('Computing covariance matrices\n')
+    v.msg = '%d/%d [';
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = 0; tic
+elseif fold <= nfold
+    if fold == 1 && toc < 0.1
+        pause(0.1)
+    end
+    fprintf(repmat('\b',1,v.h))
+    v.msg = strcat(v.msg,'=');
+    v.h = fprintf(v.msg,fold,nfold);
+    v.tocs = v.tocs + toc;
+    if fold == nfold
+        fprintf('] - %.3fs/step\n',v.tocs/nfold)
+        fprintf('Transforming model');
+    end
+    tic
+else
+    fprintf(' - %.3fs\n',toc)
+    modelsummary(model)
 end
 
 function arg = parsevarargin(varargin)
@@ -144,11 +164,16 @@ errorMsg = 'It must be a positive integer scalar within indexing range.';
 validFcn = @(x) assert(x==1||x==2,errorMsg);
 addParameter(p,'dim',1,validFcn);
 
+% Split data
+errorMsg = 'It must be a positive integer scalar.';
+validFcn = @(x) assert(isnumeric(x)&&isscalar(x),errorMsg);
+addParameter(p,'split',1,validFcn);
+
 % Boolean arguments
 errorMsg = 'It must be a numeric scalar (0,1) or logical.';
 validFcn = @(x) assert(x==0||x==1||islogical(x),errorMsg);
 addParameter(p,'zeropad',true,validFcn); % zero-pad design matrix
-addParameter(p,'verbose',true,validFcn); % print progress
+addParameter(p,'verbose',true,validFcn); % verbose mode
 
 % Parse input arguments
 parse(p,varargin{1,1}{:});
