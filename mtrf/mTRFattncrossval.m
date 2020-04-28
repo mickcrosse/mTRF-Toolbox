@@ -374,27 +374,25 @@ function v = verbosemode(v,fold,nfold,stats,stats1,stats2)
 %   the progress of the main function to the screen.
 
 if isempty(fold)
-    v = struct('msg',[],'h',[],'tocs',[]);
+    v = struct('msg',[],'h',[],'tocs',0);
     fprintf('\nTrain on %d folds, validate on 1 fold\n',nfold-1)
 elseif fold == 0
-    fprintf('Validating model\n')
-    v.msg = '%d/%d [';
+    fprintf('Training/validating model\n')
+    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),']\n'];
     v.h = fprintf(v.msg,fold,nfold);
-    v.tocs = 0; tic
 elseif fold <= nfold
     if fold == 1 && toc < 0.1
         pause(0.1)
     end
-    fprintf(repmat('\b',1,v.h))
-    v.msg = strcat(v.msg,'=');
-    v.h = fprintf(v.msg,fold,nfold);
     v.tocs = v.tocs + toc;
-    if fold == nfold
-        fprintf('] - %.3fs/step\n',v.tocs/nfold)
-    else
-        tic
-    end
-else
+    fprintf(repmat('\b',1,v.h))
+    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),'] - ',...
+        '%.3fs/fold\n'];
+    v.h = fprintf(v.msg,fold,nfold,v.tocs/fold);
+end
+if fold < nfold
+    tic
+elseif fold > nfold
     rmax = mean(stats1.r,1); rmax = max(rmax(:));
     emax = mean(stats1.err,1); emax = max(emax(:));
     fprintf('STIM1 - val_correlation: %.4f - val_error: %.4f\n',rmax,emax)
