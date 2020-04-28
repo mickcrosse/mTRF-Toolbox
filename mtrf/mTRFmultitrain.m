@@ -208,7 +208,7 @@ function v = verbosemode(v,nobs,model)
 if v == 1
     fprintf('\nTrain on %d samples\n',nobs)
 elseif v == 2
-    fprintf('Computing model'); tic
+    fprintf('Training model'); tic
 elseif v == 3
     fprintf(' - %.3fs\n',toc)
     modelsummary(model)
