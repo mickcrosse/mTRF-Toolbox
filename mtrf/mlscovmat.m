@@ -147,22 +147,20 @@ function v = verbosemode(v,fold,nfold)
 %   main function to the screen.
 
 if fold == 0
-    v = struct('msg',[],'h',[],'tocs',[]);
+    v = struct('msg',[],'h',[],'tocs',0);
     fprintf('Computing covariance matrices\n')
-    v.msg = '%d/%d [';
+    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),']\n'];
     v.h = fprintf(v.msg,fold,nfold);
-    v.tocs = 0; tic
 else
     if fold == 1 && toc < 0.1
         pause(0.1)
     end
-    fprintf(repmat('\b',1,v.h))
-    v.msg = strcat(v.msg,'=');
-    v.h = fprintf(v.msg,fold,nfold);
     v.tocs = v.tocs + toc;
-    if fold == nfold
-        fprintf('] - %.3fs/step\n',v.tocs/nfold)
-    else
-        tic
-    end
+    fprintf(repmat('\b',1,v.h))
+    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),'] - ',...
+        '%.3fs/fold\n'];
+    v.h = fprintf(v.msg,fold,nfold,v.tocs/fold);
+end
+if fold < nfold
+    tic
 end
