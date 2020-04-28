@@ -123,30 +123,29 @@ end
 
 function v = verbosemode(v,fold,nfold,model)
 %VERBOSEMODE  Execute verbose mode.
-%   V = VERBOSEMODE(V,FOLD,NFOLD) prints details about the progress of the
-%   main function to the screen.
+%   V = VERBOSEMODE(V,FOLD,NFOLD,MODEL) prints details about the progress
+%   of the main function to the screen.
 
 if fold == 0
-    v = struct('msg',[],'h',[],'tocs',[]);
-    fprintf('\nTransform backward model into forward model\n')
+    v = struct('msg',[],'h',[],'tocs',0);
+    fprintf('\nTransform decoding model\n')
     fprintf('Computing covariance matrices\n')
-    v.msg = '%d/%d [';
+    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),']\n'];
     v.h = fprintf(v.msg,fold,nfold);
-    v.tocs = 0; tic
 elseif fold <= nfold
     if fold == 1 && toc < 0.1
         pause(0.1)
     end
-    fprintf(repmat('\b',1,v.h))
-    v.msg = strcat(v.msg,'=');
-    v.h = fprintf(v.msg,fold,nfold);
     v.tocs = v.tocs + toc;
-    if fold == nfold
-        fprintf('] - %.3fs/step\n',v.tocs/nfold)
-        fprintf('Transforming model');
-    end
+    fprintf(repmat('\b',1,v.h))
+    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),'] - ',...
+        '%.3fs/fold\n'];
+    v.h = fprintf(v.msg,fold,nfold,v.tocs/fold);
     tic
-else
+end
+if fold == nfold
+    fprintf('Transforming model');
+elseif fold > nfold
     fprintf(' - %.3fs\n',toc)
     modelsummary(model)
 end
