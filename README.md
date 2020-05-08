@@ -77,7 +77,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ### TRF/STRF estimation
 
-Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while a human participant listened to natural speech. We compute the global field power (GFP) by taking the standard deviation across EEG channels, and the broadband TRF by taking the sum across frequency channels. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
+Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG data recorded while a human participant listened to natural speech.
 
 ```matlab
 % Load example speech dataset
@@ -85,7 +85,11 @@ load('data/speech_data.mat','stim','resp','fs','factor');
 
 % Estimate STRF model weights
 model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
+```
 
+We compute the broadband TRF by taking the sum across frequency channels, and the global field power (GFP) by taking the standard deviation across EEG channels.
+
+```matlab
 % Compute broadband TRF
 strf = model.w;
 trf = squeeze(sum(model.w));
@@ -93,7 +97,11 @@ trf = squeeze(sum(model.w));
 % Compute global field power
 sgfp = squeeze(std(strf,[],3));
 gfp = std(trf,[],2);
+```
 
+We plot the TRF and GFP as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
+
+```matlab
 % Plot STRF
 figure
 subplot(2,2,1), imagesc(model.t(7:59),1:16,strf(:,7:59,85)), axis square
@@ -116,9 +124,7 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 ### Stimulus reconstruction
 
-Here, we perform cross-validation (CV) to optimize the performance of a neural decoder, and then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
-
-First, we allocate training and test sets, and then run a 10-fold CV to find the regularization value that optimizes the decoders ability to predict new stimulus features.
+Here, we build a neural decoder that can reconstruct the envelope of the speech stimulus heard by the EEG participant. First, we downsample the data and partition it into 6 equal segments for training (segments 2 to 6) and testing (segment 1).
 
 ```matlab
 % Load data
@@ -129,43 +135,49 @@ stim = resample(sum(stim,2),64,fs);
 resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
-% Generate training/test sets
-[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,11,1);
+% Partition data into training/test sets
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,6,1);
+```
 
+To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using an efficient leave-one-out cross-validation (CV) procedure.
+
+```matlab
 % Model hyperparameters
 dir = -1;
 tmin = 0;
 tmax = 250;
 lambda = 10.^(-6:2:6);
-nlambda = length(lambda);
 
-% Run fast cross-validation
+% Run efficient cross-validation
 cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
 ```
 
-Based on the CV analysis, we train our model using the optimal regularization value and test it on a dataset that was held-out during CV. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
+Based on the CV results, we train our model using the optimal regularization value and test it on the held-out test set. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
 
-``` matlab
-% Use optimal regularization value
-[rmax,idx] = max(mean(cv.acc));
-lambda = lambda(idx);
+```matlab
+% Find optimal regularization value
+[rmax,idx] = max(mean(cv.r));
 
 % Train model
-model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0);
+model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda(idx),'zeropad',0);
 
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
+```
 
+We plot the CV metrics as a function of regularization and the test results of the final model. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
+
+```matlab
 % Plot CV accuracy
 figure
-subplot(2,2,1), errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),'linewidth',2)
-set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
-title('CV Accuracy'), xlabel('Lambda (1\times10^\lambda)'), ylabel('Correlation')
+subplot(2,2,1), errorbar(1:numel(lambda),mean(cv.r),std(cv.r)/sqrt(nfold-1),'linewidth',2)
+set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,numel(lambda)+1]), axis square, grid on
+title('CV Accuracy'), xlabel('Regularization (1\times10^\lambda)'), ylabel('Correlation')
 
 % Plot CV error
-subplot(2,2,2), errorbar(1:nlambda,mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
-set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
-title('CV Error'), xlabel('Lambda (1\times10^\lambda)'), ylabel('MSE')
+subplot(2,2,2), errorbar(1:numel(lambda),mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
+set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,numel(lambda)+1]), axis square, grid on
+title('CV Error'), xlabel('Regularization (1\times10^\lambda)'), ylabel('MSE')
 
 % Plot reconstruction
 subplot(2,2,3), plot((1:length(stimtest))/fs,stimtest,'linewidth',2), hold on
@@ -174,15 +186,15 @@ title('Reconstruction'), xlabel('Time (s)'), ylabel('Amplitude (a.u.)'), legend(
 
 % Plot test accuracy
 subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.acc), hold off
-set(gca,'xtick',1:2,'xticklabel',{'CV','Test'}), axis square, grid on
-title('Test Result'), xlabel('Metric'), ylabel('Correlation')
+set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'}), axis square, grid on
+title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 ```
 
 <img src="docs/stim_recon_example.PNG">
 
 ### Single-lag decoding analysis
 
-Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoding analysis. We perform a 10-fold cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using an optimized regularization parameter. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
+Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoder analysis. First, we downsample the data and partition it into 5 equal segments.
 
 ```matlab
 % Load data
@@ -195,18 +207,26 @@ fs = 64;
 
 % Generate training/test sets
 [stimtrain,resptrain] = mTRFpartition(stim,resp,10);
+```
 
+We run a leave-one-out cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using a pre-tuned regularization parameter.
+
+```matlab
 % Run single-lag cross-validation
 [stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
 
 % Compute mean and variance
-macc = squeeze(mean(stats.acc))'; vacc = squeeze(var(stats.acc))';
+macc = squeeze(mean(stats.r))'; vacc = squeeze(var(stats.r))';
 merr = squeeze(mean(stats.err))'; verr = squeeze(var(stats.err))';
 
 % Compute variance bound
 xacc = [-fliplr(t),-t]; yacc = [fliplr(macc-sqrt(vacc/nfold)),macc+sqrt(vacc/nfold)];
 xerr = [-fliplr(t),-t]; yerr = [fliplr(merr-sqrt(verr/nfold)),merr+sqrt(verr/nfold)];
+```
 
+We plot the reconstruction accuracy and error as a function of time lags. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
+
+```matlab
 % Plot accuracy
 figure
 subplot(1,2,1), h = fill(xacc,yacc,'b','edgecolor','none'); hold on
