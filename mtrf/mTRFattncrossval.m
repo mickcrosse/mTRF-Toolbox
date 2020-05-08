@@ -19,9 +19,9 @@ function [stats,stats1,stats2,t] = mTRFattncrossval(stim1,stim2,resp,fs,Dir,tmin
 %       'acc'       -- decoding accuracy based on the proportion of
 %                      observations where the correlation for STIM1 was
 %                      greater than that of STIM2 (nlambda-by-yvar)
-%       'd'         -- sensitivity index based on d', where the correlation
-%                      for STIM1 is considered signal and that of STIM2 is
-%                      considered noise (nlambda-by-yvar)
+%       'd'         -- attention modulation index based on d', where the
+%                      correlation for STIM1 is considered signal and that
+%                      of STIM2 is considered noise (nlambda-by-yvar)
 %
 %   MTRFATTNCROSSVAL performs a leave-one-out cross-validation over all
 %   trials. To achieve a k-fold cross-validation, arrange STIM1, STIM2 and
@@ -400,7 +400,7 @@ elseif fold > nfold
     emax = mean(stats2.err,1); emax = max(emax(:));
     fprintf('STIM2 - val_correlation: %.4f - val_error: %.4f\n',rmax,emax)
     amax = max(stats.acc(:)); dmax = max(stats.d(:));
-    fprintf('S1vS2 - val_accuracy: %.4f - val_d'': %.4f\n\n',amax,dmax)
+    fprintf('S1vS2 - val_accuracy: %.4f - val_d'': %.4f\n',amax,dmax)
 end
 
 function validateparamin(fs,Dir,tmin,tmax,lambda)
