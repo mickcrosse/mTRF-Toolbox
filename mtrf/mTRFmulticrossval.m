@@ -382,7 +382,7 @@ if fold < nfold
 elseif fold > nfold
     rmax = mean(stats.r,1); rmax = max(rmax(:));
     emax = mean(stats.err,1); emax = max(emax(:));
-    fprintf('val_correlation: %.4f - val_error: %.4f\n\n',rmax,emax)
+    fprintf('val_correlation: %.4f - val_error: %.4f\n',rmax,emax)
 end
 
 function validateparamin(fs,Dir,tmin,tmax,lambda)
