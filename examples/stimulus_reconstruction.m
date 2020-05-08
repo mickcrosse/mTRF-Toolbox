@@ -44,7 +44,7 @@ fs = fsNew;
 % ---Cross-validation---
 
 % Generate training/test sets
-nfold = 11;
+nfold = 6;
 testfold = 1;
 [stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,...
     testfold);
@@ -110,7 +110,7 @@ subplot(2,2,4)
 bar(1,rmax), hold on
 bar(2,test.r), hold off
 set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'})
-title('Performance')
+title('Model Performance')
 xlabel('Dataset')
 ylabel('Correlation')
 axis square, grid on
