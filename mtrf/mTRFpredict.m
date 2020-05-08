@@ -260,7 +260,7 @@ if fold < nfold
 elseif fold > nfold
     rmax = mean(stats.r,1); rmax = max(rmax(:));
     emax = mean(stats.err,1); emax = max(emax(:));
-    fprintf('correlation: %.4f - error: %.4f\n\n',rmax,emax)
+    fprintf('correlation: %.4f - error: %.4f\n',rmax,emax)
 end
 
 function arg = parsevarargin(varargin)
