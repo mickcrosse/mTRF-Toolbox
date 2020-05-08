@@ -124,7 +124,7 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 ### Stimulus reconstruction
 
-Here, we build a neural decoder that can reconstruct the envelope of the speech stimulus heard by the EEG participant. First, we downsample the data and partition it into training and test sets.
+Here, we build a neural decoder that can reconstruct the envelope of the speech stimulus heard by the EEG participant. First, we downsample the data and partition it into 6 equal segments for training (segments 2 to 6) and testing (segment 1).
 
 ```matlab
 % Load data
@@ -135,11 +135,11 @@ stim = resample(sum(stim,2),64,fs);
 resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
-% Generate training/test sets
-[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,11,1);
+% Partition data into training/test sets
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,6,1);
 ```
 
-To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using a leave-one-out cross-validation (CV) procedure.
+To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using an efficient leave-one-out cross-validation (CV) procedure.
 
 ```matlab
 % Model hyperparameters
@@ -148,20 +148,18 @@ tmin = 0;
 tmax = 250;
 lambda = 10.^(-6:2:6);
 
-% Run fast cross-validation
+% Run efficient cross-validation
 cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
 ```
 
 Based on the CV results, we train our model using the optimal regularization value and test it on the held-out test set. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
 
 ```matlab
-% Use optimal regularization value
-[rmax,idx] = max(mean(cv.acc));
-nlambda = length(lambda);
-lambda = lambda(idx);
+% Find optimal regularization value
+[rmax,idx] = max(mean(cv.r));
 
 % Train model
-model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0);
+model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda(idx),'zeropad',0);
 
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
@@ -172,14 +170,14 @@ We plot the CV metrics as a function of regularization and the test results of t
 ```matlab
 % Plot CV accuracy
 figure
-subplot(2,2,1), errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),'linewidth',2)
-set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
-title('CV Accuracy'), xlabel('Lambda (1\times10^\lambda)'), ylabel('Correlation')
+subplot(2,2,1), errorbar(1:numel(lambda),mean(cv.r),std(cv.r)/sqrt(nfold-1),'linewidth',2)
+set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,numel(lambda)+1]), axis square, grid on
+title('CV Accuracy'), xlabel('Regularization (1\times10^\lambda)'), ylabel('Correlation')
 
 % Plot CV error
-subplot(2,2,2), errorbar(1:nlambda,mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
-set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,nlambda+1]), axis square, grid on
-title('CV Error'), xlabel('Lambda (1\times10^\lambda)'), ylabel('MSE')
+subplot(2,2,2), errorbar(1:numel(lambda),mean(cv.err),std(cv.err)/sqrt(nfold-1),'linewidth',2)
+set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,numel(lambda)+1]), axis square, grid on
+title('CV Error'), xlabel('Regularization (1\times10^\lambda)'), ylabel('MSE')
 
 % Plot reconstruction
 subplot(2,2,3), plot((1:length(stimtest))/fs,stimtest,'linewidth',2), hold on
@@ -188,8 +186,8 @@ title('Reconstruction'), xlabel('Time (s)'), ylabel('Amplitude (a.u.)'), legend(
 
 % Plot test accuracy
 subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.acc), hold off
-set(gca,'xtick',1:2,'xticklabel',{'CV','Test'}), axis square, grid on
-title('Test Result'), xlabel('Metric'), ylabel('Correlation')
+set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'}), axis square, grid on
+title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 ```
 
 <img src="docs/stim_recon_example.PNG">
