@@ -77,7 +77,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ### TRF/STRF estimation
 
-Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG recorded while a human participant listened to natural speech.
+Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG data recorded while a human participant listened to natural speech.
 
 ```matlab
 % Load example speech dataset
@@ -87,9 +87,9 @@ load('data/speech_data.mat','stim','resp','fs','factor');
 model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
 ```
 
-We can estimate the broadband TRF by taking the sum across frequency channels, and the global field power (GFP) by taking the standard deviation across EEG channels.
+We compute the broadband TRF by taking the sum across frequency channels, and the global field power (GFP) by taking the standard deviation across EEG channels.
 
-```
+```matlab
 % Compute broadband TRF
 strf = model.w;
 trf = squeeze(sum(model.w));
@@ -99,9 +99,9 @@ sgfp = squeeze(std(strf,[],3));
 gfp = std(trf,[],2);
 ```
 
-We can then plot the STRF and GFP as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
+We plot the TRF and GFP as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
 
-```
+```matlab
 % Plot STRF
 figure
 subplot(2,2,1), imagesc(model.t(7:59),1:16,strf(:,7:59,85)), axis square
@@ -124,9 +124,7 @@ title('Global Field Power'), xlabel('Time lag (ms)')
 
 ### Stimulus reconstruction
 
-Here, we perform cross-validation (CV) to optimize the performance of a neural decoder, and then test the optimized decoder on a held-out dataset. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
-
-First, we allocate training and test sets, and then run a 10-fold CV to find the regularization value that optimizes the decoders ability to predict new stimulus features.
+Here, we build a neural decoder that can reconstruct the envelope of the speech stimulus heard by the EEG participant. First, we downsample the data and partition it into training and test sets.
 
 ```matlab
 % Load data
@@ -139,23 +137,27 @@ fs = 64;
 
 % Generate training/test sets
 [stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,11,1);
+```
 
+To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using a leave-one-out cross-validation (CV) procedure.
+
+```matlab
 % Model hyperparameters
 dir = -1;
 tmin = 0;
 tmax = 250;
 lambda = 10.^(-6:2:6);
-nlambda = length(lambda);
 
 % Run fast cross-validation
 cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
 ```
 
-Based on the CV analysis, we train our model using the optimal regularization value and test it on a dataset that was held-out during CV. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
+Based on the CV results, we train our model using the optimal regularization value and test it on the held-out test set. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
 
-``` matlab
+```matlab
 % Use optimal regularization value
 [rmax,idx] = max(mean(cv.acc));
+nlambda = length(lambda);
 lambda = lambda(idx);
 
 % Train model
@@ -163,7 +165,11 @@ model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0);
 
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
+```
 
+We plot the CV metrics as a function of regularization and the test results of the final model. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
+
+```matlab
 % Plot CV accuracy
 figure
 subplot(2,2,1), errorbar(1:nlambda,mean(cv.acc),std(cv.acc)/sqrt(nfold-1),'linewidth',2)
