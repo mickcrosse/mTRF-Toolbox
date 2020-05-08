@@ -194,7 +194,7 @@ title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 
 ### Single-lag decoding analysis
 
-Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoding analysis. We perform a 10-fold cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using an optimized regularization parameter. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
+Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoder analysis. First, we downsample the data and partition it into 5 equal segments.
 
 ```matlab
 % Load data
@@ -207,7 +207,11 @@ fs = 64;
 
 % Generate training/test sets
 [stimtrain,resptrain] = mTRFpartition(stim,resp,10);
+```
 
+We run a leave-one-out cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using a pre-tuned regularization parameter.
+
+```matlab
 % Run single-lag cross-validation
 [stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
 
@@ -218,7 +222,11 @@ merr = squeeze(mean(stats.err))'; verr = squeeze(var(stats.err))';
 % Compute variance bound
 xacc = [-fliplr(t),-t]; yacc = [fliplr(macc-sqrt(vacc/nfold)),macc+sqrt(vacc/nfold)];
 xerr = [-fliplr(t),-t]; yerr = [fliplr(merr-sqrt(verr/nfold)),merr+sqrt(verr/nfold)];
+```
 
+We plot the reconstruction accuracy and error as a function of time lags. This example can also be generated using [single_lag_analysis](examples/single_lag_analysis.m).
+
+```matlab
 % Plot accuracy
 figure
 subplot(1,2,1), h = fill(xacc,yacc,'b','edgecolor','none'); hold on
