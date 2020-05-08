@@ -12,9 +12,9 @@ function [acc,d] = mTRFattnevaluate(r1,r2,varargin)
 %   that the first non-singleton dimension corresponds to observations.
 %   R1 and R2 must have the same number of observations.
 %
-%   [ACC,D] = MTRFATTNEVALUATE(R1,R2) returns the sensitivity index based
-%   on d', where R1 is considered signal and R2 is considered noise as per
-%   de Cheveigné et al. (2018).
+%   [ACC,D] = MTRFATTNEVALUATE(R1,R2) returns the attention modulation
+%   index based on d', where R1 is considered signal and R2 is considered
+%   noise as per de Cheveigné et al. (2018).
 %
 %   [...] = MTRFATTNEVALUATE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
@@ -55,7 +55,7 @@ if size(r2,1) ~= n
 end
 
 % Compute accuracy
-acc = sum(r1>r2,1)/n;
+acc = squeeze(sum(r1>r2,1)/n);
 
 if nargout > 1
     
@@ -64,7 +64,8 @@ if nargout > 1
     m2 = sum(r2,1)/n;
     
     % Compute d'
-    d = (m1 - m2)./sqrt((sum((r1 - m1).^2) + sum((r2 - m2).^2))/(n - 1)/2);
+    d = squeeze((m1 - m2)./sqrt((sum((r1 - m1).^2) + ...
+        sum((r2 - m2).^2))/(n - 1)/2));
     
 end
 
