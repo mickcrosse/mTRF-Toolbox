@@ -216,7 +216,7 @@ We run a leave-one-out cross-validation to test a series of single-lag decoders 
 [stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
 
 % Compute mean and variance
-macc = squeeze(mean(stats.acc))'; vacc = squeeze(var(stats.acc))';
+macc = squeeze(mean(stats.r))'; vacc = squeeze(var(stats.r))';
 merr = squeeze(mean(stats.err))'; verr = squeeze(var(stats.err))';
 
 % Compute variance bound
