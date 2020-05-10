@@ -12,10 +12,10 @@ function plot_speech_strf
 %                   and 4000Hz, taking the Hilbert transform at each band
 %                   and averaging over every 8 neighbouring bands.
 %       'resp'      a matrix containing 2 minutes of 128-channel EEG data
-%                   filtered between 0.5 and 15 Hz
+%                   filtered between 0.5 and 15 Hertz
 %       'fs'        the sample rate of STIM and RESP (128Hz)
-%       'factor'    the BioSemi EEG normalization factor for converting the
-%                   TRF to microvolts (524.288mV / 2^24bits)
+%       'factor'    the BioSemi EEG normalization factor for computing the
+%                   STRF in microvolts (524.288mV / 2^24bits)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -30,8 +30,8 @@ function plot_speech_strf
 % Load data
 load('data/speech_data.mat','stim','resp','fs','factor');
 
-% Normalize data to convert STRF to uV
-resp = resp*factor;
+% Normalize data
+resp = factor*resp;
 
 % Model hyperparameters
 tmin = -100;
@@ -44,24 +44,13 @@ lambda = 0.5;
 model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','ridge',...
     'split',5,'zeropad',0);
 
-% Get STRF and GFP
-strf = squeeze(model.w);
-gfp = squeeze(std(model.w,[],3));
-
-% Define ROI
-chan = 85; % channel Fz
-
 % Plot STRF
 figure, subplot(1,2,1)
-imagesc(model.t(7:59),1:16,strf(:,7:59,chan))
-set(gca,'ydir','normal'), xlim([-50,350])
+mTRFplot(model,'mtrf','all',85,[-50,350]);
 title('Speech STRF (Fz)')
 ylabel('Frequency band')
-axis square, grid on
 
 % Plot GFP
 subplot(1,2,2)
-imagesc(model.t(7:59),1:16,gfp(:,7:59))
-set(gca,'ydir','normal'), xlim([-50,350])
+mTRFplot(model,'mgfp','all','all',[-50,350]);
 title('Global Field Power')
-axis square, grid on
