@@ -136,7 +136,8 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Partition data into training/test sets
-[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,6,1);
+nfold = 6;
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,1);
 ```
 
 To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using an efficient leave-one-out cross-validation (CV) procedure.
