@@ -17,7 +17,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 - [Examples](#examples)
   - [TRF/STRF estimation](#trfstrf-estimation)
   - [Stimulus reconstruction](#stimulus-reconstruction)
-  - [Single-lag decoding analysis](#single-lag-decoding-analysis)
+  - [Single-lag decoder analysis](#single-lag-decoder-analysis)
 - [License](#license)
 
 ## Installation
@@ -25,7 +25,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
 
 ```matlab
-addpath 'directory/mTRF-Toolbox-master'
+addpath 'directory/mTRF-Toolbox'
 savepath
 ```
 
@@ -81,7 +81,7 @@ Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 
 
 ```matlab
 % Load example speech dataset
-load('data/speech_data.mat','stim','resp','fs','factor');       
+load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs','factor');       
 
 % Estimate STRF model weights
 model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
@@ -128,7 +128,7 @@ Here, we build a neural decoder that can reconstruct the envelope of the speech 
 
 ```matlab
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs');
 
 % Normalize and downsample data
 stim = resample(sum(stim,2),64,fs);
@@ -192,13 +192,13 @@ title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 
 <img src="docs/stim_recon_example.PNG">
 
-### Single-lag decoding analysis
+### Single-lag decoder analysis
 
 Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoder analysis. First, we downsample the data and partition it into 5 equal segments.
 
 ```matlab
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs');
 
 % Normalize and downsample data
 stim = resample(sum(stim,2),64,fs);
