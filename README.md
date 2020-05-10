@@ -185,7 +185,7 @@ plot((1:length(pred))/fs,pred,'linewidth',2), hold off, xlim([0,10]), axis squar
 title('Reconstruction'), xlabel('Time (s)'), ylabel('Amplitude (a.u.)'), legend('Orig','Pred')
 
 % Plot test accuracy
-subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.acc), hold off
+subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.r), hold off
 set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'}), axis square, grid on
 title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 ```
@@ -206,7 +206,8 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Generate training/test sets
-[stimtrain,resptrain] = mTRFpartition(stim,resp,10);
+nfold = 10;
+[stimtrain,resptrain] = mTRFpartition(stim,resp,nfold);
 ```
 
 We run a leave-one-out cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using a pre-tuned regularization parameter.
