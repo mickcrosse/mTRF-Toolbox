@@ -17,7 +17,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 - [Examples](#examples)
   - [TRF/STRF estimation](#trfstrf-estimation)
   - [Stimulus reconstruction](#stimulus-reconstruction)
-  - [Single-lag decoding analysis](#single-lag-decoding-analysis)
+  - [Single-lag decoder analysis](#single-lag-decoder-analysis)
 - [License](#license)
 
 ## Installation
@@ -25,7 +25,7 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
 
 ```matlab
-addpath 'directory/mTRF-Toolbox-master'
+addpath 'directory/mTRF-Toolbox'
 savepath
 ```
 
@@ -81,7 +81,7 @@ Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 
 
 ```matlab
 % Load example speech dataset
-load('data/speech_data.mat','stim','resp','fs','factor');       
+load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs','factor');       
 
 % Estimate STRF model weights
 model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
@@ -128,7 +128,7 @@ Here, we build a neural decoder that can reconstruct the envelope of the speech 
 
 ```matlab
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs');
 
 % Normalize and downsample data
 stim = resample(sum(stim,2),64,fs);
@@ -136,7 +136,8 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Partition data into training/test sets
-[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,6,1);
+nfold = 6;
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,1);
 ```
 
 To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using an efficient leave-one-out cross-validation (CV) procedure.
@@ -185,20 +186,20 @@ plot((1:length(pred))/fs,pred,'linewidth',2), hold off, xlim([0,10]), axis squar
 title('Reconstruction'), xlabel('Time (s)'), ylabel('Amplitude (a.u.)'), legend('Orig','Pred')
 
 % Plot test accuracy
-subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.acc), hold off
+subplot(2,2,4), bar(1,rmax), hold on, bar(2,test.r), hold off
 set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'}), axis square, grid on
 title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 ```
 
 <img src="docs/stim_recon_example.PNG">
 
-### Single-lag decoding analysis
+### Single-lag decoder analysis
 
 Here, we evaluate the contribution of individual time lags towards stimulus reconstruction using a single-lag decoder analysis. First, we downsample the data and partition it into 5 equal segments.
 
 ```matlab
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs');
 
 % Normalize and downsample data
 stim = resample(sum(stim,2),64,fs);
@@ -206,7 +207,8 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Generate training/test sets
-[stimtrain,resptrain] = mTRFpartition(stim,resp,10);
+nfold = 10;
+[stimtrain,resptrain] = mTRFpartition(stim,resp,nfold);
 ```
 
 We run a leave-one-out cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using a pre-tuned regularization parameter.
