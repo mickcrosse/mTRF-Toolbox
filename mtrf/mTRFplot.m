@@ -83,9 +83,9 @@ end
 % Generate plot
 switch type
     case 'trf'
-        h = plot(model.t,model.w,'linewidth',3);
+        h = plot(model.t,model.w,'linewidth',3); grid on
     case 'gfp'
-        h = area(model.t,model.w,'edgecolor','none');
+        h = area(model.t,model.w,'edgecolor','none'); grid on
     case {'mtrf','mgfp'}
         h = imagesc(model.t(lags),1:numel(feat),model.w(:,lags,:));
         set(gca,'ydir','normal')
@@ -94,4 +94,3 @@ end
 xlabel('Time lag (ms)')
 xlim(xlims)
 axis square
-grid on
