@@ -9,11 +9,11 @@ function plot_contrast_trf
 %       'stim'      a vector containing the normalized contrast levels of a
 %                   checkerboard that modulated at a rate of 60Hz
 %       'resp'      a matrix containing 2 minutes of 128-channel EEG data
-%                   filtered between 0.5 and 35 Hz
+%                   filtered between 0.5 and 35 Hertz
 %       'fs'        the sample rate of STIM and RESP (128Hz)
 %       'Nf'        the modulation rate of the checkerboard (60Hz)
-%       'factor'    the BioSemi EEG normalization factor for converting the
-%                   TRF to microvolts (524.288mV / 2^24bits)
+%       'factor'    the BioSemi EEG normalization factor for computing the
+%                   TRF in microvolts (524.288mV / 2^24bits)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
@@ -28,7 +28,7 @@ function plot_contrast_trf
 % Load data
 load('data/contrast_data.mat','stim','resp','fs','Nf','factor');
 
-% Normalize data to convert TRF to uV
+% Normalize data
 stim = stim*Nf;
 resp = resp*factor;
 
@@ -41,26 +41,13 @@ lambda = 4.4e-3;
 model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','Tikhonov',...
     'split',5,'zeropad',0);
 
-% Get TRF and GFP
-trf = squeeze(model.w);
-gfp = squeeze(std(model.w,[],3));
-
-% Define ROI
-chan = 23; % channel Oz
-
 % Plot TRF
 figure, subplot(1,2,1)
-plot(model.t,trf(:,chan),'linewidth',3)
-xlim([-50,350])
+mTRFplot(model,'trf',[],23,[-50,350]);
 title('Contrast TRF (Oz)')
-xlabel('Time lag (ms)')
 ylabel('Amplitude (\muV)')
-axis square, grid on
 
 % Plot GFP
 subplot(1,2,2)
-area(model.t,gfp,'edgecolor','none');
-xlim([-50,350])
+mTRFplot(model,'gfp',[],'all',[-50,350]);
 title('Global Field Power')
-xlabel('Time lag (ms)')
-axis square, grid on
