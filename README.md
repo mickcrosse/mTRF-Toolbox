@@ -61,7 +61,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 * `mTRFmulticrossval()` - cross-validation for additive multisensory model optimization
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
-### Feature extraction
+### Feature engineering
 
 * `mTRFenvelope()` - computes the temporal envelope of an audio signal
 * `mTRFresample()` - resamples and smooths temporal features
