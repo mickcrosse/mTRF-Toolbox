@@ -81,19 +81,7 @@ load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs','factor');
 model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
 ```
 
-We compute the broadband TRF by taking the sum across frequency channels, and the global field power (GFP) by taking the standard deviation across EEG channels.
-
-```matlab
-% Compute broadband TRF
-strf = model.w;
-trf = squeeze(sum(model.w));
-
-% Compute global field power
-sgfp = squeeze(std(strf,[],3));
-gfp = std(trf,[],2);
-```
-
-We plot the TRF and GFP as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
+We compute the broadband TRF by averaging the STRF model across frequency channels and the global field power (GFP) by taking the standard deviation across EEG channels, and plot them as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
 
 ```matlab
 % Plot STRF
