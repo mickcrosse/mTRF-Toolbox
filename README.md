@@ -11,9 +11,8 @@ mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processin
 - [mTRF Modelling Framework](#mtrf-modelling-framework)
 - [Contents](#contents)
   - [Fitting encoding/decoding models](#fitting-encodingdecoding-models)
-  - [Decoding attention and multisensory processing](#decoding-attention-and-multisensory-processing)
-  - [Efficient covariance matrix estimation](#efficient-covariance-matrix-estimation)
-  - [Feature extraction](#feature-extraction)
+  - [Decoding attention and multisensory integration](#decoding-attention-and-multisensory-integration)
+  - [Feature engineering](#feature-engineering)
 - [Examples](#examples)
   - [TRF/STRF estimation](#trfstrf-estimation)
   - [Stimulus reconstruction](#stimulus-reconstruction)
@@ -49,25 +48,20 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ### Fitting encoding/decoding models
 
-* `mTRFcrossval()` - cross-validation for hyperparameter optimization
+* `mTRFcrossval()` - performs efficient leave-one-out cross-validation
 * `mTRFtrain()` - fits an encoding/decoding model (TRF/STRF estimation)
 * `mTRFtransform()` - transforms a decoding model into an encoding model
-* `mTRFpredict()` - predicts and evaluates the output of a model
-* `mTRFevaluate()` - evaluates the accuracy and error of a prediction
+* `mTRFpredict()` - predicts the output of an encoding/decoding model
+* `mTRFevaluate()` - evaluates the accuracy and error of a models prediction
 
-### Decoding attention and multisensory processing
+### Decoding attention and multisensory integration
 
 * `mTRFattncrossval()` - cross-validation for attention decoder optimization
-* `mTRFattnevaluate()` - evaluates the accuracy of an attention decoder
-* `mTRFmulticrossval()` - cross-validation for multisensory model optimization
+* `mTRFattnevaluate()` - evaluates the accuracy and modulation index of an attention decoder
+* `mTRFmulticrossval()` - cross-validation for additive multisensory model optimization
 * `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
 
-### Efficient covariance matrix estimation
-
-* `olscovmat()` - covariance matrices for ordinary least squares estimation
-* `mlscovmat()` - covariance matrices for multisensory least squares estimation
-
-### Feature extraction
+### Feature engineering
 
 * `mTRFenvelope()` - computes the temporal envelope of an audio signal
 * `mTRFresample()` - resamples and smooths temporal features
@@ -87,37 +81,25 @@ load('mTRF-Toolbox/data/speech_data.mat','stim','resp','fs','factor');
 model = mTRFtrain(stim,resp*factor,fs,1,-100,400,0.1);
 ```
 
-We compute the broadband TRF by taking the sum across frequency channels, and the global field power (GFP) by taking the standard deviation across EEG channels.
-
-```matlab
-% Compute broadband TRF
-strf = model.w;
-trf = squeeze(sum(model.w));
-
-% Compute global field power
-sgfp = squeeze(std(strf,[],3));
-gfp = std(trf,[],2);
-```
-
-We plot the TRF and GFP as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
+We compute the broadband TRF by averaging the STRF model across frequency channels and the global field power (GFP) by taking the standard deviation across EEG channels, and plot them as a function of time lags. This example can also be generated using [plot_speech_STRF](examples/plot_speech_strf.m) and [plot_speech_TRF](examples/plot_speech_trf.m).
 
 ```matlab
 % Plot STRF
 figure
-subplot(2,2,1), imagesc(model.t(7:59),1:16,strf(:,7:59,85)), axis square
-title('Speech STRF (Fz)'), ylabel('Frequency band'), set(gca,'ydir','normal')
+subplot(2,2,1), mTRFplot(model,'mtrf','all',85,[-50,350]);
+title('Speech STRF (Fz)'), ylabel('Frequency band'), xlabel('')
 
 % Plot GFP
-subplot(2,2,2), imagesc(model.t(7:59),1:16,sgfp(:,7:59)), axis square
-title('Global Field Power'), set(gca,'ydir','normal')
+subplot(2,2,2), mTRFplot(model,'mgfp','all','all',[-50,350]);
+title('Global Field Power'), xlabel('')
 
 % Plot TRF
-subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3), xlim([-50,350]), axis square, grid on
-title('Speech TRF (Fz)'), xlabel('Time lag (ms)'), ylabel('Amplitude (a.u.)')
+subplot(2,2,3), mTRFplot(model,'trf','all',85,[-50,350]);
+title('Speech TRF (Fz)'), ylabel('Amplitude (a.u.)')
 
 % Plot GFP
-subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none'), xlim([-50,350]), axis square, grid on
-title('Global Field Power'), xlabel('Time lag (ms)')
+subplot(2,2,4), mTRFplot(model,'gfp','all','all',[-50,350]);
+title('Global Field Power')
 ```
 
 <img src="docs/STRF_example.PNG">
@@ -136,8 +118,8 @@ resp = resample(resp/std(resp(:)),64,fs);
 fs = 64;
 
 % Partition data into training/test sets
-nfold = 6;
-[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,1);
+nfold = 6; testTrial = 1;
+[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,testTrial);
 ```
 
 To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using an efficient leave-one-out cross-validation (CV) procedure.
