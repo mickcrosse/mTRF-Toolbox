@@ -43,7 +43,7 @@ if nargin < 5 || isempty(xlims)
     xlims = [model.t(1),model.t(end)];
 end
 if nargin < 6 || isempty(avgfeat)
-    avgfeat = 0;
+    avgfeat = 1;
 end
 if nargin < 7 || isempty(avgchan)
     avgchan = 0;
@@ -65,8 +65,6 @@ switch type
     case {'trf','gfp'}
         if avgfeat
             model.w = mean(model.w,1);
-        else
-            model.w = sum(model.w,1);
         end
 end
 
@@ -89,7 +87,6 @@ switch type
     case {'mtrf','mgfp'}
         h = imagesc(model.t(lags),1:numel(feat),model.w(:,lags,:));
         set(gca,'ydir','normal')
-        ylim([0.5,numel(feat)+0.5])
 end
 xlabel('Time lag (ms)')
 xlim(xlims)
