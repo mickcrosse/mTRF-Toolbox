@@ -35,7 +35,7 @@ resp = resp*factor;
 % Model hyperparameters
 tmin = -100;
 tmax = 400;
-lambda = 4.4e-3;
+lambda = 0.5;
 
 % Compute model weights
 model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','Tikhonov',...
