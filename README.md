@@ -98,20 +98,20 @@ We plot the TRF and GFP as a function of time lags. This example can also be gen
 ```matlab
 % Plot STRF
 figure
-subplot(2,2,1), imagesc(model.t(7:59),1:16,strf(:,7:59,85)), axis square
-title('Speech STRF (Fz)'), ylabel('Frequency band'), set(gca,'ydir','normal')
+subplot(2,2,1), mTRFplot(model,'mtrf','all',85,[-50,350]);
+title('Speech STRF (Fz)'), ylabel('Frequency band'), xlabel('')
 
 % Plot GFP
-subplot(2,2,2), imagesc(model.t(7:59),1:16,sgfp(:,7:59)), axis square
-title('Global Field Power'), set(gca,'ydir','normal')
+subplot(2,2,2), mTRFplot(model,'mgfp','all','all',[-50,350]);
+title('Global Field Power'), xlabel('')
 
 % Plot TRF
-subplot(2,2,3), plot(model.t,trf(:,85),'linewidth',3), xlim([-50,350]), axis square, grid on
-title('Speech TRF (Fz)'), xlabel('Time lag (ms)'), ylabel('Amplitude (a.u.)')
+subplot(2,2,3), mTRFplot(model,'trf','all',85,[-50,350]);
+title('Speech TRF (Fz)'), ylabel('Amplitude (a.u.)')
 
 % Plot GFP
-subplot(2,2,4), area(model.t,squeeze(gfp),'edgecolor','none'), xlim([-50,350]), axis square, grid on
-title('Global Field Power'), xlabel('Time lag (ms)')
+subplot(2,2,4), mTRFplot(model,'gfp','all','all',[-50,350]);
+title('Global Field Power')
 ```
 
 <img src="docs/STRF_example.PNG">
