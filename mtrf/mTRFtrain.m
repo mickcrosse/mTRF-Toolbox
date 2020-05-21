@@ -140,7 +140,7 @@ if ~arg.zeropad
 end
 
 % Compute covariance matrices
-[Cxx,Cxy] = olscovmat(x,y,lags,arg.type,arg.zeropad);
+[Cxx,Cxy] = olscovmat(x,y,lags,arg.type,arg.zeropad,arg.verbose);
 
 % Verbose mode
 if arg.verbose
