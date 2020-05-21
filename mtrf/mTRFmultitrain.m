@@ -157,10 +157,10 @@ end
 
 % Compute covariance matrices
 if Dir == 1
-    [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.zeropad);
+    [Cxx,Cxy1,Cxy2] = mlscovmat(x,z1,z2,lags,arg.type,arg.zeropad,arg.verbose);
 elseif Dir == -1
-    [Cxx1,Cxy1] = olscovmat(z1,y,lags,arg.type,arg.zeropad);
-    [Cxx2,Cxy2] = olscovmat(z2,y,lags,arg.type,arg.zeropad);
+    [Cxx1,Cxy1] = olscovmat(z1,y,lags,arg.type,arg.zeropad,arg.verbose);
+    [Cxx2,Cxy2] = olscovmat(z2,y,lags,arg.type,arg.zeropad,arg.verbose);
 end
 
 % Verbose mode
