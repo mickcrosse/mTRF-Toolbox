@@ -71,7 +71,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ### TRF/STRF estimation
 
-Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG data recorded while a human participant listened to natural speech. To map in the forward direction (encoding model), we set the direction of causality to 1. To capture the temporal dynamics of the cortical response, the STRF time lags are computed between -100 and 400 ms. The regularization parameter lambda is set to 0.1 to dampen fast oscillatory components (i.e., noise).
+Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG data recorded while a human participant listened to natural speech. To map in the forward direction (encoding model), we set the direction of causality to 1. To capture the entire STRF timecourse, the time lags are computed between -100 and 400 ms. The regularization parameter lambda is set to 0.1 to dampen fast oscillatory components (i.e., noise).
 
 ```matlab
 % Load example speech dataset
