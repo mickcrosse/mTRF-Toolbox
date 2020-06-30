@@ -71,7 +71,7 @@ A backward model, known as a neural decoder, reverses the direction of causality
 
 ### TRF/STRF estimation
 
-Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG data recorded while a human participant listened to natural speech.
+Here, we estimate a 16-channel spectro-temporal response function (STRF) from 2 minutes of EEG data recorded while a human participant listened to natural speech. To map in the forward direction (encoding model), we set the direction of causality to 1. To capture the temporal dynamics of the cortical response, the STRF time lags are computed between -100 and 400 ms. The regularization parameter lambda is set to 0.1 to dampen fast oscillatory components (i.e., noise).
 
 ```matlab
 % Load example speech dataset
@@ -126,13 +126,13 @@ To optimize the decoders ability to predict stimulus features from new EEG data,
 
 ```matlab
 % Model hyperparameters
-dir = -1;
-tmin = 0;
-tmax = 250;
-lambda = 10.^(-6:2:6);
+Dir = -1; % direction of causality
+tmin = 0; % minimum time lag
+tmax = 250; % maximum time lag
+lambda = 10.^(-6:2:6); % regularization parameters
 
 % Run efficient cross-validation
-cv = mTRFcrossval(stimtrain,resptrain,fs,dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
+cv = mTRFcrossval(stimtrain,resptrain,fs,Dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
 ```
 
 Based on the CV results, we train our model using the optimal regularization value and test it on the held-out test set. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
@@ -142,7 +142,7 @@ Based on the CV results, we train our model using the optimal regularization val
 [rmax,idx] = max(mean(cv.r));
 
 % Train model
-model = mTRFtrain(stimtrain,resptrain,fs,dir,tmin,tmax,lambda(idx),'zeropad',0);
+model = mTRFtrain(stimtrain,resptrain,fs,Dir,tmin,tmax,lambda(idx),'zeropad',0);
 
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
