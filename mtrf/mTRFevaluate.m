@@ -124,6 +124,7 @@ if nargin < 2
     nobs = size(x,1);
     nvar = size(x,2);
 end
+ranks = (1:nobs)';
 
 % Initialize variables
 xranked = zeros(nobs,nvar);
@@ -132,7 +133,7 @@ for i = 1:nvar
     
     % Sort data in ascending order
     [xsort,order] = sort(x(:,i));
-    ranks = (1:nobs)';
+    ranki = ranks;
     
     % Find ties
     ties = xsort(1:nobs-1) >= xsort(2:nobs);
@@ -146,12 +147,12 @@ for i = 1:nvar
         while idx(ctr+1) == idx(ctr)+1
             ctr = ctr+1; n = n+1;
         end
-        ranks(m:m+n-1) = sum(ranks(m:m+n-1))/n;
+        ranki(m:m+n-1) = sum(ranki(m:m+n-1))/n;
         ctr = ctr+1;
     end
     
     % Order ranks
-    xranked(order) = ranks;
+    xranked(order,i) = ranki;
     
 end
 
