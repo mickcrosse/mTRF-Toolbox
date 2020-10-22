@@ -73,13 +73,6 @@ else
     nwin = 1;
 end
 
-% Compute rank values
-switch arg.corr
-    case 'Spearman'
-        y = num2rank(y,yobs,yvar);
-        pred = num2rank(pred,pobs,pvar);
-end
-
 % Initialize variables
 r = zeros(nwin,yvar);
 err = zeros(nwin,yvar);
@@ -97,14 +90,6 @@ for i = 1:nwin
         nobs = yobs;
     end
     
-    % Compute standard deviation
-    sumy = sum(yi,1); sump = sum(pi,1);
-    sdyp = sqrt((sum(yi.^2,1) - (sumy.^2)/nobs) .* ...
-        (sum(pi.^2,1) - (sump.^2)/nobs));
-    
-    % Compute correlation
-    r(i,:) = (sum(yi.*pi,1) - sumy.*sump/nobs)./sdyp;
-    
     % Compute error
     switch arg.error
         case 'mse'
@@ -112,6 +97,20 @@ for i = 1:nwin
         case 'mae'
             err(i,:) = sum(abs(yi - pi),1)/nobs;
     end
+    
+    switch arg.corr
+        case 'Spearman' % convert to rank values
+            yi = num2rank(yi,nobs,yvar);
+            pi = num2rank(pi,nobs,pvar);
+    end
+    
+    % Compute standard deviation
+    sumy = sum(yi,1); sump = sum(pi,1);
+    sdyp = sqrt((sum(yi.^2,1) - (sumy.^2)/nobs) .* ...
+        (sum(pi.^2,1) - (sump.^2)/nobs));
+    
+    % Compute correlation
+    r(i,:) = (sum(yi.*pi,1) - sumy.*sump/nobs)./sdyp;
     
 end
 
