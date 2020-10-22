@@ -1,4 +1,4 @@
-function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
+function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,comp,buff,varargin)
 %MTRFENVELOPE  Estimate the temporal envelope of an audio signal.
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT) computes the resampled temporal envelope
 %   of the audio signal X by averaging the square of the nearest neighbours
@@ -15,9 +15,9 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,drc,buff,varargin)
 %   used to estimate adjacent output frames resulting in increased envelope
 %   smoothing. By default, a window size of 1 is used.
 %
-%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC) specifies the amount of
-%   dynamic range compression (DRC) to apply by raising the RMS value of X
-%   to the power of DRC. By default, a value of log10(2) is used to model
+%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,COMP) specifies the amount of
+%   compression applied to the envelope by raising the RMS value of X
+%   to the power of COMP. By default, a value of log10(2) is used to model
 %   human auditory perception (Stevens, 1955).
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC,BUFF) prepends a buffer
@@ -62,8 +62,8 @@ end
 if nargin < 4 || isempty(window)
     window = 1;
 end
-if nargin < 5 || isempty(drc)
-    drc = log10(2);
+if nargin < 5 || isempty(comp)
+    comp = log10(2);
 end
 if nargin < 6
     buff = [];
@@ -75,8 +75,8 @@ x = x.^2;
 % Resample via moving average
 [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,'dim',arg.dim);
 
-% Apply dynamic range compression
-y = sqrt(y).^drc;
+% Apply compression to envelope
+y = sqrt(y).^comp;
 
 function arg = parsevarargin(varargin)
 %PARSEVARARGIN  Parse input arguments.
