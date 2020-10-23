@@ -22,9 +22,6 @@ lw = numel(num2str(w1)) + numel(num2str(w2));
 if w3 > 1, lw = lw + numel(num2str(w3)); end
 nw = w1*w2*w3;
 
-% Non-trainable params
-ntparams = 3; % lambda, tmin, tmax
-
 % Print model
 if model.Dir == 1
     fprintf('\nModel: "encoding"\n')
@@ -66,7 +63,6 @@ else
     end
 end
 for i = 1:52, fprintf('='), end, fprintf('\n')
-fprintf('Total params: %d\n',nw+nb+ntparams)
 fprintf('Trainable params: %d\n',nw+nb)
-fprintf('Non-trainable params: %d\n',ntparams)
+fprintf('Lag type: %s-lag\n',model.type)
 for i = 1:52, fprintf('_'), end, fprintf('\n')
