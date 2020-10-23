@@ -113,6 +113,7 @@ end
 for i = 1:length(Css)
     bmodel.w(:,:,i) = Cxx*bmodel.w(:,:,i)/Css(i,i);
 end
+bmodel.w = permute(bmodel.w,[3,2,1]);
 
 % Format output arguments
 fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
