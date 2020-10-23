@@ -1,7 +1,7 @@
 # Contributing to mTRF-Toolbox
 
 mTRF-Toolbox is maintained primarily by past and present members of the Lalor 
-Lab (Trinity College Dublin and Rochester University) but accepts contributions 
+Lab (Trinity College Dublin and University of Rochester) but accepts contributions 
 from the research community at large in the form of bug reports, fixes, feature 
 additions, and documentation improvements. To contribute to mTRF-Toolbox, we 
 recommend [opening an issue](https://github.com/mickcrosse/mTRF-Toolbox/issues/new) 
