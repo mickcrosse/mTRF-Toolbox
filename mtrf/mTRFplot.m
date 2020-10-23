@@ -33,6 +33,9 @@ function h = mTRFplot(model,type,feat,chan,xlims,avgfeat,avgchan)
 if nargin < 2 || isempty(type)
     type = 'trf';
 end
+if model.Dir == -1
+    model.w = permute(model.w,[3,2,1]);
+end
 if nargin < 3 || isempty(feat) || strcmpi(feat,'all')
     feat = 1:size(model.w,1);
 end
