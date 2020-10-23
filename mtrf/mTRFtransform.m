@@ -56,10 +56,10 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
 
-%   Authors: Adam Bednar <bednara@tcd.ie>
+%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%            Adam Bednar <bednara@tcd.ie>
 %            Emily Teoh <teohe@tcd.ie>
 %            Giovanni Di Liberto <diliberg@tcd.ie>
-%            Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
@@ -110,7 +110,9 @@ for i = 1:nfold
 end
 
 % Transform backward model weights
-bmodel.w = Cxx*bmodel.w/Css;
+for i = 1:length(Css)
+    bmodel.w(:,:,i) = Cxx*bmodel.w(:,:,i)/Css(i,i);
+end
 
 % Format output arguments
 fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
@@ -118,7 +120,7 @@ fmodel = struct('w',fliplr(bmodel.w),'t',-fliplr(bmodel.t),...
 
 % Verbose mode
 if arg.verbose
-    verbosemode(v,i+1,nfold,fmodel);
+    verbosemode(v,nfold+1,nfold,fmodel);
 end
 
 function v = verbosemode(v,fold,nfold,model)
