@@ -58,17 +58,11 @@ chan = 85; % channel Fz
 
 % Plot TRF
 figure, subplot(1,2,1)
-plot(fmodel.t,squeeze(fmodel.w(chan,:)),'linewidth',3);
-xlim([-50,350]);
-title('Frontal TRF (Fz)')
-xlabel('Time lag (ms)')
+mTRFplot(fmodel,'trf',[],chan,[-50,350],0);
+title('Transformed TRF (Fz)')
 ylabel('Amplitude (a.u.)')
-axis square, grid on
 
 % Plot GFP
 subplot(1,2,2)
-area(fmodel.t,squeeze(std(fmodel.w)),'edgecolor','none');
-xlim([-50,350])
+mTRFplot(fmodel,'gfp',[],'all',[-50,350],0);
 title('Global Field Power')
-xlabel('Time lag (ms)')
-axis square, grid on
