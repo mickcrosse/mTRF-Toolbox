@@ -3,7 +3,7 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,comp,buff,varargin)
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT) computes the resampled temporal envelope
 %   of the audio signal X by averaging the square of the nearest neighbours
 %   every FSIN/FSOUT samples, taking the square root and logarithmically
-%   scaling the RMS intesnity as per Lalor and Foxe (2010).
+%   scaling the RMS intensity (Lalor & Foxe, 2010).
 %
 %   If X is a matrix, it is assumed that the rows correspond to
 %   observations and the columns to variables, unless otherwise stated via
@@ -20,10 +20,10 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,comp,buff,varargin)
 %   to the power of COMP. By default, a value of log10(2) is used to model
 %   human auditory perception (Stevens, 1955).
 %
-%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,DRC,BUFF) prepends a buffer
+%   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,COMP,BUFF) concatenates a buffer
 %   of initial data to the beginning of X to enable centering of the first
 %   window at time t=0. The buffer should be passed from the final
-%   state of previous data sampled at the input sample rate FSIN..
+%   state of previous data sampled at the input sample rate FSIN.
 %
 %   [...] = MTRFENVELOPE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
