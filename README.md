@@ -127,8 +127,8 @@ To optimize the decoders ability to predict stimulus features from new EEG data,
 ```matlab
 % Model hyperparameters
 Dir = -1; % direction of causality
-tmin = 0; % minimum time lag
-tmax = 250; % maximum time lag
+tmin = 0; % minimum time lag (ms)
+tmax = 250; % maximum time lag (ms)
 lambda = 10.^(-6:2:6); % regularization parameters
 
 % Run efficient cross-validation
