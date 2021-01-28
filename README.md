@@ -4,7 +4,7 @@
 [![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
 [![Download mTRF-Toolbox](https://img.shields.io/sourceforge/dt/aespa.svg)](https://sourceforge.net/projects/aespa/files/latest/download)
 
-mTRF-Toolbox is a MATLAB package for quantitative modelling of sensory processing, suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG. It can be used to model the functional relationship between neuronal populations and dynamic sensory inputs such as natural scenes and sounds, or build neural decoders for reconstructing stimulus features and developing real-time applications such as brain-computer interfaces (BCIs).
+mTRF-Toolbox is a MATLAB package for modelling multivariate stimulus-response data, suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG. It can be used to model the functional relationship between neuronal populations and dynamic sensory inputs such as natural scenes and sounds, or build neural decoders for reconstructing stimulus features and developing real-time applications such as brain-computer interfaces (BCIs).
 
 - [Installation](#installation)
 - [Documentation](#documentation)
@@ -119,7 +119,7 @@ fs = 64;
 
 % Partition data into training/test sets
 nfold = 6; testTrial = 1;
-[stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,testTrial);
+[strain,rtrain,stest,rtest] = mTRFpartition(stim,resp,nfold,testTrial);
 ```
 
 To optimize the decoders ability to predict stimulus features from new EEG data, we tune the regularization parameter using an efficient leave-one-out cross-validation (CV) procedure.
@@ -127,12 +127,12 @@ To optimize the decoders ability to predict stimulus features from new EEG data,
 ```matlab
 % Model hyperparameters
 Dir = -1; % direction of causality
-tmin = 0; % minimum time lag
-tmax = 250; % maximum time lag
+tmin = 0; % minimum time lag (ms)
+tmax = 250; % maximum time lag (ms)
 lambda = 10.^(-6:2:6); % regularization parameters
 
 % Run efficient cross-validation
-cv = mTRFcrossval(stimtrain,resptrain,fs,Dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
+cv = mTRFcrossval(strain,rtrain,fs,Dir,tmin,tmax,lambda,'zeropad',0,'fast',1);
 ```
 
 Based on the CV results, we train our model using the optimal regularization value and test it on the held-out test set. Model performance is evaluated by measuring the correlation between the original and predicted stimulus.
@@ -142,10 +142,10 @@ Based on the CV results, we train our model using the optimal regularization val
 [rmax,idx] = max(mean(cv.r));
 
 % Train model
-model = mTRFtrain(stimtrain,resptrain,fs,Dir,tmin,tmax,lambda(idx),'zeropad',0);
+model = mTRFtrain(strain,rtrain,fs,Dir,tmin,tmax,lambda(idx),'zeropad',0);
 
 % Test model
-[pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
+[pred,test] = mTRFpredict(stest,rtest,model,'zeropad',0);
 ```
 
 We plot the CV metrics as a function of regularization and the test results of the final model. This example can also be generated using [stimulus_reconstruction](examples/stimulus_reconstruction.m).
@@ -163,7 +163,7 @@ set(gca,'xtick',1:nlambda,'xticklabel',-6:2:6), xlim([0,numel(lambda)+1]), axis 
 title('CV Error'), xlabel('Regularization (1\times10^\lambda)'), ylabel('MSE')
 
 % Plot reconstruction
-subplot(2,2,3), plot((1:length(stimtest))/fs,stimtest,'linewidth',2), hold on
+subplot(2,2,3), plot((1:length(stest))/fs,stest,'linewidth',2), hold on
 plot((1:length(pred))/fs,pred,'linewidth',2), hold off, xlim([0,10]), axis square, grid on
 title('Reconstruction'), xlabel('Time (s)'), ylabel('Amplitude (a.u.)'), legend('Orig','Pred')
 
@@ -190,14 +190,14 @@ fs = 64;
 
 % Generate training/test sets
 nfold = 10;
-[stimtrain,resptrain] = mTRFpartition(stim,resp,nfold);
+[strain,rtrain] = mTRFpartition(stim,resp,nfold);
 ```
 
 We run a leave-one-out cross-validation to test a series of single-lag decoders over the range 0 to 1000 ms using a pre-tuned regularization parameter.
 
 ```matlab
 % Run single-lag cross-validation
-[stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
+[stats,t] = mTRFcrossval(strain,rtrain,fs,-1,0,1e3,10.^-2,'type','single','zeropad',0);
 
 % Compute mean and variance
 macc = squeeze(mean(stats.r))'; vacc = squeeze(var(stats.r))';
