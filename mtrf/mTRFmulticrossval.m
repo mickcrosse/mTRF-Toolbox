@@ -68,10 +68,10 @@ function [stats,t] = mTRFmulticrossval(stim,resp,resp1,resp2,fs,Dir,tmin,tmax,la
 %                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'error'     A string specifying the error metric to use:
-%                       'msc'       Mean square error (default): take the
+%                       'mse'       mean square error (default): take the
 %                                   square root to convert it to the
 %                                   original units of the data (i.e., RMSE)
-%                       'mae'       Mean absolute error: more robust to
+%                       'mae'       mean absolute error: more robust to
 %                                   outliers than MSE
 %       'split'     A scalar specifying the number of segments in which to
 %                   split each trial of data when computing the covariance

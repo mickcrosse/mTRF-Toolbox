@@ -29,10 +29,10 @@ function [r,err] = mTRFevaluate(y,pred,varargin)
 %                                   coefficient: suitable for data with a
 %                                   non-linear relationship
 %       'error'     A string specifying the error metric to use:
-%                       'msc'       Mean squared error (default): take the
+%                       'mse'       mean squared error (default): take the
 %                                   square root to convert to the original
 %                                   units (i.e., RMSE)
-%                       'mae'       Mean absolute error: more robust to
+%                       'mae'       mean absolute error: more robust to
 %                                   outliers than MSE
 %       'window'    A scalar specifying the window size over which to
 %                   compute performance in samples. By default, the entire
@@ -177,7 +177,7 @@ addParameter(p,'corr','Pearson',validFcn);
 % Error metric
 errOptions = {'mse','mae'};
 validFcn = @(x) any(validatestring(x,errOptions));
-addParameter(p,'error','msc',validFcn);
+addParameter(p,'error','mse',validFcn);
 
 % Window size
 errorMsg = 'It must be a positive numeric scalar within indexing range.';
