@@ -82,35 +82,34 @@ for i = 1:nwin
     if arg.window % use window
         idx = arg.window*(i-1)+1:arg.window*i;
         yi = y(idx,:);
-        pi = pred(idx,:);
+        predi = pred(idx,:);
         nobs = numel(idx);
     else % use entire trial
         yi = y;
-        pi = pred;
+        predi = pred;
         nobs = yobs;
     end
     
     % Compute error
     switch arg.error
         case 'mse'
-            err(i,:) = sum(abs(yi - pi).^2,1)/nobs;
+            err(i,:) = sum(abs(yi - predi).^2,1)/nobs;
         case 'mae'
-            err(i,:) = sum(abs(yi - pi),1)/nobs;
+            err(i,:) = sum(abs(yi - predi),1)/nobs;
     end
     
     switch arg.corr
         case 'Spearman' % convert to rank values
             yi = num2rank(yi,nobs,yvar);
-            pi = num2rank(pi,nobs,pvar);
+            predi = num2rank(predi,nobs,pvar);
     end
     
-    % Compute standard deviation
-    sumy = sum(yi,1); sump = sum(pi,1);
-    sdyp = sqrt((sum(yi.^2,1) - (sumy.^2)/nobs) .* ...
-        (sum(pi.^2,1) - (sump.^2)/nobs));
+    % Demean signals
+    y0 = yi - sum(yi,1)/nobs;
+    pred0 = predi - sum(predi,1)/nobs;
     
-    % Compute correlation
-    r(i,:) = (sum(yi.*pi,1) - sumy.*sump/nobs)./sdyp;
+    % Compute correlation coefficient
+    r(i,:) = sum(y0.*pred0)/sqrt(sum(y0.^2)*sum(pred0.^2));
     
 end
 
