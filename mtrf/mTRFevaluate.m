@@ -93,9 +93,9 @@ for i = 1:nwin
     % Compute error
     switch arg.error
         case 'mse'
-            err(i,:) = sum(abs(yi - predi).^2,1)/nobs;
+            err(i,:) = sum(abs(yi-predi).^2,1)/nobs;
         case 'mae'
-            err(i,:) = sum(abs(yi - predi),1)/nobs;
+            err(i,:) = sum(abs(yi-predi),1)/nobs;
     end
     
     switch arg.corr
@@ -105,11 +105,11 @@ for i = 1:nwin
     end
     
     % Demean signals
-    y0 = yi - sum(yi,1)/nobs;
-    pred0 = predi - sum(predi,1)/nobs;
+    y0 = bsxfun(@minus,yi,sum(yi,1)/nobs);
+    pred0 = bsxfun(@minus,predi,sum(predi,1)/nobs);
     
     % Compute correlation coefficient
-    r(i,:) = sum(y0.*pred0)/sqrt(sum(y0.^2)*sum(pred0.^2));
+    r(i,:) = sum(y0.*pred0,1)./sqrt(sum(y0.^2,1).*sum(pred0.^2,1));
     
 end
 
