@@ -378,7 +378,7 @@ if isempty(fold)
     fprintf('\nTrain on %d folds, validate on 1 fold\n',nfold-1)
 elseif fold == 0
     fprintf('Training/validating model\n')
-    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),']\n'];
+    v.msg = ['%d/%d [',repmat(' ',1,nfold),']\n'];
     v.h = fprintf(v.msg,fold,nfold);
 elseif fold <= nfold
     if fold == 1 && toc < 0.1
@@ -386,7 +386,7 @@ elseif fold <= nfold
     end
     v.tocs = v.tocs + toc;
     fprintf(repmat('\b',1,v.h))
-    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),'] - ',...
+    v.msg = ['%d/%d [',repmat('=',1,fold),repmat(' ',1,nfold-fold),'] - ',...
         '%.3fs/fold\n'];
     v.h = fprintf(v.msg,fold,nfold,v.tocs/fold);
 end

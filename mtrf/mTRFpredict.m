@@ -243,7 +243,7 @@ if fold == 0
     v = struct('msg',[],'h',[],'tocs',0);
     fprintf('\nTest on %d samples\n',nobs)
     fprintf('Predicting output\n')
-    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),']\n'];
+    v.msg = ['%d/%d [',repmat(' ',1,nfold),']\n'];
     v.h = fprintf(v.msg,fold,nfold);
 elseif fold <= nfold
     if fold == 1 && toc < 0.1
@@ -251,7 +251,7 @@ elseif fold <= nfold
     end
     v.tocs = v.tocs + toc;
     fprintf(repmat('\b',1,v.h))
-    v.msg = ['%d/%d [',repelem('=',fold),repelem(' ',nfold-fold),'] - ',...
+    v.msg = ['%d/%d [',repmat('=',1,fold),repmat(' ',1,nfold-fold),'] - ',...
         '%.3fs/fold\n'];
     v.h = fprintf(v.msg,fold,nfold,v.tocs/fold);
 end
