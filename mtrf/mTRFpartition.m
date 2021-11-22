@@ -23,7 +23,7 @@ function [strain,rtrain,stest,rtest] = mTRFpartition(stim,resp,k,testfold,vararg
 %                   of equal size or use all available data: pass in 1 for
 %                   equal folds, or 0 to use all available data (default).
 %
-%   See also CVPARTITION, MTRFCROSSVAL, MTRFNESTEDCROSSVAL.
+%   See also CVPARTITION, MTRFCROSSVAL.
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 

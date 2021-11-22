@@ -56,6 +56,9 @@ function [pred,stats] = mTRFpredict(stim,resp,model,varargin)
 %                   split each trial of data when computing the covariance
 %                   matrices. This is useful for reducing memory usage on
 %                   large datasets. By default, the entire trial is used.
+%       'window'    A scalar specifying the window size over which to
+%                   compute performance in seconds. By default, the entire
+%                   trial or segment is used.
 %       'zeropad'   A numeric or logical specifying whether to zero-pad the
 %                   outer rows of the design matrix or delete them: pass in
 %                   1 to zero-pad them (default), or 0 to delete them.

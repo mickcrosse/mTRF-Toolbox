@@ -16,14 +16,14 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,comp,buff,varargin)
 %   smoothing. By default, a window size of 1 is used.
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,COMP) specifies the amount of
-%   compression applied to the envelope by raising the RMS value of X
-%   to the power of COMP. By default, a value of log10(2) is used to model
+%   compression applied to the envelope by raising the RMS value of X to 
+%   the power of COMP. By default, a value of log10(2) is used to model
 %   human auditory perception (Stevens, 1955).
 %
 %   Y = MTRFENVELOPE(X,FSIN,FSOUT,WINDOW,COMP,BUFF) concatenates a buffer
 %   of initial data to the beginning of X to enable centering of the first
-%   window at time t=0. The buffer should be passed from the final
-%   state of previous data sampled at the input sample rate FSIN.
+%   window at time t=0. The buffer should be passed from the final state of 
+%   previous data sampled at the input sample rate FSIN.
 %
 %   [...] = MTRFENVELOPE(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies
 %   additional parameters and their values. Valid parameters are the
