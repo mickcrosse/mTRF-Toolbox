@@ -29,7 +29,7 @@ function stimulus_reconstruction
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('../data/speech_data.mat','stim','resp','fs');
 
 % Normalize data
 stim = sum(stim,2);
@@ -73,6 +73,10 @@ model = mTRFtrain(stimtrain,resptrain,fs,-1,tmin,tmax,lambda,'zeropad',0);
 % Test model
 [pred,test] = mTRFpredict(stimtest,resptest,model,'zeropad',0);
 
+% Get a null distribution of predict accuracies
+nullstats = mTRFpermute([stimtrain; stimtest],[resptrain; resptest],fs,-1,'circshift',...
+    tmin,tmax,lambda);
+
 % ---Evaluation---
 
 % Plot CV correlation
@@ -108,9 +112,15 @@ legend('Orig','Pred')
 % Plot test correlation
 subplot(2,2,4)
 bar(1,rmax), hold on
-bar(2,test.r), hold off
+bar(2,test.r)
+% plot the null distributions
+nl(1) = plot([0 3],ones(1,2)*median(nullstats.nullr),'k','linewidth',1.5);
+nl(2) = plot([0 3],ones(1,2)*quantile(nullstats.nullr,0.95),'k--','linewidth',1.5);
+plot([0 3],ones(1,2)*quantile(nullstats.nullr,0.05),'k--','linewidth',1.5)
+hold off
 set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'})
 title('Model Performance')
 xlabel('Dataset')
 ylabel('Correlation')
+legend(nl,{'Null distribution','5-95% quantile'});
 axis square, grid on

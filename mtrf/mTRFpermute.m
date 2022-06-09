@@ -1,4 +1,4 @@
-function stats = mTRFpermute(stim,resp,fs,Dir,tmin,tmax,lambda)
+function stats = mTRFpermute(stim,resp,fs,Dir,method,tmin,tmax,lambda)
 % Shuffle or circularly shift stimuli relative to the response and
 % recalculate a null distribution of r values for a given lambda value
 
@@ -25,10 +25,10 @@ for n = 1:niter
 
     if strcmp(method,'permute') || strcmp(method,'both')
         % randomly select pairs of trials
-        eidx = randi(length(resp),length(resp),1);
-        sidx = randi(length(stim),length(stim),1);
+        eidx = randperm(length(resp));
+        sidx = randperm(length(stim));
     else
-        eidx = randi(length(resp),1); % randomly shuffle...
+        eidx = randperm(length(resp)); % randomly shuffle...
         sidx = eidx; % ...but use the original trial pairings
     end
     if strcmp(method,'circshift') || strcmp(method,'both')
