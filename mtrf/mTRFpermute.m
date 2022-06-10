@@ -1,8 +1,26 @@
-function stats = mTRFpermute(stim,resp,fs,Dir,method,tmin,tmax,lambda)
+function stats = mTRFpermute(stim,resp,fs,Dir,method,tmin,tmax,lambda,varargin)
+% STATS = MTRFPERMUTE(STIM,RESP,FS,DIR,METHOD,TMIN,TMAX,LAMBDA)
 % Shuffle or circularly shift stimuli relative to the response and
 % recalculate a null distribution of r values for a given lambda value
+% When running this, include all of the folds or trials in 'stim' and
+% 'resp'.
+% METHOD has three options:
+% - 'permute': Randomly permute the trials or folds
+% - 'circshift': Keep trial pairings, but randomly circularly shift the
+%       stimuli in each trial or fold
+% - 'both': Both randomly permute trials or folds and randomly circularly 
+%       shift the stimuli
+% Nate Zuk (2022)
 
-niter = 100; % number of permutations
+nperm = 100; % number of permutations
+
+if ~isempty(varargin)
+    for n = 2:2:length(varargin)
+        if strcmp(varargin{n-1},'nperm')
+            nperm = varargin{n};
+        end
+    end
+end
 
 if Dir==1
     ndim = size(resp{1},2); % number of output channels, assumed to be the same for all trials
@@ -15,13 +33,13 @@ if ~strcmp(method,'circshift') && ~strcmp(method,'permute') && ~strcmp(method,'b
     error('Method must be circshift, permute, or both');
 end
 
-fprintf('Computing the null distribution of accuracies (%d iterations)\n',niter);
+fprintf('Computing the null distribution of accuracies (%d iterations)\n',nperm);
 nullcmp_timer = tic; % keep track of how long it takes to run
-nullr = NaN(niter,ndim);
-nullerr = NaN(niter,ndim);
-for n = 1:niter
+nullr = NaN(nperm,ndim);
+nullerr = NaN(nperm,ndim);
+for n = 1:nperm
     % display a . every 10 trials
-    if mod(n,100)==0, fprintf('(%d/%d)\n',n,niter); end
+    if mod(n,10)==0, fprintf('(%d/%d)\n',n,nperm); end
 
     if strcmp(method,'permute') || strcmp(method,'both')
         % randomly select pairs of trials
