@@ -3,8 +3,8 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/mickcrosse/mTRF-Toolbox/graphs/commit-activity)
 [![Download mTRF-Toolbox](https://img.shields.io/sourceforge/dt/aespa.svg)](https://sourceforge.net/projects/aespa/files/latest/download)
 [![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
-[![DOI:10.3389/fnhum.2016.00604](http://img.shields.io/badge/DOI-10.3389/fnhum.2016.00604-F39200FF.svg)](https://doi.org/10.3389/fnhum.2016.00604)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![DOI:10.3389/fnhum.2016.00604](http://img.shields.io/badge/DOI-10.3389/fnhum.2016.00604-F39200FF.svg)](https://doi.org/10.3389/fnhum.2016.00604)
 
 mTRF-Toolbox is a MATLAB package for modelling multivariate stimulus-response data, suitable for neurophysiological data such as MEG, EEG, sEEG, ECoG and EMG. It can be used to model the functional relationship between neuronal populations and dynamic sensory inputs such as natural scenes and sounds, or build neural decoders for reconstructing stimulus features and developing real-time applications such as brain-computer interfaces (BCIs).
 
