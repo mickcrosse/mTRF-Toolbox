@@ -1,6 +1,6 @@
 # <img src="docs/mTRF-Toolbox_logo.png">
 
-[![DOI:10.3389/fnhum.2016.00604](http://img.shields.io/badge/DOI-10.1101/2021.01.08.425840-B31B1B.svg)](https://doi.org/10.3389/fnhum.2016.00604)
+[![DOI:10.3389/fnhum.2016.00604](http://img.shields.io/badge/DOI-10.3389/fnhum.2016.00604-F39200FF.svg)](https://doi.org/10.3389/fnhum.2016.00604)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/mickcrosse/mTRF-Toolbox/graphs/commit-activity)
 [![View mTRF-Toolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/74260-mtrf-toolbox)
 [![Download mTRF-Toolbox](https://img.shields.io/sourceforge/dt/aespa.svg)](https://sourceforge.net/projects/aespa/files/latest/download)
