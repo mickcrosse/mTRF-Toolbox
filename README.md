@@ -10,11 +10,11 @@ mTRF-Toolbox is a MATLAB package for modelling multivariate stimulus-response da
 
 - [Installation](#installation)
 - [Documentation](#documentation)
-- [mTRF Modelling Framework](#mtrf-modelling-framework)
 - [Contents](#contents)
   - [Fitting encoding/decoding models](#fitting-encodingdecoding-models)
   - [Decoding attention and multisensory integration](#decoding-attention-and-multisensory-integration)
   - [Feature engineering](#feature-engineering)
+- [mTRF Modelling Framework](#mtrf-modelling-framework)
 - [Examples](#examples)
   - [TRF/STRF estimation](#trfstrf-estimation)
   - [Stimulus reconstruction](#stimulus-reconstruction)
