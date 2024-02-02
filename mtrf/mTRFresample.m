@@ -67,8 +67,9 @@ if nargin < 5
 end
 
 % Arrange data column-wise
-if arg.dim == 2, x = x'; end
-if isrow(x), x = x'; end
+if arg.dim == 2 || isrow(x)
+    x = x';
+end
 
 % Concatenate buffer
 if ~isempty(buff)
