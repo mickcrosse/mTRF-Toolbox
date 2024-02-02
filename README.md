@@ -1,4 +1,4 @@
-# <img src="docs/mTRF-Toolbox_logo.png">
+# <img src="img/mTRF-Toolbox_logo.png">
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/mickcrosse/mTRF-Toolbox/graphs/commit-activity)
 [![Download mTRF-Toolbox](https://img.shields.io/sourceforge/dt/aespa.svg)](https://sourceforge.net/projects/aespa/files/latest/download)
@@ -26,50 +26,64 @@ mTRF-Toolbox is a MATLAB package for modelling multivariate stimulus-response da
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
 
 ```matlab
-addpath('directory/mTRF-Toolbox')
+addpath(genpath('directory/mTRF-Toolbox-2.3/mtrf'))
 savepath
 ```
 
-Alternatively, use the MATLAB dialog box to install mTRF-Toolbox. On the **Home tab**, in the **Environment** section, click **Set Path**. In the Set Path dialog box, click **Add Folder with Subfolders** and search for mTRF-Toolbox in your local directory and select the top-level folder.
+Alternatively, use the MATLAB dialog box to install mTRF-Toolbox. On the **Home tab**, in the **Environment** section, click **Set Path**. In the Set Path dialog box, click **Add Folder with Subfolders** and search for mTRF-Toolbox in your local directory and select the `mtrf` subfolder.
 
 ## Documentation
 
-For documentation and citation, please refer to the [mTRF-Toolbox paper](docs/Crosse_etal_FrontHumNeurosci_2016.pdf).
+For documentation and citation, please refer to the [mTRF-Toolbox paper](doc/Crosse_etal_FrontHumNeurosci_2016.pdf):
 
-For usage, please see [examples](#examples) and [example M-files](examples).
+- Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) **The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli.** *Frontiers in Human Neuroscience* 10:604. https://doi.org/10.3389/fnhum.2016.00604
 
-## mTRF Modelling Framework
+For methodological considerations in applied research, please refer to the [mTRF-Methods paper](doc/Crosse_etal_FrontNeurosci_2021.pdf):
 
-mTRF-Toolbox provides a complementary forward/backward quantitative modelling framework. A forward model, known as a temporal response function or temporal receptive field (TRF), describes how sensory information is encoded in neuronal activity. Multivariate stimulus features such as spatio- or spectro-temporal representations, as well as categorical features such as phonetic or semantic embeddings, can be used as inputs to the model. TRFs can be subjected to conventional time-frequency/source analysis techniques or used to predict the neural responses to an independent set of stimuli. mTRF-Toolbox provides an efficient cross-validation procedure for hyperparameter optimization.
+- Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor EC (2021) **Linear Modeling of Neurophysiological Responses to Speech and Other Continuous Stimuli: Methodological Considerations for Applied Research.** *Frontiers in Neuroscience* 15:705621. https://doi.org/10.3389/fnins.2021.705621
 
-A backward model, known as a neural decoder, reverses the direction of causality between stimulus and response. Neural decoders can be used to reconstruct stimulus features from information encoded explicitly or implicitly in neuronal activity, or decode higher-order cognitive processes such as top-down attention. The mTRF modelling framework provides a basic machine learning platform for real-time BCI applications such as stimulus reconstruction/synthesis and auditory attention decoding (AAD).
-
-<div align="center">
-  <img src="docs/mTRF_modelling_framework.PNG">
-</div>
+For usage, please see the example code provided in the [Examples](#examples) section below, as well the M-files in the [examples](examples) folder. For detailed usage, please see the help documentation in each of the function headers.
 
 ## Contents
 
+mTRF-Toolbox consists of the following set of functions:
+
 ### Fitting encoding/decoding models
 
-* `mTRFcrossval()` - performs efficient leave-one-out cross-validation
-* `mTRFtrain()` - fits an encoding/decoding model (TRF/STRF estimation)
-* `mTRFtransform()` - transforms a decoding model into an encoding model
-* `mTRFpredict()` - predicts the output of an encoding/decoding model
-* `mTRFevaluate()` - evaluates the accuracy and error of a models prediction
+| Function | Description |
+| --- | --- |
+| [**mTRFcrossval()**](mtrf/mTRFcrossval.m) | Cross-validation for encoding/decoding model optimization |
+| [**mTRFtrain()**](mtrf/mTRFtrain.m) | Fits an encoding/decoding model (TRF/STRF estimation) |
+| [**mTRFtransform()**](mtrf/mTRFtransform.m) | Transforms a decoding model into an encoding model |
+| [**mTRFpredict()**](mtrf/mTRFpredict.m) | Predicts the output of an encoding/decoding model |
+| [**mTRFevaluate()**](mtrf/mTRFevaluate.m) | Evaluates encoding/decoding model performance |
 
 ### Decoding attention and multisensory integration
 
-* `mTRFattncrossval()` - cross-validation for attention decoder optimization
-* `mTRFattnevaluate()` - evaluates the accuracy and modulation index of an attention decoder
-* `mTRFmulticrossval()` - cross-validation for additive multisensory model optimization
-* `mTRFmultitrain()` - fits an additive multisensory model (TRF/STRF estimation)
+| Function | Description |
+| --- | --- |
+| [**mTRFattncrossval()**](mtrf/mTRFattncrossval.m) | Cross-validation for attention decoder optimization |
+| [**mTRFattnevaluate()**](mtrf/mTRFattnevaluate.m) | Evaluates attention decoder performance |
+| [**mTRFmulticrossval()**](mtrf/mTRFmulticrossval.m) | Cross-validation for additive multisensory model optimization |
+| [**mTRFmultitrain()**](mtrf/mTRFmultitrain.m) | Fits an additive multisensory model (TRF/STRF estimation) |
 
 ### Feature engineering
 
-* `mTRFenvelope()` - computes the temporal envelope of an audio signal
-* `mTRFresample()` - resamples and smooths temporal features
-* `lagGen()` - generates time-lagged input features of multivariate data
+| Function | Description |
+| --- | --- |
+| [**mTRFenvelope()**](mtrf/mTRFenvelope.m) | Computes the temporal envelope of a continuous signal |
+| [**mTRFresample()**](mtrf/mTRFresample.m) | Resamples and smooths temporal features |
+| [**lagGen()**](mtrf/lagGen.m) | Generates time-lagged input features of multivariate data |
+
+## mTRF Modelling Framework
+
+mTRF-Toolbox provides a complementary forward/backward quantitative modelling framework. A forward model, known as a temporal response function or temporal receptive field (TRF), describes how sensory information is encoded in neuronal activity as a function of time (or some other variable). Multivariate stimulus features such as spatio- or spectro-temporal representations, as well as categorical features such as phonetic or semantic embeddings, can be used as inputs to the model. TRFs can be subjected to conventional time-frequency / source analysis techniques, or used to predict the neural responses to an independent set of stimuli. mTRF-Toolbox provides an efficient cross-validation procedure for hyperparameter optimization.
+
+A backward model, known as a neural decoder, treats the direction of causality as if it were in reverse, mapping from the neural response back to the stimulus. Neural decoders can be used to reconstruct stimulus features from information encoded explicitly or implicitly in neuronal activity, or decode higher-order cognitive processes such as selective attention. The mTRF modelling framework provides a basic machine learning platform for real-time BCI applications such as stimulus reconstruction / synthesis and auditory attention decoding (AAD).
+
+<div align="center">
+  <img src="img/mTRF_modelling_framework.png">
+</div>
 
 ## Examples
 
@@ -106,7 +120,7 @@ subplot(2,2,4), mTRFplot(model,'gfp','all','all',[-50,350]);
 title('Global Field Power')
 ```
 
-<img src="docs/STRF_example.PNG">
+<img src="img/STRF_example.png">
 
 ### Stimulus reconstruction
 
@@ -177,7 +191,7 @@ set(gca,'xtick',1:2,'xticklabel',{'Val.','Test'}), axis square, grid on
 title('Model Performance'), xlabel('Dataset'), ylabel('Correlation')
 ```
 
-<img src="docs/stim_recon_example.PNG">
+<img src="img/stim_recon_example.png">
 
 ### Single-lag decoder analysis
 
@@ -230,7 +244,25 @@ plot(-fliplr(t),fliplr(merr),'linewidth',2), hold off
 title('Reconstruction Error'), xlabel('Time lag (ms)'), ylabel('MSE')
 ```
 
-<img src="docs/single_lag_analysis_example.PNG">
+<img src="img/single_lag_analysis_example.png">
+
+## Citation
+
+If you publish any work using mTRF-Toolbox, please it cite as:
+
+Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) **The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli.** *Frontiers in Human Neuroscience* 10:604.
+
+```
+@article{crosse2016mtrf,
+  title={The multivariate temporal response function (mTRF) toolbox: a MATLAB toolbox for relating neural signals to continuous stimuli},
+  author={Crosse, Michael J and Di Liberto, Giovanni M and Bednar, Adam and Lalor, Edmund C},
+  journal={Frontiers in Human Neuroscience},
+  volume={10},
+  pages={604},
+  year={2016},
+  publisher={Frontiers}
+}
+```
 
 ## License
 
