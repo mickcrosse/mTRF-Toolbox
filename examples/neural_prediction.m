@@ -1,8 +1,8 @@
-function stimulus_reconstruction
-%STIMULUS_RECONSTRUCTION  Stimulus reconstruction example.
-%   STIMULUS_RECONSTRUCTION loads an example dataset and trains a neural
-%   decoder that reconstructs stimulus features (speech envelope) from 2
-%   minutes of 128-channel EEG data as per Crosse et al. (2016).
+function neural_prediction
+%NEURAL_PREDICTION  Neural prediction example.
+%   NEURAL_PREDICTION loads an example dataset and trains a forward
+%   encoding model (TRF) that predicts 128-channel EEG responses from 2
+%   minutes of speech as per Crosse et al. (2016).
 %
 %   Example data is loaded from SPEECH_DATA.MAT and consists of the
 %   following variables:
@@ -24,40 +24,34 @@ function stimulus_reconstruction
 %          multivariate temporal response function (mTRF) toolbox: a MATLAB
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
-%      [2] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor 
-%          EC (2021) Linear Modeling of Neurophysiological Responses to 
-%          Speech and Other Continuous Stimuli: Methodological 
+%      [2] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor
+%          EC (2021) Linear Modeling of Neurophysiological Responses to
+%          Speech and Other Continuous Stimuli: Methodological
 %          Considerations for Applied Research. Front Neurosci 15:705621.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('../data/speech_data.mat','stim','resp','fs');
+load('../data/speech_data.mat','stim','resp','fs','factor');
 
 % Normalize data
 stim = sum(stim,2);
-resp = resp/std(resp(:));
-
-% Downsample data
-fsNew = 64;
-stim = resample(stim,fsNew,fs);
-resp = resample(resp,fsNew,fs);
-fs = fsNew;
+resp = factor*resp(:,85);
 
 % ---Cross-validation---
 
 % Generate training/test sets
 nfold = 6;
-testfold = 1;
+testfold = 3;
 [stimtrain,resptrain,stimtest,resptest] = mTRFpartition(stim,resp,nfold,...
     testfold);
 
 % Model hyperparameters
 Dir = -1; % direction of causality
 tmin = 0; % minimum time lag
-tmax = 250; % maximum time lag
-lambdas = 10.^(-6:2:6); % regularization values
+tmax = 200; % maximum time lag
+lambdas = 10.^(-3:1:3); % regularization values
 
 % Run fast cross-validation
 cv = mTRFcrossval(stimtrain,resptrain,fs,Dir,tmin,tmax,lambdas,...
@@ -66,7 +60,7 @@ cv = mTRFcrossval(stimtrain,resptrain,fs,Dir,tmin,tmax,lambdas,...
 % ---Model training---
 
 % Get optimal hyperparameters
-[rmax,idx] = max(mean(cv.r));
+[rmax,idx] = max(mean(mean(cv.r),3));
 lambda = lambdas(idx);
 nlambda = length(lambdas);
 
@@ -81,7 +75,7 @@ model = mTRFtrain(stimtrain,resptrain,fs,Dir,tmin,tmax,lambda,'zeropad',0);
 % ---Evaluation---
 
 % Plot CV correlation
-figure('Name','Stimulus Reconstruction','NumberTitle','off')
+figure('Name','Neural Prediction','NumberTitle','off')
 set(gcf,'color','w')
 subplot(2,2,1)
 errorbar(1:nlambda,mean(cv.r),std(cv.r)/sqrt(nfold-1),'linewidth',2)
@@ -102,10 +96,10 @@ axis square, grid on
 
 % Plot reconstruction
 subplot(2,2,3)
-plot((1:length(stimtest))/fs,stimtest,'linewidth',2), hold on
+plot((1:length(resptest))/fs,resptest,'linewidth',2), hold on
 plot((1:length(pred))/fs,pred,'linewidth',2), hold off
 xlim([0,10])
-title('Reconstruction')
+title('Prediction')
 xlabel('Time (s)')
 ylabel('Amplitude (a.u.)')
 axis square, grid on

@@ -25,12 +25,20 @@ function transform_decoder
 %          Bieﬂmann F (2014) On the interpretation of weight vectors of
 %          linear models in multivariate neuroimaging. NeuroImage
 %          87:96-110.
+%      [2] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
+%      [3] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor
+%          EC (2021) Linear Modeling of Neurophysiological Responses to
+%          Speech and Other Continuous Stimuli: Methodological
+%          Considerations for Applied Research. Front Neurosci 15:705621.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('../data/speech_data.mat','stim','resp','fs');
 
 % Normalize data
 stim = sum(stim,2);
@@ -43,12 +51,14 @@ resp = resample(resp,fsNew,fs);
 fs = fsNew;
 
 % Model parameters
-tmin = -150;
-tmax = 450;
-lambda = 256;
+Dir = -1; % direction of causality
+tmin = -150; % minimum time lag
+tmax = 450; % maximum time lag
+lambda = 256; % regularization value
 
 % Compute backward model weights
-bmodel = mTRFtrain(stim,resp,fs,-1,tmin,tmax,lambda,'split',5,'zeropad',0);
+bmodel = mTRFtrain(stim,resp,fs,Dir,tmin,tmax,lambda,'split',5,...
+    'zeropad',0);
 
 % Transform to forward model weights
 fmodel = mTRFtransform(bmodel,resp,'split',5,'zeropad',0);
@@ -57,7 +67,9 @@ fmodel = mTRFtransform(bmodel,resp,'split',5,'zeropad',0);
 chan = 85; % channel Fz
 
 % Plot TRF
-figure, subplot(1,2,1)
+figure('Name','Decoder-Encoder Transformation','NumberTitle','off')
+set(gcf,'color','w')
+subplot(1,2,1)
 mTRFplot(fmodel,'trf',[],chan,[-50,350],0);
 title('Transformed TRF (Fz)')
 ylabel('Amplitude (a.u.)')

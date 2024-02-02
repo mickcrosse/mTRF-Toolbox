@@ -21,28 +21,39 @@ function plot_contrast_trf
 %      [1] Lalor EC, Pearlmutter BA, Reilly RB, McDarby G, Foxe JJ (2006)
 %          The VESPA: a method for the rapid estimation of a visual evoked
 %          potential. NeuroImage 32:1549-1561.
+%      [2] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
+%      [3] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor
+%          EC (2021) Linear Modeling of Neurophysiological Responses to
+%          Speech and Other Continuous Stimuli: Methodological
+%          Considerations for Applied Research. Front Neurosci 15:705621.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('data/contrast_data.mat','stim','resp','fs','Nf','factor');
+load('../data/contrast_data.mat','stim','resp','fs','Nf','factor');
 
 % Normalize data
 stim = stim*Nf;
 resp = resp*factor;
 
 % Model hyperparameters
-tmin = -100;
-tmax = 400;
-lambda = 0.5;
+Dir = 1; % direction of causality
+tmin = -100; % minimum time lag
+tmax = 400; % maximum time lag
+lambda = 0.5; % regularization value
 
 % Compute model weights
-model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','Tikhonov',...
+model = mTRFtrain(stim,resp,fs,Dir,tmin,tmax,lambda,'method','Tikhonov',...
     'split',5,'zeropad',0);
 
 % Plot TRF
-figure, subplot(1,2,1)
+figure('Name','Contrast TRF & GFP','NumberTitle','off')
+set(gcf,'color','w')
+subplot(1,2,1)
 mTRFplot(model,'trf',[],23,[-50,350]);
 title('Contrast TRF (Oz)')
 ylabel('Amplitude (\muV)')

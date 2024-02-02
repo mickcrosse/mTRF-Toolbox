@@ -25,12 +25,20 @@ function single_lag_analysis
 %          Cunningham BG, Slaney M, Shamma SA, Lalor EC (2015) Attentional
 %          Selection in a Cocktail Party Environment Can Be Decoded from
 %          Single-Trial EEG. Cereb Cortex 25(7):1697-1706.
+%      [2] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
+%      [3] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor 
+%          EC (2021) Linear Modeling of Neurophysiological Responses to 
+%          Speech and Other Continuous Stimuli: Methodological 
+%          Considerations for Applied Research. Front Neurosci 15:705621.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('data/speech_data.mat','stim','resp','fs');
+load('../data/speech_data.mat','stim','resp','fs');
 
 % Normalize data
 stim = sum(stim,2);
@@ -47,18 +55,19 @@ nfold = 10;
 [stimtrain,resptrain] = mTRFpartition(stim,resp,nfold);
 
 % Model hyperparameters
-tmin = 0;
-tmax = 1000;
-lambda = 10.^-2;
+Dir = -1; % direction of causality
+tmin = 0; % minimum time lag
+tmax = 1000; % maximum time lag
+lambda = 10.^-2; % regularization value
 
 % Run single-lag cross-validation
-[stats,t] = mTRFcrossval(stimtrain,resptrain,fs,-1,tmin,tmax,...
+[stats,t] = mTRFcrossval(stimtrain,resptrain,fs,Dir,tmin,tmax,...
     lambda,'type','single','zeropad',0);
 
 % Compute mean and variance
 mr = squeeze(mean(stats.r))';
-vr = squeeze(var(stats.r))';
 merr = squeeze(mean(stats.err))';
+vr = squeeze(var(stats.r))';
 verr = squeeze(var(stats.err))';
 
 % Compute variance bound
@@ -68,7 +77,8 @@ yr = [fliplr(mr-sqrt(vr/nfold)),mr+sqrt(vr/nfold)];
 yerr = [fliplr(merr-sqrt(verr/nfold)),merr+sqrt(verr/nfold)];
 
 % Plot accuracy
-figure
+figure('Name','Single-lag Analysis','NumberTitle','off')
+set(gcf,'color','w')
 subplot(1,2,1)
 h = fill(xr,yr,'b','edgecolor','none'); hold on
 set(h,'facealpha',0.2), xlim([tmin,tmax])

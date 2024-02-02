@@ -23,12 +23,20 @@ function plot_speech_trf
 %      [1] Lalor EC, Foxe JJ (2010) Neural responses to uninterrupted
 %          natural speech can be extracted with precise temporal
 %          resolution. Eur J Neurosci 31(1):189-193.
+%      [2] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
+%      [3] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor
+%          EC (2021) Linear Modeling of Neurophysiological Responses to
+%          Speech and Other Continuous Stimuli: Methodological
+%          Considerations for Applied Research. Front Neurosci 15:705621.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('data/speech_data.mat','stim','resp','fs','factor');
+load('../data/speech_data.mat','stim','resp','fs','factor');
 
 % Normalize data
 resp = factor*resp;
@@ -37,16 +45,19 @@ resp = factor*resp;
 stim = sum(stim,2);
 
 % Model hyperparameters
-tmin = -100;
-tmax = 400;
-lambda = 0.05;
+Dir = 1; % direction of causality
+tmin = -100; % minimum time lag
+tmax = 400; % maximum time lag
+lambda = 0.1; % regularization value
 
 % Compute model weights
-model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','Tikhonov',...
+model = mTRFtrain(stim,resp,fs,Dir,tmin,tmax,lambda,'method','Tikhonov',...
     'split',5,'zeropad',0);
 
 % Plot TRF
-figure, subplot(1,2,1)
+figure('Name','Speech TRF & GFP','NumberTitle','off')
+set(gcf,'color','w')
+subplot(1,2,1)
 mTRFplot(model,'trf',[],85,[-50,350]);
 title('Speech TRF (Fz)')
 ylabel('Amplitude (a.u.)')

@@ -23,29 +23,40 @@ function plot_speech_strf
 %      [1] Di Liberto GM, O'Sullivan JA, Lalor EC (2015) Low-Frequency
 %          Cortical Entrainment to Speech Reflects Phoneme-Level
 %          Processing. Curr Biol 25:1-9.
+%      [2] Crosse MC, Di Liberto GM, Bednar A, Lalor EC (2016) The
+%          multivariate temporal response function (mTRF) toolbox: a MATLAB
+%          toolbox for relating neural signals to continuous stimuli. Front
+%          Hum Neurosci 10:604.
+%      [3] Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor
+%          EC (2021) Linear Modeling of Neurophysiological Responses to
+%          Speech and Other Continuous Stimuli: Methodological
+%          Considerations for Applied Research. Front Neurosci 15:705621.
 
 %   Authors: Mick Crosse <mickcrosse@gmail.com>
 %   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
 
 % Load data
-load('data/speech_data.mat','stim','resp','fs','factor');
+load('../data/speech_data.mat','stim','resp','fs','factor');
 
 % Normalize data
 resp = factor*resp;
 
 % Model hyperparameters
-tmin = -100;
-tmax = 400;
-lambda = 0.5;
+Dir = 1; % direction of causality
+tmin = -100; % minimum time lag
+tmax = 400; % maximum time lag
+lambda = 0.5; % regularization value
 
 % Compute model weights
 % Note, ridge regression is used instead of Tikhonov regularization to
 % avoid cross-channel leakage of the multivariate input features
-model = mTRFtrain(stim,resp,fs,1,tmin,tmax,lambda,'method','ridge',...
+model = mTRFtrain(stim,resp,fs,Dir,tmin,tmax,lambda,'method','ridge',...
     'split',5,'zeropad',0);
 
 % Plot STRF
-figure, subplot(1,2,1)
+figure('Name','Speech STRF & GFP','NumberTitle','off')
+set(gcf,'color','w')
+subplot(1,2,1)
 mTRFplot(model,'mtrf','all',85,[-50,350]);
 title('Speech STRF (Fz)')
 ylabel('Frequency band')
