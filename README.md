@@ -34,11 +34,9 @@ Alternatively, use the MATLAB dialog box to install mTRF-Toolbox. On the **Home 
 
 ## Documentation
 
-For documentation and citation, please refer to the [mTRF-Toolbox paper](doc/Crosse_etal_FrontHumNeurosci_2016.pdf):
+For documentation and citation, please refer to the [mTRF-Toolbox papers](doc):
 
 - Crosse MJ, Di Liberto GM, Bednar A, Lalor EC (2016) **The Multivariate Temporal Response Function (mTRF) Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous Stimuli.** *Frontiers in Human Neuroscience* 10:604. https://doi.org/10.3389/fnhum.2016.00604
-
-For methodological considerations in applied research, please refer to the [mTRF-Methods paper](doc/Crosse_etal_FrontNeurosci_2021.pdf):
 
 - Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor EC (2021) **Linear Modeling of Neurophysiological Responses to Speech and Other Continuous Stimuli: Methodological Considerations for Applied Research.** *Frontiers in Neuroscience* 15:705621. https://doi.org/10.3389/fnins.2021.705621
 
