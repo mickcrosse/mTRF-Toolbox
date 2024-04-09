@@ -26,7 +26,7 @@ mTRF-Toolbox is a MATLAB package for modelling multivariate stimulus-response da
 Download and unzip mTRF-Toolbox to a local directory, then in the MATLAB/GNU Octave command window enter:
 
 ```matlab
-addpath(genpath('directory/mTRF-Toolbox-2.3/mtrf'))
+addpath(genpath('directory/mTRF-Toolbox-2.4/mtrf'))
 savepath
 ```
 
