@@ -26,8 +26,8 @@ function h = mTRFplot(model,type,feat,chan,xlims,avgfeat,avgchan)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Authors: Mick Crosse <crossemj@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Set default values
 if nargin < 2 || isempty(type)

@@ -21,8 +21,8 @@ function stats = mTRFnestedcrossval(stim,resp,fs,Dir,tmin,tmax,lambdas)
 
 %   Authors: Nate Zuk <zukn@tcd.ie>
 %            Giovanni Di Liberto <diliberg@tcd.ie>
-%            Mick Crosse <mickcrosse@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%            Mick Crosse <crossemj@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % check if the inputs are cell arrays
 if ~iscell(stim) || ~iscell(resp)

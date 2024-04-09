@@ -45,9 +45,9 @@ function [y,t,cache] = mTRFresample(x,fsin,fsout,window,buff,varargin)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
-%            Edmund Lalor <edmundlalor@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Authors: Mick Crosse <crossemj@tcd.ie>
+%            Edmund Lalor <edlalor@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);

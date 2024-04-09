@@ -80,11 +80,11 @@ function model = mTRFtrain(stim,resp,fs,Dir,tmin,tmax,lambda,varargin)
 %          The VESPA: a method for the rapid estimation of a visual evoked
 %          potential. NeuroImage 32:1549-1561.
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%   Authors: Mick Crosse <crossemj@tcd.ie>
 %            Giovanni Di Liberto <diliberg@tcd.ie>
-%            Edmund Lalor <edmundlalor@gmail.com>
+%            Edmund Lalor <edlalor@tcd.ie>
 %            Nate Zuk <zukn@tcd.ie>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);

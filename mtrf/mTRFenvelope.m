@@ -45,9 +45,9 @@ function [y,t,cache] = mTRFenvelope(x,fsin,fsout,window,comp,buff,varargin)
 %      [2] Stevens SS (1955) The Measurement of Loudness. J Acoust Soc Am
 %          27(2):815-829.
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
-%            Edmund Lalor <edmundlalor@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Authors: Mick Crosse <crossemj@tcd.ie>
+%            Edmund Lalor <edlalor@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);

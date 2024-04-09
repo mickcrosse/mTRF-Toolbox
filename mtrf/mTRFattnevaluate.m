@@ -38,8 +38,8 @@ function [acc,d] = mTRFattnevaluate(r1,r2,varargin)
 %          Lalor EC (2015) Decoding the auditory brain with canonical
 %          component analysis. NeuroImage 172:206-216.
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Authors: Mick Crosse <crossemj@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);

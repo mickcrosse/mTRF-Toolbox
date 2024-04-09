@@ -48,8 +48,8 @@ function [r,err] = mTRFevaluate(y,pred,varargin)
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Authors: Mick Crosse <crossemj@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);

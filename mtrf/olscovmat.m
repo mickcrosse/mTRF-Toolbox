@@ -33,9 +33,9 @@ function [Cxx,Cxy,folds] = olscovmat(x,y,lags,type,zeropad,verbose)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%   Authors: Mick Crosse <crossemj@tcd.ie>
 %            Nate Zuk <zukn@tcd.ie>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Set default values
 if nargin < 4 || isempty(type)

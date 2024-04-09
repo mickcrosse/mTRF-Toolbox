@@ -11,8 +11,8 @@ function [y,yobs] = truncate(x,tmin,tmax,xobs)
 %
 %   mTRF-Toolbox https://github.com/mickcrosse/mTRF-Toolbox
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Authors: Mick Crosse <crossemj@tcd.ie>
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Set default values
 if nargin < 4 || ~isempty(xobs)

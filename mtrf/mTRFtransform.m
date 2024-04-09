@@ -56,11 +56,11 @@ function fmodel = mTRFtransform(bmodel,resp,varargin)
 %          toolbox for relating neural signals to continuous stimuli. Front
 %          Hum Neurosci 10:604.
 
-%   Authors: Mick Crosse <mickcrosse@gmail.com>
+%   Authors: Mick Crosse <crossemj@tcd.ie>
 %            Adam Bednar <bednara@tcd.ie>
 %            Emily Teoh <teohe@tcd.ie>
 %            Giovanni Di Liberto <diliberg@tcd.ie>
-%   Copyright 2014-2020 Lalor Lab, Trinity College Dublin.
+%   Copyright 2014-2024 Lalor Lab, Trinity College Dublin.
 
 % Parse input arguments
 arg = parsevarargin(varargin);
