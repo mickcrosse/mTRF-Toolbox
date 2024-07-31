@@ -32,7 +32,7 @@ savepath
 
 Alternatively, use the MATLAB dialog box to install mTRF-Toolbox. On the **Home tab**, in the **Environment** section, click **Set Path**. In the Set Path dialog box, click **Add Folder with Subfolders** and search for mTRF-Toolbox in your local directory and select the `mtrf` subfolder.
 
-## Try the mTRF-Toolbox with Matlab Online ((work in progress)
+## Try the mTRF-Toolbox with Matlab Online (work in progress) ********************
 Get started with some example scripts right away. You can individually view :eyes: or run :arrow_forward: each on [MATLAB Online](https://www.mathworks.com/products/matlab-online.html):
 
 | Data Type | Preprocessed sample data  | View | Run
