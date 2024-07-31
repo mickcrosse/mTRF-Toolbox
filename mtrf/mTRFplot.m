@@ -84,7 +84,7 @@ end
 % Generate plot
 switch type
     case 'trf'
-        h = plot(model.t,model.w,'linewidth',3); grid on
+        h = plot(model.t,squeeze(model.w),'linewidth',3); grid on
     case 'gfp'
         h = area(model.t,model.w,'edgecolor','none'); grid on
     case {'mtrf','mgfp'}
