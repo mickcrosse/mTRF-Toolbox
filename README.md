@@ -41,7 +41,7 @@ Get started with some example scripts right away. You can individually view :eye
 
 <sub><sup>1</sup> Data from Di Liberto et al., eLife, 2020, https://doi.org/10.7554/eLife.51784<sub>
 
-First-time users on MATLAB Online will be prompted to install the [Deep Learning Toolbox Converter for TensorFlow Models](https://nl.mathworks.com/matlabcentral/fileexchange/64649-deep-learning-toolbox-converter-for-tensorflow-models) support package. Please follow the prompted link to complete the installation and re-run the example. See [Installation](https://github.com/MATLAB-Community-Toolboxes-at-INCF/DeepInterpolation-MATLAB/edit/vijayiyer05-patch-1/README.md#installation) for further guidance to install DeepInterpolation with MATLAB on your local or cloud compute environment. 
+First-time users on MATLAB Online may be prompted to install additional packages. Please follow the prompted link to complete the installation and re-run the example.
 
 ## Documentation
 
