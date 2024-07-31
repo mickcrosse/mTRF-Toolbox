@@ -37,7 +37,7 @@ Get started with some example scripts right away. You can individually view :eye
 
 | Data Type | Preprocessed sample data  | View | Run
 |  --- | --- | --- | --- |
-|ForwardTRF example | [dataStim<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [dataSub<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx)
+|ForwardTRF example | [dataStim<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [dataSub1<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [dataSub2<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx)
 
 <sub><sup>1</sup> Data from Di Liberto et al., eLife, 2020, https://doi.org/10.7554/eLife.51784<sub>
 
