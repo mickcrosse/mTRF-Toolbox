@@ -14,6 +14,7 @@ mTRF-Toolbox is a MATLAB package for modelling multivariate stimulus-response da
   - [Fitting encoding/decoding models](#fitting-encodingdecoding-models)
   - [Decoding attention and multisensory integration](#decoding-attention-and-multisensory-integration)
   - [Feature engineering](#feature-engineering)
+- [Running Examples on MATLAB Online](#running-examples-on-matlab-online)
 - [mTRF Modelling Framework](#mtrf-modelling-framework)
 - [Examples](#examples)
   - [TRF/STRF estimation](#trfstrf-estimation)
@@ -74,13 +75,13 @@ mTRF-Toolbox consists of the following set of functions:
 | [**mTRFresample()**](mtrf/mTRFresample.m) | Resamples and smooths temporal features |
 | [**lagGen()**](mtrf/lagGen.m) | Generates time-lagged input features of multivariate data |
 
-## Run mTRF-Toolbox on MATLAB Online (work in progress) 
+## Running Examples on MATLAB Online (work in progress) 
 
-Get started with some example scripts right away using MATLAB Online. You can individually view :eyes: or run :arrow_forward: each of the examples listed in the table below:
+Get started with some example scripts right away using MATLAB Online. You can view :eyes: or run :arrow_forward: each of the examples listed below:
 
 | Data Type | Analysis Type | Sample Data | View | Run | Reference |
 | --- | --- | --- | --- | --- | --- |
-| Music listening | Forward | [stim](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [sub1](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [sub2](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx) | [Di Liberto et al. (2020)](https://doi.org/10.7554/eLife.51784) |
+| Music listening | Forward model | [stim](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [sub1](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [sub2](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx) | [Di Liberto et al. (2020)](https://doi.org/10.7554/eLife.51784) |
 
 First-time users of MATLAB Online may be prompted to install additional packages. Please follow the link to complete the installation and re-run the example.
 
