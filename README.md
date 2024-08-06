@@ -79,9 +79,9 @@ mTRF-Toolbox consists of the following set of functions:
 
 Get started with some example scripts right away using MATLAB Online. You can view :eyes: or run :arrow_forward: each of the examples listed below:
 
-| Data Type | Analysis Type | Sample Data | View | Run | Reference |
+| Data Type | Analysis Type | Sample Data | Reference | View | Run |
 | --- | --- | --- | --- | --- | --- |
-| Music listening | Forward model | [stim](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [sub1](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [sub2](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx) | [Di Liberto et al. (2020)](https://doi.org/10.7554/eLife.51784) |
+| Music listening | Forward model | [stim](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [sub1](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [sub2](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [Di Liberto et al. (2020)](https://doi.org/10.7554/eLife.51784) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx) |
 
 First-time users of MATLAB Online may be prompted to install additional packages. Please follow the link to complete the installation and re-run the example.
 
