@@ -32,6 +32,17 @@ savepath
 
 Alternatively, use the MATLAB dialog box to install mTRF-Toolbox. On the **Home tab**, in the **Environment** section, click **Set Path**. In the Set Path dialog box, click **Add Folder with Subfolders** and search for mTRF-Toolbox in your local directory and select the `mtrf` subfolder.
 
+## Try the mTRF-Toolbox with Matlab Online (work in progress) ********************
+Get started with some example scripts right away. You can individually view :eyes: or run :arrow_forward: each on [MATLAB Online](https://www.mathworks.com/products/matlab-online.html):
+
+| Data Type | Preprocessed sample data  | View | Run
+|  --- | --- | --- | --- |
+|ForwardTRF example | [dataStim<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [dataSub1<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [dataSub2<sup>1</sup>](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [:eyes:](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F84c22101-bffc-435a-910c-b0c7dcd5b386%2F29e7e92d-4639-4178-8e19-739580981e60%2Ffiles%2Fexamples%2Ftiny_ephys_inference.mlx&embed=web) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=INCF/DeepInterpolation-MATLAB&file=examples/tiny_ephys_inference.mlx)
+
+<sub><sup>1</sup> Data from Di Liberto et al., eLife, 2020, https://doi.org/10.7554/eLife.51784<sub>
+
+First-time users on MATLAB Online may be prompted to install additional packages. Please follow the prompted link to complete the installation and re-run the example.
+
 ## Documentation
 
 For documentation and citation, please refer to the [mTRF-Toolbox papers](doc):
