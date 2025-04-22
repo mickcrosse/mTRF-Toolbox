@@ -42,6 +42,8 @@ For documentation and citation, please refer to the [mTRF-Toolbox papers](doc):
 
 - Crosse MJ, Zuk NJ, Di Liberto GM, Nidiffer AR, Molholm S, Lalor EC (2021) **Linear Modeling of Neurophysiological Responses to Speech and Other Continuous Stimuli: Methodological Considerations for Applied Research.** *Frontiers in Neuroscience* 15:705621. https://doi.org/10.3389/fnins.2021.705621
 
+- Di Liberto GM, Nidiffer A, Crosse MJ, Zuk N, Haro S, Cantisani G, Winchester MW, Igoe A, McCrann R, Chandra S, Lalor EC, Baruzzo G (2024) **A standardised open science framework for sharing and re-analysing neural data acquired to continuous stimuli.** *Neurons, Behavior, Data Analysis, and Theory* October, 1-25. https://doi.org/10.51628/001c.124867
+
 For usage, please see the example code provided in the [Examples](#examples) section below, as well the M-files in the [examples](examples) folder. For detailed usage, please see the help documentation in each of the function headers.
 
 ## Contents
@@ -77,13 +79,16 @@ mTRF-Toolbox consists of the following set of functions:
 
 ## Running Examples on MATLAB Online (work in progress) 
 
-Get started with some example scripts right away using MATLAB Online. You can view :eyes: or run :arrow_forward: each of the examples listed below:
+Get started with some example scripts right away using MATLAB Online. You can view or run each of the examples listed below. Sample data are downloaded when executing the scripts.
 
-| Data Type | Analysis Type | Sample Data | Reference | View | Run |
-| --- | --- | --- | --- | --- | --- |
-| Music listening | Forward model | [stim](https://www.data.cnspworkshop.net/sampleData/diliBach/dataStim.mat), [sub1](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub1.mat), [sub2](https://www.data.cnspworkshop.net/sampleData/diliBach/pre_dataSub2.mat) | [Di Liberto et al. (2020)](https://doi.org/10.7554/eLife.51784) | [:eyes:]([https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F8f03f89a-a3d4-43b0-b9d5-2a8e0d849ce2%2Fda47aaeb-5610-45df-8560-8aa05de526dd%2Ffiles%2Fexamples%2FCNSPexample_forwardTRF.mlx&embed=web](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F8f03f89a-a3d4-43b0-b9d5-2a8e0d849ce2%2Fda47aaeb-5610-45df-8560-8aa05de526dd%2Ffiles%2Fexamples%2FCNSPexample_forwardTRF.mlx&embed=web)) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_forwardTRF.mlx) |
-
-| Speech listening | Backward model | [stim](https://www.data.cnspworkshop.net/sampleData/LalorNatSpeech/dataStim.mat), [sub1](https://www.data.cnspworkshop.net/sampleData/LalorNatSpeech/pre_dataSub1.mat), [sub2](https://www.data.cnspworkshop.net/sampleData/LalorNatSpeech/pre_dataSub2.mat) | [Broderick et al. (2018)]([https://doi.org/10.7554/eLife.51784](https://www.cell.com/current-biology/fulltext/S0960-9822(18)30146-5?5952eaf7=ef28a21f ) | [:eyes:]([https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F8f03f89a-a3d4-43b0-b9d5-2a8e0d849ce2%2Fda47aaeb-5610-45df-8560-8aa05de526dd%2Ffiles%2Fexamples%2FCNSPexample_backwardTRF.mlx&embed=web](https://viewer.mathworks.com/?viewer=live_code&url=https%3A%2F%2Fwww.mathworks.com%2Fmatlabcentral%2Fmlc-downloads%2Fdownloads%2F8f03f89a-a3d4-43b0-b9d5-2a8e0d849ce2%2Fda47aaeb-5610-45df-8560-8aa05de526dd%2Ffiles%2Fexamples%2FCNSPexample_backwardTRF.mlx&embed=web)) | [:arrow_forward:](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_backwardTRF.mlx) |
+| Name | Analysis Type | Dataset | View | Run |
+| --- | --- | --- | --- | --- |
+| Forward TRF (Speech/music) | Forward model | [Di Liberto et al. (2020)](https://doi.org/10.7554/eLife.51784) |  | [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_forwardTRF.mlx) |
+| Comparing TRFs across datasets | Forward model | [Broderick et al. (2018)](https://www.cell.com/current-biology/fulltext/S0960-9822(18)30146-5?5952eaf7=ef28a21f) |  | [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_forwardTRF_comparingDatasets.mlx) |
+| Forward TRF (Food intolerance) | Forward model | simulated data |  | [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_forwardTRF_foodIntolerance.mlx) |
+| Speech envelope decoding | Backward model | [Broderick et al. (2018)]([https://doi.org/10.7554/eLife.51784](https://www.cell.com/current-biology/fulltext/S0960-9822(18)30146-5?5952eaf7=ef28a21f ) |  | [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_backwardTRF.mlx) |
+| Speech attention decoding (dataset 1) | Backward model / classification | [Har-shai Yahav & Zion Golumbic (2024)](https://osf.io/bzean/) |  | [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_cocktailPartyDecoding.mlx) |
+| Speech attention decoding (dataset 2) | Backward model / classification | in review |  | [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=mickcrosse/mTRF-Toolbox&file=examples/CNSPexample_cocktailPartyDecoding_secondDataset.mlx) |
 
 First-time users of MATLAB Online may be prompted to install additional packages. Please follow the link to complete the installation and re-run the example.
 
