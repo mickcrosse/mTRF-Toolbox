@@ -44,13 +44,13 @@ For documentation and citation, please refer to the [mTRF-Toolbox papers](doc):
 
 - Di Liberto GM, Nidiffer A, Crosse MJ, Zuk N, Haro S, Cantisani G, Winchester MW, Igoe A, McCrann R, Chandra S, Lalor EC, Baruzzo G (2024) **A standardised open science framework for sharing and re-analysing neural data acquired to continuous stimuli.** *Neurons, Behavior, Data Analysis, and Theory* October, 1-25. https://doi.org/10.51628/001c.124867
 
-For usage, please see the example code provided in the [Examples](#examples) section below, as well the M-files in the [examples](examples) folder. For detailed usage, please see the help documentation in each of the function headers.
+For usage, please see the example code provided in the [LiveScript Examples](#running-examples-on-matlab-online) and [Examples](#examples) sections below, as well the M-files in the [examples](examples) folder. For detailed usage, please see the help documentation in each of the function headers.
 
 ## Contents
 
 mTRF-Toolbox consists of the following set of functions:
 
-### Fitting encoding/decoding models
+### Fitting encoding/decoding models        
 
 | Function | Description |
 | --- | --- |
