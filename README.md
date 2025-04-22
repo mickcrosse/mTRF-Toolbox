@@ -77,7 +77,7 @@ mTRF-Toolbox consists of the following set of functions:
 | [**mTRFresample()**](mtrf/mTRFresample.m) | Resamples and smooths temporal features |
 | [**lagGen()**](mtrf/lagGen.m) | Generates time-lagged input features of multivariate data |
 
-## Running Examples on MATLAB Online (work in progress) 
+## Running Examples on MATLAB Online
 
 Get started with some example scripts right away using MATLAB Online. You can view or run each of the examples listed below. Sample data are downloaded when executing the scripts.
 
