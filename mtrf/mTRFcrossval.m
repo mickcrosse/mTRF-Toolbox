@@ -227,8 +227,8 @@ for i = 1:nfold
         xlag = lagGen(x{i},lags,arg.zeropad,1);
         
         % Training set
-        Cxxi = Cxx - xlag'*xlag;
-        Cxyi = Cxy - xlag'*y{i};
+        Cxxi = Cxx(:,:,i) - xlag'*xlag;
+        Cxyi = Cxy(:,:,i) - xlag'*y{i};
         
     end
     
