@@ -3,6 +3,8 @@ function stimulus_reconstruction
 %   STIMULUS_RECONSTRUCTION loads an example dataset and trains a neural
 %   decoder that reconstructs stimulus features (speech envelope) from 2
 %   minutes of 128-channel EEG data as per Crosse et al. (2016).
+%   ** (Update, 28-5-2025, N Zuk): Create a null distribution of
+%   reconstruction accuracies using mTRFpermute.
 %
 %   Example data is loaded from SPEECH_DATA.MAT and consists of the
 %   following variables:
