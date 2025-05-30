@@ -15,9 +15,9 @@ addpath(genpath('../mtrf')); % the path for the toolbox functions
 addpath('../data'); % used to get the example EEG data
 
 Fs = 128; % sampling frequency of the signals
-ntr = 30; % number of trials
+ntr = 20; % number of trials
 freq_range = [1 15]; % frequency range of the signals
-snr = -20; % signal to noise ratio in the response (in dB)
+snr = -40; % signal to noise ratio in the response (in dB)
 lambdas = [0 10.^(0:8)]; % set of ridge regularization parameters to using during mTRFcrossval
 nperm = 500; % number of times to shuffle the data and get null testing values
 quantiles_to_plot = [0.05 0.95];
@@ -88,7 +88,7 @@ fprintf('* Completed training and testing on true data in @ %.3f s\n',toc(true_t
 %% Plot both models to see how similar they are
 figure
 hold on
-plot(resp_t*1000,true_trf/rms(true_trf),'k');
+plot(resp_t*1000,true_trf/rms(true_trf),'k','LineWidth',2);
 for n = 1:ntr
     plot(mdl{n}.t,mdl{n}.w/rms(mdl{n}.w),'b');
 end
