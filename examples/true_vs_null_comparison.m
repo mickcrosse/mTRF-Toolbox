@@ -11,9 +11,13 @@ addpath('../data'); % used to get the example EEG data
 Fs = 128; % sampling frequency of the signals
 ntr = 20; % number of trials
 freq_range = [1 15]; % frequency range of the signals
-snr = -30; % signal to noise ratio in the response (in dB)
+snr = -25; % signal to noise ratio in the response (in dB)
 lambdas = [0 10.^(0:8)]; % set of ridge regularization parameters to using during mTRFcrossval
 nperm = 500; % number of times to shuffle the data and get null testing values
+null_method = 'circshift'; % method to use for calculating the null distribution
+    % this could be 'circshift' to randomly circularly shift the signals in
+    % each trial, or 'permute' to randomly permute pairs of predicted
+    % response with the true response in each trial
 
 %% Generate the TRF model
 %%% Generate a TRF model (an exponentially decaying sinusoid with a
@@ -84,19 +88,24 @@ fprintf('* Completed training and testing on true data in @ %.3f s\n',toc(true_t
 %% Plot both models to see how similar they are
 figure
 hold on
-plot(resp_t*1000,true_trf/rms(true_trf),'k','LineWidth',2);
+mdl_plt = NaN(2,1);
+mdl_plt(1) = plot(resp_t*1000,true_trf/rms(true_trf),'k','LineWidth',2);
 for n = 1:ntr
-    plot(mdl{n}.t,mdl{n}.w/rms(mdl{n}.w),'b');
+    mdl_plt(2) = plot(mdl{n}.t,mdl{n}.w/rms(mdl{n}.w),'b');
 end
 set(gca,'FontSize',14);
 xlabel('Delay (ms)');
-ylabel('RMS normalized model weights');
+ylabel('Normalized model weights');
+title('Estimated TRF for each left-out trial')
+legend(mdl_plt,{'True TRF','Estimated TRF'})
 
 %% Permutations
-%%% Permute 1: Shuffle the testing data to get a null distribution of test
-%%% values
+%%% Create the null distribution
 disp('Creating the null distribution');
-null_stats = mTRFpermute(resp,pred,'circshift');
+null_stats = mTRFpermute(resp,pred,null_method);
+
+% Calculate d-prime distance between true and null accuracies
+dpr = (mean(test_r)-mean(null_stats.r))/sqrt(0.5*(var(test_r)+var(null_stats.r)));
 
 %% Plot the true values and the null distribution
 figure
@@ -108,7 +117,9 @@ bar(r_bins,h_r/sum(h_r),1,'k');
 stem(test_r,0.4*ones(length(test_r),1),'Color','r','LineWidth',2);
 xlabel('Prediction accuracy (r)');
 ylabel('Prop. of null distribution');
+title(sprintf('d'' distance between true and null: %.3f',dpr))
 legend('Null distribution','True values','Location','northwest');
+
 
 
 %%% Additional functions %%%

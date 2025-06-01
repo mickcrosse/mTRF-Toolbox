@@ -1,4 +1,4 @@
-function null_stats = mTRFpermute(y,pred,method,varargin)
+function stats = mTRFpermute(y,pred,method,varargin)
 % STATS = MTRFPERMUTE(Y,PRED,METHOD)
 % Shuffle or circularly the true signals (y) relative to the predictions
 % (pred) in order to calculate a null distribution of accuracies. Note that
@@ -75,8 +75,8 @@ for n = 1:nperm
     [r(n,:),err(n,:)] = mTRFevaluate(s,e);
 end
 
-null_stats.r = r;
-null_stats.err = err;
+stats.r = r;
+stats.err = err;
 
 % insert a new line in the command window when this is completed
 fprintf('\n-- Completed @ %.3f s\n',toc(nullcmp_timer));
