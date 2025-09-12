@@ -1,17 +1,20 @@
 % Simulate data of stimulus tracking (1-15 Hz) with added EEG-shaped noise
-% for 20 2-minute-long trials, calculate a null distribution of prediction
-% accuracies, and compare the true predictiona accuracies to the null
+% for 60 minutes. Split the data into segments for training and testing.
+% Vary the segment lengths. Calculate a null distribution of prediction
+% accuracies, and compare the true prediction accuracies to the null
 % prediction accuracies.
 % Nate Zuk (2025)
 
 addpath(genpath('../mtrf')); % the path for the toolbox functions
+addpath(genpath('libs')); % specifically to use rampstim
 addpath('../data'); % used to get the example EEG data
 
 %% Simulation parameters
 Fs = 128; % sampling frequency of the signals
-ntr = 20; % number of trials
+dur = 60*30; % duration of the overall simulation (in s)
+trial_dur = 60; % duration of each trial (in s)
 freq_range = [1 15]; % frequency range of the signals
-snr = -25; % signal to noise ratio in the response (in dB)
+snr = -30; % signal to noise ratio in the response (in dB)
 lambdas = [0 10.^(0:8)]; % set of ridge regularization parameters to using during mTRFcrossval
 nperm = 500; % number of times to shuffle the data and get null testing values
 null_method = 'circshift'; % method to use for calculating the null distribution
@@ -43,23 +46,36 @@ clear exmp_data % delete the example data structure, we no longer need it
 %%% distribution.
 % stimulus is random bandpass noise
 disp('Creating the stimuli and responses...');
+s = bandlimited_noise(freq_range,dur,Fs); 
+lags = round(resp_t*Fs);
+X = lagGen(s,lags);
+trfout = X*true_trf';
+
+% generate the noise by randomizing the phases of the EEG segment multiple
+% times, and concatenating noise segments to match the overall stimulus
+% duration
+ns = [];
+while size(ns,1)<size(s,1)
+    rand_ph = exp(1j*rand(dur_idx,1)*2*pi);
+    NS = EXMP_EEG.*rand_ph;
+    ns_seg = zscore(real(ifft(NS)));
+    % ramp the noise segment to avoid discontinuities betwee segments
+    ns_seg = rampstim(ns_seg,Fs,1/freq_range(2));
+    ns = [ns; ns_seg];
+end
+% truncate ns to match the duration of the stimulus
+ns = ns(1:size(s,1),:);
+eeg = trfout + ns/10^(snr/20)*std(trfout);
+
+% segment the stimuli based on the number of trials
+ntr = floor(dur/trial_dur);
+seg_idx = round(linspace(1,dur*Fs+1,ntr+1));
 stim = cell(ntr,1);
 resp = cell(ntr,1);
-lags = round(resp_t*Fs);
 for n = 1:ntr
-    % create a stimulus that has equal energy within the frequency range
-    % specified (by default this is 1-15 Hz)
-    s = bandlimited_noise(freq_range,dur_idx/Fs,Fs); 
-    % set the variance of the original stimulus to 1
-    stim{n} = zscore(s);
-    % Convolve the stimulus with the true TRF
-    X = lagGen(stim{n},lags);
-    trfout = X*true_trf';
-    % add EEG-shaped noise
-    rand_ph = exp(1j*rand(dur_idx,1)*2*pi);
-    NS = EXMP_EEG.*rand_ph; % phase shift the signal based on the random values
-    ns = zscore(real(ifft(NS))); % convert back into time domain and normalize
-    resp{n} = trfout+ns/10^(snr/20)*std(trfout); % scale the noise to the appropriate SNR
+    idx = seg_idx(n):seg_idx(n+1)-1;
+    stim{n} = s(idx);
+    resp{n} = eeg(idx);
 end
 
 %% Iteratively leave one trial out, cross-validate on the rest
